@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=Krita/PythonPlugin
+X-KDE-Library=recent_color
+X-Python-2-Compatible=false
+X-Krita-Manual=myPluginManual.html
+Name=previous_color3
+Comment=Switch to previous color
