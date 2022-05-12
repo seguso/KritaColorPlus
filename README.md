@@ -1,6 +1,6 @@
 This plugin contains three actions that can be assigned to 3 different shortcuts. 
 
-LastColor
+LastColor (defaut shortcut: D)
 ===========
 
 This action switches to the previous used color. This is equivalent to pressing the color on top of the color history.
@@ -13,8 +13,10 @@ Question: what is the difference with pressing X (swap foreground and background
 
 What is the difference with pressing the color on top of the history? None, except there is a lot of mouse travel involved.
 
+Note: The first time you press D, the plugin does nothing: it only initializes itself. It will start working the second time you press D.
 
-MixColor
+
+MixColor  (default shortcut: X)
 ==========
 
 It mixes the foreground color with the color under cursor (on the canvas). Precisely, it picks 35% of the canvas color and 65% of the previous foreground color. Default shortcut: X.
@@ -23,7 +25,30 @@ Usage: when you paint, you realize you have picked a color that's too different 
 
 Special usage: in conjunction with the PickColor action (bound to the C key, see below). You press C to pick a color, then move the mouse/pen, and press X to introduce a bit of another color. Then paint.
 
-PickColor
+PickColor (default shortcut: C)
 ==========
 
 An easier way to pick a color from the canvas, easier than CTRL+click. you just position the mouse/pen on a pixel and press C. No need to hold anything. Once you get used to it, you'll never want to go back. Especially useful for pixel art, where it's clear what color your cursor is hovering.
+
+
+INSTALLATION
+=================
+
+In Windows:
+
+exit Krita. Enter  the folder
+
+C:\Users\yourname\AppData\Roaming\krita\pykrita
+
+and copy here the .desktop file and the recent_color folder:  https://i.imgur.com/5SoFMpu.png
+
+Then enter the folder 
+
+C:\Users\yourname\AppData\Roaming\krita\actions
+
+and copy the .action files here: https://i.imgur.com/zspj4uc.png
+
+Then start Krita. Activate the plugin by checking it here: https://i.imgur.com/CKH6wDs.png
+
+Then reassign the shortcuts here: https://i.imgur.com/14IRqxa.png
+
