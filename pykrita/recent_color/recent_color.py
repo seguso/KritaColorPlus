@@ -233,9 +233,12 @@ class MyExtension(Extension):
                     comp = fg.components() 
                     print(f"fg color = {comp}")
      
-                    comp[0] = comp[0] * 0.65 + (self.pixelC.red() / 255.0)  * 0.35
-                    comp[1] = comp[1] * 0.65 + (self.pixelC.green() / 255.0)  * 0.35
-                    comp[2] = comp[2] * 0.65 + (self.pixelC.blue()  / 255.0)  * 0.35
+     
+                    canv = 0.45
+                    fgMul = 1.0 - canv
+                    comp[0] = comp[0] * fgMul + (self.pixelC.red() / 255.0)  * canv
+                    comp[1] = comp[1] * fgMul + (self.pixelC.green() / 255.0)  * canv
+                    comp[2] = comp[2] * fgMul + (self.pixelC.blue()  / 255.0)  * canv
                   
                     fg.setComponents(comp)
                     
