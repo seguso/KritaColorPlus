@@ -19,7 +19,7 @@ Note: The first time you press D, the plugin does nothing: it only initializes i
 MixColor  (default shortcut: X)
 ==========
 
-It mixes the foreground color with the color under cursor (on the canvas). Precisely, it picks 35% of the canvas color and 65% of the current foreground color. Default shortcut: X.
+It mixes the foreground color with the color under cursor (on the canvas). Precisely, it picks 45% of the canvas color and leaves 55% of the current foreground color. Default shortcut: X.
 
 Usage: when you paint, you realize you have picked a color that's too different from the color you are overwriting. You are creating too much contrast. Then, you press X and make your foreground color more similar to the destination.
 
