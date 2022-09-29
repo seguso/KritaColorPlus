@@ -11,7 +11,7 @@ Basically, with this technique, colors merge together instead of overlapping, un
 
 More precisely: you can paint with a semi-transparent brush. If you lift the pen, and make another stroke, you don't see the "overlap". The strokes "merge together". Only when you press a shortcut to "dry the paper", subsequent strokes overlap. 
 
-Note: you need to have two layers. Put the two layers in a group. These need to be the only layers in that group. The top layer needs to be partially transparent (typically from 50% to 75%). You will only paint on the top layer. You need to use a completely opaque brush.
+Note: you need to have two layers. Put the two layers in a group. These need to be the only layers in that group. The top layer needs to be partially transparent (typically from 50% to 75%). You will only paint on the top layer. You need to use a completely opaque brush. In particular, the brush should not have pressure assigned to opacity, or to flow. (I suggest pressure size).
 
 
 LastColor (defaut shortcut: D)
