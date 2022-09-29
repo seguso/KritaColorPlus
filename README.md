@@ -1,4 +1,16 @@
-This plugin contains three actions that can be assigned to 3 different shortcuts. 
+This plugin contains 4 actions that can be assigned to 4 different shortcuts. 
+
+Here is a video to illustrate all the functions: https://www.youtube.com/watch?v=Muz3o2Wuoi4
+
+Dry paper (default shortcut: V)
+====================================
+
+Basically it allows watercolor style. It's difficult to explain, so please refer to the video here: https://www.youtube.com/watch?v=Muz3o2Wuoi4
+
+Basically, with this system you can paint with a semi-transparent brush. If you lift the pen, and make another stroke, you don't see the "overlap". They merge together. Only when you press a shortcut to "dry the paper", subsequent strokes overlap. 
+
+You need to have two layers. The top layer needs to be partially transparent (typically from 50% to 75%). You need to only paint on the top layer. You need to use a completely opaque brush.
+
 
 LastColor (defaut shortcut: D)
 ===========
@@ -16,6 +28,7 @@ What is the difference with pressing the color on top of the history? None, exce
 Note: The first time you press D, the plugin does nothing: it only initializes itself. It will start working the second time you press D.
 
 
+
 MixColor  (default shortcut: X)
 ==========
 
@@ -24,6 +37,8 @@ It mixes the foreground color with the color under cursor (on the canvas). Preci
 Usage: when you paint, you realize you have picked a color that's too different from the color you are overwriting. You are creating too much contrast. Then, you press X and make your foreground color more similar to the destination.
 
 Special usage: in conjunction with the PickColor action (bound to the C key, see below). You press C to pick a color, then move the mouse/pen, and press X to introduce a bit of another color. Then paint.
+
+
 
 PickColor (default shortcut: C)
 ==========
