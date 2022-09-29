@@ -32,6 +32,37 @@ import time
 import datetime
 import xml
 
+timeMessage = 300
+
+
+def minimize_views():
+    """
+    https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QMdiArea.html
+    https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QMdiSubWindow.html
+    https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QWidget.html#PySide2.QtWidgets.PySide2.QtWidgets.QWidget.showMinimized
+    """
+    app = Krita.instance()
+    win = app.activeWindow()
+    q_win = win.qwindow()
+    mdi_area = q_win.findChild(QMdiArea)
+    for sub_win in mdi_area.subWindowList():
+        sub_win.showMinimized()
+
+
+def set_active_view_stay_on_top(new_state):
+    """
+    https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QMdiArea.html
+    https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QMdiSubWindow.html
+    https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QWidget.html#PySide2.QtWidgets.PySide2.QtWidgets.QWidget.setWindowFlag
+    """
+    app = Krita.instance()
+    win = app.activeWindow()
+    q_win = win.qwindow()
+    mdi_area = q_win.findChild(QMdiArea)
+    sub_win = mdi_area.activeSubWindow()
+    sub_win.setWindowFlag(Qt.WindowStaysOnTopHint, new_state)
+
+
 
 class rgb:
     def __init__(self, r, g, b, a):
@@ -175,6 +206,7 @@ class MyExtension(Extension):
 
             print("cursor mapped = ", win)
     
+            acView = Krita.instance().activeWindow().activeView()
             if not self.inited:
                 print ("swap: initializing...")
                 
@@ -194,9 +226,11 @@ class MyExtension(Extension):
                 
                 self.inited = True;
                 print ("swap: initialized")
+                
+                acView.showFloatingMessage("Last color initialized. Press again to use.", QIcon(), timeMessage * 2, 1)
             else:
                 
-                acView = Krita.instance().activeWindow().activeView()
+                
 
                 col = acView.foregroundColor()
                 comp = col.components()
@@ -206,8 +240,11 @@ class MyExtension(Extension):
                 acView.setForeGroundColor(col)
                 
                 self.previousColor = self.currentColor
+                
+                acView.showFloatingMessage("Last color", QIcon(), timeMessage , 1)
                     
         except Exception as e:
+                acView.showFloatingMessage(f"error {e}.", QIcon(), timeMessage * 2, 1)
                 print("errore trovato in swap:")
                 print(e)
                 
@@ -262,7 +299,7 @@ class MyExtension(Extension):
                     print(f"fg color = {comp}")
      
      
-                    canv = 0.45
+                    canv = 0.5 #I pick half color from canvas
                     fgMul = 1.0 - canv
                     comp[0] = comp[0] * fgMul + (self.pixelC.red() / 255.0)  * canv
                     comp[1] = comp[1] * fgMul + (self.pixelC.green() / 255.0)  * canv
@@ -321,7 +358,7 @@ class MyExtension(Extension):
          
          
                         
-                        canv = 0.45
+                        canv = 0.5 # pick half color from canvas
                         fgMul = 1.0 - canv
                         comp[0] = comp[0] * fgMul + (mergedColor.r / 255.0)  * canv
                         comp[1] = comp[1] * fgMul + (mergedColor.g / 255.0)  * canv
@@ -334,6 +371,10 @@ class MyExtension(Extension):
                         fg.setComponents(comp)
                         
                         view.setForeGroundColor(fg)
+                        
+                        
+                        # messaggio
+                        view.showFloatingMessage("Mix color", QIcon(), timeMessage, 1)
                         
                         
                     # self.pixelBytes = document.activeNode().pixelData(doc_pos.x(), doc_pos.y(), 1, 1)
@@ -444,6 +485,9 @@ class MyExtension(Extension):
                         
                         view.setForeGroundColor(fg)
 
+                        # messaggio
+                        view.showFloatingMessage("Pick color", QIcon(), timeMessage, 1)
+                        
     
     
     def layerMergeAndCreate(self):
@@ -455,15 +499,74 @@ class MyExtension(Extension):
             oldOpacity = activeLayer.opacity()
             activeLayer.mergeDown()
             root = currentDoc.rootNode()
-            newLa = currentDoc.createNode("temp_layer", "paintLayer")
+            newLa = currentDoc.createNode("Wet_area", "paintLayer")
             newLa.setOpacity(oldOpacity)
             parentNode.addChildNode(newLa, None)
         else:
-            newLa = currentDoc.createNode("temp_layer", "paintLayer")
-            newLa.setOpacity(160)
+            newLa = currentDoc.createNode("Wet_area", "paintLayer")
+            newLa.setOpacity(140)
             root.addChildNode(newLa, None)
             
+        application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
+            
         
+    def viewSingleWindow(self):
+        app = Krita.instance()
+        
+        
+        print(f"windows = {app.windows()}")
+        
+        # for wi in app.windows():
+            # print(f"wi views = {wi.views()}")
+            # print (f"wi subwindows = {wi.qwindow().findChild(QMdiArea).subWindowList()}")
+            
+            # subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
+            # firstsubwin = subwins[1]
+            # firstsubwin.showMinimized()
+            
+        
+        # mdi_area = firstWindow.findChild(QMdiArea)
+        # for sub_win in mdi_area.subWindowList():
+            # print(sub_win)
+
+        
+        #currentDoc = app.activeDocument()
+        curWin = app.activeWindow()
+        wins = app.windows()
+        
+        
+        # dockers = app.dockers()
+        
+        # for d in dockers:
+            # print (f"docker  {d.objectName()}")
+
+
+        # documents = app.documents()
+        
+        # for d in documents:
+            # print (f"document {d.fileName()}")
+        
+        # views = app.views()
+        
+        # for v in views:
+            
+            # print(f"view: {v.document().fileName()}. win: {v.window().activeView().document().fileName()}")
+        
+        # #minimizzo tutte le finestre tranne quella attiva
+        for win in wins:
+                
+                print (f"win: {win.activeView().document().fileName()}")
+                # print("flename2")
+                # # print (curWin.activeView().document().fileName())
+                
+                # # if win.activeView().document() is   curWin.activeView().document():
+                    # # print ("trovata")
+                q_win = win.qwindow()
+                mdi_area = q_win.findChild(QMdiArea)
+                for sub_win in mdi_area.subWindowList():
+                    sub_win.showMinimized()
+
+                #curWin.qwindow().showNormal()
     
     def createActions(self, window):
     
@@ -480,6 +583,9 @@ class MyExtension(Extension):
 
         action2 = window.createAction("LayerMergeDownAndNew", "LayerMergeDownAndNew")
         action2.triggered.connect(self.layerMergeAndCreate)
+
+        action2 = window.createAction("ViewSingleWindow", "ViewSingleWindow")
+        action2.triggered.connect(self.viewSingleWindow)
 
         
 # And add the extension to Krita's list of extensions:
