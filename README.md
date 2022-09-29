@@ -7,9 +7,11 @@ Dry paper (default shortcut: V)
 
 Basically it allows watercolor style. It's difficult to explain, so please refer to the video here: https://www.youtube.com/watch?v=Muz3o2Wuoi4
 
-Basically, with this system you can paint with a semi-transparent brush. If you lift the pen, and make another stroke, you don't see the "overlap". They merge together. Only when you press a shortcut to "dry the paper", subsequent strokes overlap. 
+Basically, with this technique, colors merge together instead of overlapping, until you decide to dry the paper. 
 
-You need to have two layers. The top layer needs to be partially transparent (typically from 50% to 75%). You need to only paint on the top layer. You need to use a completely opaque brush.
+More precisely: you can paint with a semi-transparent brush. If you lift the pen, and make another stroke, you don't see the "overlap". The strokes "merge together". Only when you press a shortcut to "dry the paper", subsequent strokes overlap. 
+
+Note: you need to have two layers. Put the two layers in a group. These need to be the only layers in that group. The top layer needs to be partially transparent (typically from 50% to 75%). You will only paint on the top layer. You need to use a completely opaque brush.
 
 
 LastColor (defaut shortcut: D)
