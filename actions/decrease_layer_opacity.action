@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
-        <text>Mix Color: pick 50% from canvas</text>
+        <text>Decrease layer opacity</text>
 
-        <Action name="MixColor">
+        <Action name="DecreaseLayerOpacity">
         <icon></icon>
-        <text>Pick 50% color from canvas and 50% from current fg color</text>
+        <text>Decrease layer opacity</text>
         <whatsThis></whatsThis>
         <toolTip></toolTip>
         <iconText></iconText>
         <activationFlags>0</activationFlags>
         <activationConditions>0</activationConditions>
-        <shortcut>x</shortcut>
+        <shortcut>a</shortcut>
         <isCheckable>false</isCheckable>
         <statusTip></statusTip>
         </Action>
