@@ -1004,63 +1004,60 @@ class MyExtension(Extension):
                 
         
                 
-        def viewSingleWindow(self):
+        def minimizeOnTopAndViewFullScreen(self):
                 app = Krita.instance()
-                
-                
-                print(f"windows = {app.windows()}")
-                
-                # for wi in app.windows():
-                        # print(f"wi views = {wi.views()}")
-                        # print (f"wi subwindows = {wi.qwindow().findChild(QMdiArea).subWindowList()}")
-                        
-                        # subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
-                        # firstsubwin = subwins[1]
-                        # firstsubwin.showMinimized()
-                        
-                
-                # mdi_area = firstWindow.findChild(QMdiArea)
-                # for sub_win in mdi_area.subWindowList():
-                        # print(sub_win)
-
-                
-                #currentDoc = app.activeDocument()
-                curWin = app.activeWindow()
-                wins = app.windows()
-                
-                
-                # dockers = app.dockers()
-                
-                # for d in dockers:
-                        # print (f"docker  {d.objectName()}")
-
-
-                # documents = app.documents()
-                
-                # for d in documents:
-                        # print (f"document {d.fileName()}")
-                
-                # views = app.views()
-                
-                # for v in views:
-                        
-                        # print(f"view: {v.document().fileName()}. win: {v.window().activeView().document().fileName()}")
-                
-                # #minimizzo tutte le finestre tranne quella attiva
-                for win in wins:
                                 
-                                print (f"win: {win.activeView().document().fileName()}")
-                                # print("flename2")
-                                # # print (curWin.activeView().document().fileName())
-                                
-                                # # if win.activeView().document() is   curWin.activeView().document():
-                                        # # print ("trovata")
-                                q_win = win.qwindow()
-                                mdi_area = q_win.findChild(QMdiArea)
-                                for sub_win in mdi_area.subWindowList():
-                                        sub_win.showMinimized()
+                # print(f"windows = {app.windows()}")                
+                # print(f"active window title = {app.activeWindow().qwindow().windowTitle()}")
+                
+                wi = app.activeWindow()
+                
+                
+                #for wi in app.windows():
+                # print(f"---------")
+                # print(f"window title = {wi.qwindow().windowTitle()}")
+                # print(f"wi views = {wi.views()}")
+                # print (f"wi subwindows = {wi.qwindow().findChild(QMdiArea).subWindowList()}")
+                
+                subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
+                
+                i = 0
+                
+                for su in subwins:
+                    flags = su.windowFlags()
+                    
+                    stayOnTop = False
+                    if su.windowFlags() & Qt.WindowStaysOnTopHint:
+                        stayOnTop = True
+                    else:
+                        stayOnTop = False
+                    
 
-                                #curWin.qwindow().showNormal()
+                    isMinimized = False
+                    if su.windowState() & Qt.WindowMinimized:
+                        isMinimized = True
+                    else:
+                        isMinimized = False
+
+                    print(f"subwindow title = {su.windowTitle()}, stay on top = {stayOnTop    }, minimized = {isMinimized}")
+
+                    
+                    if stayOnTop:
+                        if isMinimized:
+                            su.setWindowState(su.windowState() & ~Qt.WindowMinimized)
+                        else:
+                            su.setWindowState(su.windowState() | Qt.WindowMinimized)
+                    
+
+
+
+                # end for
+                
+                app.action('view_show_canvas_only').trigger()
+                app.activeDocument().waitForDone () # action needs to finish before continuing
+                
+                            
+                          
         
         def createActions(self, window):
         
@@ -1086,7 +1083,7 @@ class MyExtension(Extension):
                 action2.triggered.connect(self.layerMergeAndCreate)
 
                 action2 = window.createAction("ViewSingleWindow", "ViewSingleWindow")
-                action2.triggered.connect(self.viewSingleWindow)
+                action2.triggered.connect(self.minimizeOnTopAndViewFullScreen)
 
                 action2 = window.createAction("IncreaseLayerOpacity", "IncreaseLayerOpacity")
                 action2.triggered.connect(self.increaseLayerOpacity)
