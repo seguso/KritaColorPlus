@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
-        <text>Preview single window</text>
+        <text>Dry paper and pick color</text>
 
-        <Action name="ViewSingleWindow">
+        <Action name="DryPaperAndPick">
         <icon></icon>
-        <text>Minimize all always-on-top windows, then view full screen. Press again to restore previous state.</text>
+        <text>Dry the paper and pick color under cursor with a single key press</text>
         <whatsThis></whatsThis>
         <toolTip></toolTip>
         <iconText></iconText>
         <activationFlags>0</activationFlags>
         <activationConditions>0</activationConditions>
-        <shortcut>\</shortcut>
+        <shortcut>c</shortcut>
         <isCheckable>false</isCheckable>
         <statusTip></statusTip>
         </Action>

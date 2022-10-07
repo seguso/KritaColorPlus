@@ -3,6 +3,8 @@ from krita import *
 from krita import (
                 Krita,)
 
+from pathlib import Path
+    
 from PyQt5.QtCore import (
                 Qt,
                 QEvent,
@@ -17,26 +19,32 @@ from PyQt5.QtGui import (
                 QColor,
                 QPolygonF,
                 QInputEvent,
+                QKeyEvent,
                 QCursor)
 
 from PyQt5.QtWidgets import (
                 QWidget,
                 QMdiArea,
                 QTextEdit,
-                QAbstractScrollArea)
+                QAbstractScrollArea,
+                QAction, QMenu
+                
+                )
 
 
 # from PyQt5 import QtWidgets, QtCore, QtGui, uic
+import os
 import os.path
 import time
 import datetime
 import xml
 import math
+import json
 
 timeMessage = 300
 stepOpacity = 20
 
-g_mixing_step = 0.02
+g_mixing_step = 0.05
 
 g_step_mixing_target_distance = 2.5
 
@@ -44,6 +52,12 @@ g_step_mixing_target_distance = 2.5
 
 print(Krita.instance().filters())
 
+class Dict2Class(object):
+      
+    def __init__(self, my_dict):
+          
+        for key in my_dict:
+            setattr(self, key, my_dict[key])
 
 def minimize_views():
         """
@@ -266,6 +280,19 @@ def listEqual(l1,l2):
     # return rgb
     
     
+class Window:
+    x = 10
+    y = 20
+    wt = 30
+    ht = 40
+    name = "file.kra"
+    isMaximized = False
+    isMinimized = False
+    isAlwaysOnTop = False
+    fullPath = ""
+    
+class PluginState:
+    windows = []
     
 class MyExtension(Extension):
 
@@ -279,7 +306,7 @@ class MyExtension(Extension):
                 self.g_how_much_canvas_to_pick = 0.4
                 self.mix_radius = 2 # pixel
                 
-                #self.g_how_much_canvas_to_pick_old = 0.3
+                
                 
                 self.mixing_target_distance = 25.0
                 
@@ -289,10 +316,189 @@ class MyExtension(Extension):
                 # self.timer.timeout.connect(self.mixOnTimer)
                 # self.timer.start(40)
                 
-                print("LastColor init ok")
+                
+                # self.timer = QTimer()
+                # self.timer.timeout.connect(self.saveWindowPositions)
+                # self.timer.start(2000)
+                
+                
+            
+                home = str(Path.home())
+                
+                home= os.getenv('APPDATA')
+                
+                self.plugin_state_dir = f"{home}/plugin_krita_color_plus"
+                
+                self.filePathWindowState = f"{self.plugin_state_dir}/windowPositions.txt"
+                
+                
+                if not os.path.exists(self.plugin_state_dir):
+                
+                    os.mkdir(self.plugin_state_dir)
+                    
+                    
+                #Krita.instance().notifier().windowCreated.connect(self.onWindowCreated)
+                print(f"init ok. home = {home}")
 
+
+        
+        # def onWindowCreated(self):
+                # print("on window created  ")
+                
+                # window = Krita.instance().activeWindow()
+                # self.actionSave = window.createAction("saveWindowPositions", "Save window state")
+                # # menu = QtWidgets.QMenu("saveWindowPositions", window.qwindow())
+                # # action.setMenu(menu)
+                # self.actionSave.triggered.connect(self.saveWindowPositions)
+                
+                # # extractAction = QAction("Save window state")
+                # # extractAction.setShortcut("Ctrl+F")
+                # # extractAction.setStatusTip('Saves windows position and state')
+                # # extractAction.triggered.connect(self.saveWindowPositions)
+                
+                # # main_menu = Krita.instance().activeWindow().qwindow().menuBar()
+                # # custom_menu = main_menu.addMenu("ColorPlus")
+                # # custom_menu.addAction(extractAction)
 
                 
+
+                # print("on window created : ok")
+                
+
+
+        def saveWindowPositions(self):
+            wi = Krita.instance().activeWindow()
+            subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
+            
+            
+            fullPaths = []
+            for wi in Krita.instance().windows():
+                print(f"wi = {wi}  title = {wi.qwindow().windowTitle()}")
+                for vi in wi.views():
+                    print(f"view filename {vi.document().fileName()}")
+                    fullPaths.append(vi.document().fileName())
+            
+            
+            
+            windows = []
+            for su in subwins:
+                tit = su.windowTitle().replace(" *", "")
+                
+                path = [ fp for fp in fullPaths if fp.endswith(tit) ] [0]
+                print(f"window {tit}, position {su.pos()}")
+                newWin = Window()
+                newWin.x = su.pos().x()
+                newWin.y = su.pos().y()
+                newWin.wt = su.size().width()
+                newWin.ht = su.size().height()
+                newWin.fullPath = path
+                newWin.title = tit
+                newWin.isMaximized = True if su.windowState() & Qt.WindowMaximized else False
+                newWin.isMinimized = True if su.windowState() & Qt.WindowMinimized else False
+                newWin.isAlwaysOnTop = True if su.windowFlags() & Qt.WindowStaysOnTopHint else False
+                windows.append(newWin)
+                
+            js = json.dumps([ w.__dict__ for w in windows] )
+            
+            
+            
+            with open(self.filePathWindowState, 'w+') as f:
+                f.write(js)
+            print(f"dump json = {js}")
+
+            return js
+            
+        def restoreWindowPositionsOld(self): #relies on sessions to open the files
+        
+            #restore last saved window state
+            f = open(self.filePathWindowState)
+            windows = json.load(f)
+            print(f"roba letta: {windows}")
+            
+            
+
+            f.close()
+            
+            wi = Krita.instance().activeWindow()
+            subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
+            
+            
+            for w in windows:
+                w2 = Dict2Class(w)
+                print(f"titolo = {w2.title}, x = {w2.x}")
+                
+                for su in subwins:
+                    tit = su.windowTitle().replace(" *", "")
+                    if tit == w2.title:
+                        # devo settare questa finestra come era
+                        if w2.isMaximized: # se era massimizzata                    
+                            su.setWindowState(su.windowState() | Qt.WindowMaximized)  # la massimizzo
+                        else:
+                            su.setWindowState(su.windowState() & ~Qt.WindowMaximized)  # tolgo lo stato maximixed
+                            
+                        if w2.isAlwaysOnTop : # se era always on top
+                            su.setWindowFlags(su.windowFlags() | Qt.WindowStaysOnTopHint)  # la metto on top
+                        else:
+                            su.setWindowFlags(su.windowFlags() & ~Qt.WindowStaysOnTopHint)  # tolgo lo stato on top
+                        
+                        
+                        su.move( w2.x, w2.y)
+                        su.resize(w2.wt, w2.ht)
+        
+        def restoreWindowPositions(self):
+        
+            #restore last saved window state
+            f = open(self.filePathWindowState)
+            windows = json.load(f)
+            print(f"roba letta: {windows}")
+            
+            f.close()
+            
+            wi = Krita.instance().activeWindow()
+            subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
+            
+            
+            for w in windows:
+                w2 = Dict2Class(w)
+                print(f"titolo = {w2.title}, x = {w2.x}. opening document: {w2.fullPath}")
+            
+            
+                doc = Krita.instance().openDocument(w2.fullPath)
+                Krita.instance().activeWindow().addView(doc)
+                
+            # ora che ho aperto tutto, rifaccio il meccanismo precedente
+                
+            subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
+            
+            
+            for w in windows:
+                w2 = Dict2Class(w)
+                print(f"titolo = {w2.title}, x = {w2.x}")
+                
+                for su in subwins:
+                    tit = su.windowTitle().replace(" *", "")
+                    if tit == w2.title:
+                        # devo settare questa finestra come era
+                        if w2.isMaximized: # se era massimizzata                    
+                            su.setWindowState(su.windowState() | Qt.WindowMaximized)  # la massimizzo
+                        else:
+                            su.setWindowState(su.windowState() & ~Qt.WindowMaximized)  # tolgo lo stato maximixed
+                            
+                            
+                        if w2.isMinimized: 
+                            su.setWindowState(su.windowState() | Qt.WindowMinimized)  
+                        else:
+                            su.setWindowState(su.windowState() & ~Qt.WindowMinimized)  
+                            
+                        if w2.isAlwaysOnTop : # se era always on top
+                            su.setWindowFlags(su.windowFlags() | Qt.WindowStaysOnTopHint)  # la metto on top
+                        else:
+                            su.setWindowFlags(su.windowFlags() & ~Qt.WindowStaysOnTopHint)  # tolgo lo stato on top
+                        
+                        
+                        su.move( w2.x, w2.y)
+                        su.resize(w2.wt, w2.ht)
+        
         def setup(self):
                 
                 
@@ -399,7 +605,7 @@ class MyExtension(Extension):
                                 #self.timer_hm.stop()
                                 raise
 
-        def mixOld(self):
+        def mixOldSingleLayer(self):
                 app = Krita.instance()
                 win = app.activeWindow()
                 if win is not None:
@@ -436,7 +642,7 @@ class MyExtension(Extension):
 
                 
 
-        def mixFgColorWithBgColor(self):
+        def mixFgColorWithBgColor_distanceLogic(self):
                 app = Krita.instance()
                 win = app.activeWindow()
                 if win is not None:
@@ -560,6 +766,80 @@ class MyExtension(Extension):
                                                 else:
                                                     view.showFloatingMessage(f"Picked a bit of color from canvas. Distance: {round(curDist)}", QIcon(), timeMessage, 1)
                                                 
+        def mixFgColorWithBgColor_normalLogic(self):
+                app = Krita.instance()
+                win = app.activeWindow()
+                if win is not None:
+                        view = win.activeView()
+                        if view is not None:
+                                document = view.document()
+                                if document:
+                                        center = QPointF(0.5 * document.width(), 0.5 * document.height())
+                                        p = get_cursor_in_document_coords()
+                                        
+                                        doc_pos = p + center
+                                        print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
+                                        
+                                        
+                                        parentNode = document.activeNode().parentNode()
+                                        
+                                        
+                                        if parentNode is not None:
+                                        
+                                                brothers = parentNode.childNodes()
+                                                colors = []
+                                                
+                                                #costruisco colors
+                                                for curLayer in brothers:
+                                                
+                                                        self.pixelBytes = curLayer.pixelData(doc_pos.x(), doc_pos.y(), 1, 1)
+                                                        
+                                                        self.imageData = QImage(self.pixelBytes, 1, 1, QImage.Format_RGBA8888)
+                                                        self.pixelC = self.imageData.pixelColor(0,0)
+                                                        
+                                                        # devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
+                                                        if curLayer.uniqueId() == document.activeNode().uniqueId():
+                                                            correzMul = 1.0
+                                                        else:
+                                                            layerOpac = curLayer.opacity() # tra  0 e 255
+                                                            correzMul = float(layerOpac) /  255.0
+                                                        
+
+                                                        print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
+                                                        
+                                                        colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha() * correzMul ))
+                                                
+                                                #creo il colore composito dei layer. questo è il bgcolor                                                
+                                                bgColor = calcolaCompositeColor(colors)
+                                                bgColor.print("bgColor")
+                                                                
+                                                
+                                                fg = view.foregroundColor() 
+                                                comp = fg.components() 
+                                                
+                                                canv = self.g_how_much_canvas_to_pick
+                                                
+                                                
+                                                fgMul = 1.0 - canv
+                                                comp[0] = comp[0] * fgMul + (bgColor.r / 255.0)  * canv
+                                                comp[1] = comp[1] * fgMul + (bgColor.g / 255.0)  * canv
+                                                comp[2] = comp[2] * fgMul + (bgColor.b  / 255.0)  * canv
+                                                
+                                            
+                                          
+                                                fg.setComponents(comp)
+                                                
+                                                view.setForeGroundColor(fg)
+                                                
+                                                
+                                                # setto anche il virtual fg color al result del mix
+                                                self.last_color_picked = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
+                                                
+                                                
+                                                
+                                                # messaggio
+                                                
+                                                quickMessage(f"Picked {round(canv * 100)}%  color from the canvas.")
                                                 
 
         def mixOnTimer(self):
@@ -665,23 +945,25 @@ class MyExtension(Extension):
                                                 
 
                 
-        def mixSmall(self):
-                return self.mix(0.66)  #0.66 from canvas
+        # def mixSmall(self):
+                # return self.mix(0.66)  #0.66 from canvas
                 
-        def mixBig(self):
-                return self.mix( 0.33)  #0.33 from canvas
+        # def mixBig(self):
+                # return self.mix( 0.33)  #0.33 from canvas
         
-        # def mixHalf(self):
-                # return self.mix( self.g_how_much_canvas_to_pick_old) 
                                    
-        def pick(self):
+        def pick(self, showMessage = True):
+                # print("pick called")
                 app = Krita.instance()
                 win = app.activeWindow()
                 if win is not None:
+                        # print("pick called 1")
                         view = win.activeView()
                         if view is not None:
+                                # print("pick called 2")
                                 document = view.document()
                                 if document:
+                                        print("pick called 3")
                                         center = QPointF(0.5 * document.width(), 0.5 * document.height())
                                         p = get_cursor_in_document_coords()
                                         doc_pos = p + center
@@ -691,7 +973,7 @@ class MyExtension(Extension):
                                         
                                         
                                         if parentNode is not None:
-                                        
+                                                print("pick called 4")
                                                 brothers = parentNode.childNodes()
                                                 colors = []
                                                 
@@ -704,12 +986,12 @@ class MyExtension(Extension):
                                                         self.pixelC = self.imageData.pixelColor(0,0) # valori tra 0 e 255
 
                                                         # devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
-                                                        if curLayer.uniqueId() == document.activeNode().uniqueId():
-                                                            correzMul = 1.0
-                                                        else:
-                                                            layerOpac = curLayer.opacity() # tra  0 e 255
-                                                            correzMul = float(layerOpac) /  255.0
-                                                            
+                                                        # if curLayer.uniqueId() == document.activeNode().uniqueId():
+                                                            # correzMul = 1.0
+                                                        # else:
+                                                        layerOpac = curLayer.opacity() # tra  0 e 255
+                                                        correzMul = float(layerOpac) /  255.0
+                                                        
                                                         
 
                                                         print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
@@ -752,60 +1034,52 @@ class MyExtension(Extension):
                                                 view.setForeGroundColor(fg)
 
                                                 # messaggio
-                                                view.showFloatingMessage("Pick color", QIcon(), timeMessage, 1)
+                                                if showMessage:
+                                                    view.showFloatingMessage("Pick color", QIcon(), timeMessage, 1)
                                                 
         
         
         
-        # def increaseMixing(self):
-                # self.g_how_much_canvas_to_pick += g_mixing_step
-                # if self.g_how_much_canvas_to_pick > 1.0:
-                        # self.g_how_much_canvas_to_pick = 1.0
+        def increaseMixing(self):
+                self.g_how_much_canvas_to_pick += g_mixing_step
+                if self.g_how_much_canvas_to_pick > 1.0:
+                        self.g_how_much_canvas_to_pick = 1.0
                         
                         
-                # quickMessage(f"Increased mixing to {self.g_how_much_canvas_to_pick}")
+                quickMessage(f"Increased mixing to {round(self.g_how_much_canvas_to_pick* 100.0)}%")
         
-        # def decreaseMixing(self):
-                # self.g_how_much_canvas_to_pick -= g_mixing_step
-                # if self.g_how_much_canvas_to_pick < 0.0:
-                        # self.g_how_much_canvas_to_pick = 0.0
+        def decreaseMixing(self):
+                self.g_how_much_canvas_to_pick -= g_mixing_step
+                if self.g_how_much_canvas_to_pick < 0.0:
+                        self.g_how_much_canvas_to_pick = 0.0
                         
-                # quickMessage(f"Decreased mixing to {self.g_how_much_canvas_to_pick}")
+                quickMessage(f"Decreased mixing to {round(self.g_how_much_canvas_to_pick * 100.0)}%")
         
 
-        # def increaseMixingOrig(self):
-                # self.g_how_much_canvas_to_pick_old += g_mixing_step
-                # if self.g_how_much_canvas_to_pick_old > 1.0:
-                        # self.g_how_much_canvas_to_pick_old = 1.0
-                        
-                        
-                # quickMessage(f"Increased mixing to {self.g_how_much_canvas_to_pick_old }")
         
-        # def decreaseMixingOrig(self):
-                # self.g_how_much_canvas_to_pick_old -= g_mixing_step
-                # if self.g_how_much_canvas_to_pick_old < 0.0:
-                        # self.g_how_much_canvas_to_pick_old = 0.0
+
+        # def increaseMixing_targetLogic(self):
+                # self.mixing_target_distance += g_step_mixing_target_distance
+                # if self.mixing_target_distance > 255.0:
+                        # self.mixing_target_distance = 255.0
                         
-                # quickMessage(f"Decreased mixing to {self.g_how_much_canvas_to_pick_old}")
+                        
+                # quickMessage(f"Increased mixing. Target distance from fg color: {round(self.mixing_target_distance )}")
         
-        def increaseMixingOrig(self):
-                self.mixing_target_distance += g_step_mixing_target_distance
-                if self.mixing_target_distance > 255.0:
-                        self.mixing_target_distance = 255.0
+        # def decreaseMixing_targetLogic(self):
+                # self.mixing_target_distance -= g_step_mixing_target_distance
+                # if self.mixing_target_distance < 0.0:
+                        # self.mixing_target_distance = 0.0
                         
-                        
-                quickMessage(f"Increased mixing. Target distance from fg color: {round(self.mixing_target_distance )}")
-        
-        def decreaseMixingOrig(self):
-                self.mixing_target_distance -= g_step_mixing_target_distance
-                if self.mixing_target_distance < 0.0:
-                        self.mixing_target_distance = 0.0
-                        
-                quickMessage(f"Decreased mixing. Target distance from fg color: {round(self.mixing_target_distance)}")
+                # quickMessage(f"Decreased mixing. Target distance from fg color: {round(self.mixing_target_distance)}")
+
                 
         def increaseLayerOpacity(self):
         
-                #self.layerMergeAndCreate() # conviene, perche' tanto significa che i segni precedenti non si vedono.
+        
+
+                
+                #self.dryPaper() # conviene, perche' tanto significa che i segni precedenti non si vedono.
                 
                 application = Krita.instance()
                 currentDoc = application.activeDocument()
@@ -840,7 +1114,7 @@ class MyExtension(Extension):
                 # blurFilter = application.filter('gaussian blur')
                 # blurFilter.apply(activeLayer, 0, 0, 3000, 2000)
                 
-                #self.layerMergeAndCreate() # conviene, perche' tanto significa che i segni precedenti non si vedono.
+                #self.dryPaper() # conviene, perche' tanto significa che i segni precedenti non si vedono.
                 
                 application = Krita.instance()
                 currentDoc = application.activeDocument()
@@ -917,7 +1191,12 @@ class MyExtension(Extension):
                                         
                                         tmpDoc.close()
                                         
-        def layerMergeAndCreate(self):
+                                        
+        def dryPaperWithMessage(self):
+            self.dryPaper(True)
+            
+        def dryPaper(self, showMessage = True):
+                print(f"dry paper called showMessage = {showMessage}")
                 application = Krita.instance()
                 currentDoc = application.activeDocument()
                 activeLayer = currentDoc.activeNode()
@@ -927,7 +1206,8 @@ class MyExtension(Extension):
                 # selectionStroke = currentDoc.selection()
                 
                 parentNode = activeLayer.parentNode()
-                if parentNode is not None:
+                if parentNode is not None:  
+                        print("dry paper called1")
                         oldOpacity = activeLayer.opacity()
                         activeLayer.mergeDown()
                         root = currentDoc.rootNode()
@@ -999,11 +1279,22 @@ class MyExtension(Extension):
                         
                 #test blur        
                 
-                application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
+                if showMessage:
+                    print("dry paper called message")
+                    quickMessage("Dry paper")
+                    #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
                         
                 
         
-                
+        def dryPaperAndPick(self):
+            print("dry paper and pick")
+            
+            #non funziona se inverto l'ordine... non capisco perche'
+            self.pick(showMessage = False)
+            
+            self.dryPaper(showMessage = False)
+            quickMessage("Dry paper and pick color")
+            
         def minimizeOnTopAndViewFullScreen(self):
                 app = Krita.instance()
                                 
@@ -1021,7 +1312,24 @@ class MyExtension(Extension):
                 
                 subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
                 
-                i = 0
+                
+                
+                app.action('view_show_canvas_only').trigger()
+                app.activeDocument().waitForDone () # action needs to finish before continuing
+                
+                
+                #workaround per mancanza di fit to page
+                app.action('zoom_to_100pct').trigger()
+                app.activeDocument().waitForDone () # action needs to finish before continuing
+                
+                app.action('toggle_zoom_to_fit').trigger()
+                app.activeDocument().waitForDone () # action needs to finish before continuing
+                
+                
+                
+                
+                # ordina le finestre in modo che la always on top sia per prima, altrimenti poi l'action fit to window avviene alla finestra sbagliata.
+                
                 
                 for su in subwins:
                     flags = su.windowFlags()
@@ -1048,13 +1356,12 @@ class MyExtension(Extension):
                         else:
                             su.setWindowState(su.windowState() | Qt.WindowMinimized)
                     
-
+                    # if not isMinimized:
+                        # su.showFullScreen()
 
 
                 # end for
                 
-                app.action('view_show_canvas_only').trigger()
-                app.activeDocument().waitForDone () # action needs to finish before continuing
                 
                             
                           
@@ -1063,7 +1370,7 @@ class MyExtension(Extension):
         
 
 
-                action = window.createAction("LastColor", "LastColor")
+                action = window.createAction("LastColor", "Switch to last used color")
                 action.triggered.connect(self.switchToLastColor)
                 
                 # action2 = window.createAction("MixColorBig", "MixColorBig")
@@ -1073,31 +1380,62 @@ class MyExtension(Extension):
                 # action2.triggered.connect(self.mixSmall)
 
 
-                action2 = window.createAction("MixColor", "MixColor")
-                action2.triggered.connect(self.mixFgColorWithBgColor)
+                actionMix = window.createAction("MixColor", "Pick some color from canvas and mix with fg color")
+                actionMix.triggered.connect(self.mixFgColorWithBgColor_normalLogic)
                 
-                action2 = window.createAction("PickColor", "PickColor")
-                action2.triggered.connect(self.pick)
+                actionMix = window.createAction("DryPaperAndPick", "Dry the paper and pick color under cursor with a single key press")
+                actionMix.triggered.connect(self.dryPaperAndPick)
+                
+                
+                actionPick = window.createAction("PickColor", "Pick color under cursor")
+                actionPick.triggered.connect(self.pick)
 
-                action2 = window.createAction("LayerMergeDownAndNew", "LayerMergeDownAndNew")
-                action2.triggered.connect(self.layerMergeAndCreate)
+                actionDryPaper = window.createAction("LayerMergeDownAndNew", "Dry the paper")
+                actionDryPaper.triggered.connect(self.dryPaperWithMessage)
 
-                action2 = window.createAction("ViewSingleWindow", "ViewSingleWindow")
-                action2.triggered.connect(self.minimizeOnTopAndViewFullScreen)
+                actionViewFullScreen = window.createAction("ViewSingleWindow", "Hide always on top windows and go fullscreen")
+                actionViewFullScreen.triggered.connect(self.minimizeOnTopAndViewFullScreen)
 
-                action2 = window.createAction("IncreaseLayerOpacity", "IncreaseLayerOpacity")
-                action2.triggered.connect(self.increaseLayerOpacity)
+                actionIncreaseLO = window.createAction("IncreaseLayerOpacity", "Increase current layer opacity")
+                actionIncreaseLO.triggered.connect(self.increaseLayerOpacity)
 
-                action2 = window.createAction("DecreaseLayerOpacity", "DecreaseLayerOpacity")
-                action2.triggered.connect(self.decreaseLayerOpacity)
+                actiondeclo = window.createAction("DecreaseLayerOpacity", "Decrease current layer opacity")
+                actiondeclo.triggered.connect(self.decreaseLayerOpacity)
 
 
-                action2 = window.createAction("IncreaseMixing", "IncreaseMixing")
-                action2.triggered.connect(self.increaseMixingOrig)
+                actionincmi = window.createAction("IncreaseMixing", "Increase amount of color you pick from canvas")
+                actionincmi.triggered.connect(self.increaseMixing)
 
-                action2 = window.createAction("DecreaseMixing", "DecreaseMixing")
-                action2.triggered.connect(self.decreaseMixingOrig)
+                actiondecmi = window.createAction("DecreaseMixing", "Decrease amount of color you pick from canvas")
+                actiondecmi.triggered.connect(self.decreaseMixing)
 
+
+                actionSave = window.createAction("saveWindowPositions", "Save state and position of all windows")
+                actionSave.setShortcut("Ctrl+Shift+F")
+                actionSave.triggered.connect(self.saveWindowPositions)
+                
+                actionRestore = window.createAction("restoreWindowPositions", "Restore state and position of all windows")
+                actionRestore.setShortcut("Ctrl+Shift+R")
+                actionRestore.triggered.connect(self.restoreWindowPositions)
+                
+
+                
+                main_menu = window.qwindow().menuBar()
+                custom_menu = main_menu.addMenu("ColorPlus")
+                custom_menu.addAction(actionDryPaper)
+                custom_menu.addAction(actionRestore)
+                custom_menu.addAction(actionSave)
+                custom_menu.addAction(actionPick)
+                custom_menu.addAction(actionMix)
+                custom_menu.addAction(actionViewFullScreen)
+                custom_menu.addAction(actionIncreaseLO)
+                custom_menu.addAction(actiondeclo)
+                custom_menu.addAction(actionincmi)
+                custom_menu.addAction(actiondecmi)
+                
+
+                
+                
 # And add the extension to Krita's list of extensions:
 Krita.instance().addExtension(MyExtension(Krita.instance()))
 

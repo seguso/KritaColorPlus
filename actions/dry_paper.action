@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
-        <text>Merge down and new</text>
+        <text>Dry paper</text>
 
         <Action name="LayerMergeDownAndNew">
         <icon></icon>
-        <text>Merge down the current layer and create a new semitransparent layer</text>
+        <text>Dry the paper. Requires two layers, see manual</text>
         <whatsThis></whatsThis>
         <toolTip></toolTip>
         <iconText></iconText>
         <activationFlags>0</activationFlags>
         <activationConditions>0</activationConditions>
-        <shortcut>f</shortcut>
+        <shortcut>d</shortcut>
         <isCheckable>false</isCheckable>
         <statusTip></statusTip>
         </Action>

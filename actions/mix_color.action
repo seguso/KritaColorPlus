@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
-        <text>Mix Color: pick 50% from canvas</text>
+        <text>Mix Color</text>
 
         <Action name="MixColor">
         <icon></icon>
-        <text>Pick 50% color from canvas and 50% from current fg color</text>
+        <text>Pick some color from the canvas</text>
         <whatsThis></whatsThis>
         <toolTip></toolTip>
         <iconText></iconText>
