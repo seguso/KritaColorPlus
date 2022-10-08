@@ -50,7 +50,7 @@ g_step_mixing_target_distance = 2.5
 
 
 
-print(Krita.instance().filters())
+#print(Krita.instance().filters())
 
 class Dict2Class(object):
       
@@ -58,6 +58,18 @@ class Dict2Class(object):
           
         for key in my_dict:
             setattr(self, key, my_dict[key])
+
+
+def messageBox(txt):
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Information)
+    msg.setText(txt)
+    # msg.setInformativeText()
+    msg.setWindowTitle("ColorPlus")
+    #msg.setDetailedText("The details are as follows:")
+    msg.setStandardButtons(QMessageBox.Ok )
+    msg.exec_()
+    
 
 def minimize_views():
         """
@@ -300,6 +312,7 @@ class MyExtension(Extension):
                 # This is initialising the parent, always important when subclassing.
                 super().__init__(parent)
                 
+                self.inited = False
                 
                 self.last_color_picked = None # di tipo rgb
                 
@@ -336,35 +349,34 @@ class MyExtension(Extension):
                 
                     os.mkdir(self.plugin_state_dir)
                     
-                    
-                #Krita.instance().notifier().windowCreated.connect(self.onWindowCreated)
+                
+                Krita.instance().notifier().windowCreated.connect(self.onWindowCreated)
                 print(f"init ok. home = {home}")
 
 
         
-        # def onWindowCreated(self):
-                # print("on window created  ")
-                
-                # window = Krita.instance().activeWindow()
-                # self.actionSave = window.createAction("saveWindowPositions", "Save window state")
-                # # menu = QtWidgets.QMenu("saveWindowPositions", window.qwindow())
-                # # action.setMenu(menu)
-                # self.actionSave.triggered.connect(self.saveWindowPositions)
-                
-                # # extractAction = QAction("Save window state")
-                # # extractAction.setShortcut("Ctrl+F")
-                # # extractAction.setStatusTip('Saves windows position and state')
-                # # extractAction.triggered.connect(self.saveWindowPositions)
-                
-                # # main_menu = Krita.instance().activeWindow().qwindow().menuBar()
-                # # custom_menu = main_menu.addMenu("ColorPlus")
-                # # custom_menu.addAction(extractAction)
-
+        def onWindowCreated(self): #called by framework
+                print("on window created  ")
                 
 
-                # print("on window created : ok")
+                self.currentColor = [255,255,255,0]
+                self.previousColor = [255,255,20,0]
+                # self.inited = False
+                                
+                app = Krita.instance()
+                history_docker = next((d for d in app.dockers() if d.objectName() == 'History'), None)
+                kis_undo_view = next((v for v in history_docker.findChildren(QListView) if v.metaObject().className() == 'KisUndoView'), None)
+                s_model = kis_undo_view.selectionModel()
+                s_model.currentChanged.connect(self._on_history_was_made)
+                
+                self.inited = True;
+                print ("swap: initialized")
                 
 
+                print("on window created : ok")
+                
+        def setup(self): #called by framework
+            print("setup called")
 
         def saveWindowPositions(self):
             wi = Krita.instance().activeWindow()
@@ -448,67 +460,79 @@ class MyExtension(Extension):
         def restoreWindowPositions(self):
         
             #restore last saved window state
-            f = open(self.filePathWindowState)
-            windows = json.load(f)
-            print(f"roba letta: {windows}")
-            
-            f.close()
-            
-            wi = Krita.instance().activeWindow()
-            subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
-            
-            
-            for w in windows:
-                w2 = Dict2Class(w)
-                print(f"titolo = {w2.title}, x = {w2.x}. opening document: {w2.fullPath}")
-            
-            
-                doc = Krita.instance().openDocument(w2.fullPath)
-                Krita.instance().activeWindow().addView(doc)
+            try:
+                f = open(self.filePathWindowState)
+                windows = json.load(f)
+                print(f"roba letta: {windows}")
                 
-            # ora che ho aperto tutto, rifaccio il meccanismo precedente
+                f.close()
                 
-            subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
-            
-            
-            for w in windows:
-                w2 = Dict2Class(w)
-                print(f"titolo = {w2.title}, x = {w2.x}")
+                wi = Krita.instance().activeWindow()
+                subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
                 
-                for su in subwins:
-                    tit = su.windowTitle().replace(" *", "")
-                    if tit == w2.title:
-                        # devo settare questa finestra come era
-                        if w2.isMaximized: # se era massimizzata                    
-                            su.setWindowState(su.windowState() | Qt.WindowMaximized)  # la massimizzo
-                        else:
-                            su.setWindowState(su.windowState() & ~Qt.WindowMaximized)  # tolgo lo stato maximixed
-                            
-                            
-                        if w2.isMinimized: 
-                            su.setWindowState(su.windowState() | Qt.WindowMinimized)  
-                        else:
-                            su.setWindowState(su.windowState() & ~Qt.WindowMinimized)  
-                            
-                        if w2.isAlwaysOnTop : # se era always on top
-                            su.setWindowFlags(su.windowFlags() | Qt.WindowStaysOnTopHint)  # la metto on top
-                        else:
-                            su.setWindowFlags(su.windowFlags() & ~Qt.WindowStaysOnTopHint)  # tolgo lo stato on top
+                # open all files
+                for w in windows:
+                    w2 = Dict2Class(w)
+                    print(f"titolo = {w2.title}, x = {w2.x}. opening document: {w2.fullPath}")
+                
+                    alreadyOpen = False
+                    for su in subwins:
+                            tit = su.windowTitle().replace(" *", "")
+                            if tit == w2.title:
+                                alreadyOpen = True
+                                
+                    if not alreadyOpen:
+                        doc = Krita.instance().openDocument(w2.fullPath)
+                        Krita.instance().activeWindow().addView(doc)
+
+
                         
-                        
-                        su.move( w2.x, w2.y)
-                        su.resize(w2.wt, w2.ht)
-        
-        def setup(self):
+                # all needed files are open. Set attributes, like maximized and always on top
+                    
+                
+                # subwins have changed. reload them
+                subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
+                
+                for w in windows:
+                    w2 = Dict2Class(w)
+                    print(f"titolo = {w2.title}, x = {w2.x}")
+                    
+                    for su in subwins:
+                        tit = su.windowTitle().replace(" *", "")
+                        if tit == w2.title:
+                            # devo settare questa finestra come era
+                            if w2.isMaximized: # se era massimizzata                    
+                                su.setWindowState(su.windowState() | Qt.WindowMaximized)  # la massimizzo
+                            else:
+                                su.setWindowState(su.windowState() & ~Qt.WindowMaximized)  # tolgo lo stato maximixed
+                                
+                                
+                            if w2.isMinimized: 
+                                su.setWindowState(su.windowState() | Qt.WindowMinimized)  
+                            else:
+                                su.setWindowState(su.windowState() & ~Qt.WindowMinimized)  
+                                
+                            if w2.isAlwaysOnTop : # se era always on top
+                                su.setWindowFlags(su.windowFlags() | Qt.WindowStaysOnTopHint)  # la metto on top
+                            else:
+                                su.setWindowFlags(su.windowFlags() & ~Qt.WindowStaysOnTopHint)  # tolgo lo stato on top
+                            
+                            
+                            su.move( w2.x, w2.y)
+                            su.resize(w2.wt, w2.ht)
+            except FileNotFoundError:
+                messageBox(f"The file where the window state is stored was not found: \n\n{self.filePathWindowState } \n\nYou need to save the windows state first. Then the file will be created.")
+                
+        # def setup(self):
                 
                 
                 
                 
-                self.currentColor = [0,0,0,0]
-                self.previousColor = [0,0,0,0]
-                self.inited = False
+                # self.currentColor = [0,0,0,0]
+                # self.previousColor = [0,0,0,0]
+                # self.inited = False
                 
-                print("LastColor setup ok")
+                # print("LastColor setup ok")
                 
                 
                 
@@ -525,15 +549,17 @@ class MyExtension(Extension):
                         # print(x)
         
                         pos = QtGui.QCursor.pos()
-                        print("cursor absolute = ", pos)
+                        # print("cursor absolute = ", pos)
 
                         win = Krita.instance().activeWindow().qwindow().mapFromGlobal(pos);
 
-                        print("cursor mapped = ", win)
+                        # print("cursor mapped = ", win)
         
                         acView = Krita.instance().activeWindow().activeView()
                         if not self.inited:
-                                print ("swap: initializing...")
+                                quickMessage ("LastColor not yet initialized")
+                                
+                                # print ("swap: initializing...")
                                 
                                 
                                 
@@ -543,16 +569,16 @@ class MyExtension(Extension):
                                 
                                 
                                 
-                                app = Krita.instance()
-                                history_docker = next((d for d in app.dockers() if d.objectName() == 'History'), None)
-                                kis_undo_view = next((v for v in history_docker.findChildren(QListView) if v.metaObject().className() == 'KisUndoView'), None)
-                                s_model = kis_undo_view.selectionModel()
-                                s_model.currentChanged.connect(self._on_history_was_made)
+                                # app = Krita.instance()
+                                # history_docker = next((d for d in app.dockers() if d.objectName() == 'History'), None)
+                                # kis_undo_view = next((v for v in history_docker.findChildren(QListView) if v.metaObject().className() == 'KisUndoView'), None)
+                                # s_model = kis_undo_view.selectionModel()
+                                # s_model.currentChanged.connect(self._on_history_was_made)
                                 
-                                self.inited = True;
-                                print ("swap: initialized")
+                                # self.inited = True;
+                                # print ("swap: initialized")
                                 
-                                acView.showFloatingMessage("Last color initialized. Press again to use.", QIcon(), timeMessage * 2, 1)
+                                # acView.showFloatingMessage("Last color initialized. Press again to use.", QIcon(), timeMessage * 2, 1)
                         else:
                                 
                                 
@@ -600,8 +626,8 @@ class MyExtension(Extension):
                                 
 
                                 
-                except:
-                                print("found error")
+                except Exception as e:
+                                print(f"found error: {e}")
                                 #self.timer_hm.stop()
                                 raise
 
@@ -1356,8 +1382,11 @@ class MyExtension(Extension):
                         else:
                             su.setWindowState(su.windowState() | Qt.WindowMinimized)
                     
-                    # if not isMinimized:
-                        # su.showFullScreen()
+                    if not isMinimized:
+                        
+                        q_win = wi.qwindow()
+                        mdi_area = q_win.findChild(QMdiArea)
+                        mdi_area.setActiveSubWindow(su)
 
 
                 # end for
@@ -1365,7 +1394,24 @@ class MyExtension(Extension):
                 
                             
                           
+        # def setup(self):
         
+                # try:
+                    # print ("swap: initializing plugin LastColor...")
+                    
+                    # # app = Krita.instance()
+                    # # history_docker = next((d for d in app.dockers() if d.objectName() == 'History'), None)
+                    # # kis_undo_view = next((v for v in history_docker.findChildren(QListView) if v.metaObject().className() == 'KisUndoView'), None)
+                    # # s_model = kis_undo_view.selectionModel()
+                    # # s_model.currentChanged.connect(self._on_history_was_made)
+                    
+                    # # self.inited = True;
+                    # # print ("swap: initialized")
+                
+                # except Exception as e:
+                    # print(f"errore trovato in setup {e}")
+                    
+                                
         def createActions(self, window):
         
 
@@ -1432,6 +1478,9 @@ class MyExtension(Extension):
                 custom_menu.addAction(actiondeclo)
                 custom_menu.addAction(actionincmi)
                 custom_menu.addAction(actiondecmi)
+
+
+            
                 
 
                 
