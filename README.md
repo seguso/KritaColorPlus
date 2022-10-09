@@ -1,4 +1,4 @@
-This plugin contains 4 actions that can be assigned to 4 different shortcuts. 
+This plugin contains several actions that can be assigned to different shortcuts. 
 
 Here is a video to illustrate all the functions: https://www.youtube.com/watch?v=Muz3o2Wuoi4
 
@@ -43,17 +43,20 @@ Special usage: in conjunction with the PickColor action (bound to the C key, see
 
 
 
-Pick Color (default shortcut: shift+C)
+Pick Color (default shortcut: F)
 ==========
 
-Originally, this function was assigned to C by default. Now I suggest to use "dry paper and pick color", so this action is assigned to shift+C because you will use it rarely.
+This is an easier way to pick a color from the canvas, easier than CTRL+click. You just position the mouse/pen on a pixel and press F. No need to hold a key. Once you get used to it, you'll never want to go back. Especially useful for pixel art, where it's clear what color your cursor is hovering.
 
-Originally, this was an easier way to pick a color from the canvas, easier than CTRL+click. You just position the mouse/pen on a pixel and press C. No need to hold a key. Once you get used to it, you'll never want to go back. Especially useful for pixel art, where it's clear what color your cursor is hovering.
+Originally, this function was assigned to C by default, which is easier to press than F. Now I suggest to use "dry paper and pick color", so this action is assigned to F by default. If you prefer to use "pick" instead of "dry and pick" (for example because you don't use the watercolor system with the dry paper technique), you may want to reassign this to C.
+
+
+
 
 Dry paper and pick color (default shortcut: C)
 ===================
 
-If you are using a watercolor style, usually when you change color you also want to dry the paper, so I created this shortcut that does both things at once.
+If you are using a watercolor style, usually when you change color you also want to dry the paper, so I created this shortcut that does both things at once. It is like pressing F and D in sequence.
 
 
 INSTALLATION

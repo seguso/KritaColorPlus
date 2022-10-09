@@ -11,7 +11,7 @@
         <iconText></iconText>
         <activationFlags>0</activationFlags>
         <activationConditions>0</activationConditions>
-        <shortcut>shift+c</shortcut>
+        <shortcut>f</shortcut>
         <isCheckable>false</isCheckable>
         <statusTip></statusTip>
         </Action>
