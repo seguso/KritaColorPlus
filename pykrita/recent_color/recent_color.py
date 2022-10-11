@@ -482,7 +482,24 @@ class MyExtension(Extension):
                 wi = Krita.instance().activeWindow()
                 subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
                 
-                # open all files
+                
+                # sort the windows so that the always on top is restored first, otherwise if it's last you don't see the correct layers in the layer list, after I do setActiveSubWindow below.
+                def sortFun(wi):
+                    w2 = Dict2Class(wi)
+                    if w2.isAlwaysOnTop:
+                        return -1
+                    else:
+                        return 1
+                        
+                        
+                windows.sort(key = sortFun)
+                print(f"sorted: {windows}")    
+                
+                
+                
+                
+                    
+                # open all files in the correct order
                 for w in windows:
                     w2 = Dict2Class(w)
                     print(f"titolo = {w2.title}, x = {w2.x}. opening document: {w2.fullPath}")
@@ -534,7 +551,7 @@ class MyExtension(Extension):
                             su.resize(w2.wt, w2.ht)
                             
                             
-                #I activate any window that is not on top and not minimized
+                #I activate any window that is not on top and not minimized. this still leaves the layers of the wrong window in the layer list, therefore I sorted them previously
                 for su in subwins:
                     flags = su.windowFlags()
                     
@@ -558,6 +575,12 @@ class MyExtension(Extension):
                         mdi_area = q_win.findChild(QMdiArea)
                         mdi_area.setActiveSubWindow(su)
 
+
+
+
+                # application = Krita.instance()
+                # currentDoc = application.activeDocument()
+                # currentDoc.refreshProjection()           #altrimenti non si aggiorna
 
             except FileNotFoundError:
                 messageBox(f"The file where the window state is stored was not found: \n\n{self.filePathWindowState } \n\nYou need to save the windows state first. Then the file will be created.")
@@ -728,7 +751,7 @@ class MyExtension(Extension):
                     else:
                         self.temp_switched_to_25_previous_opac = activeLayer.opacity()
                     
-                    activeLayer.setOpacity(25.0 * 255.0 / 200.0)
+                    activeLayer.setOpacity(25.0 * 255.0 / 100.0)
                     
                     
                     quickMessage(f"Temporarily set 25% opacity. Press again to restore.")
