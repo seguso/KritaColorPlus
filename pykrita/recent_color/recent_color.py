@@ -314,17 +314,29 @@ class MyExtension(Extension):
                 
                 self.inited = False
                 
-                self.last_color_picked = None # di tipo rgb
                 
-                self.g_how_much_canvas_to_pick = 0.4
+                
+                strHowMuch = Krita.instance().readSetting("colorPlus", "g_how_much_canvas_to_pick","0.45")
+                self.g_how_much_canvas_to_pick = float(strHowMuch)
+                
+                
+                # dev values , only read when timer is active
+                self.last_color_picked = None # di tipo rgb
+                self.g_how_much_canvas_to_pick_on_timer = 0.8
+                
+                
                 self.mix_radius = 2 # pixel
                 
+                self.temp_switched_to_100_previous_opac = None
                 
+                self.temp_switched_to_25_previous_opac = None
                 
                 self.mixing_target_distance = 25.0
                 
                 self.correct_color_for_transparency = True
-                # creo il timer per il mixing
+                
+                
+                #creo il timer per il mixing
                 # self.timer = QTimer()
                 # self.timer.timeout.connect(self.mixOnTimer)
                 # self.timer.start(40)
@@ -607,7 +619,74 @@ class MyExtension(Extension):
                                 
 
 
+        def toggle_100_opac(self):
         
+            application = Krita.instance()
+            currentDoc = application.activeDocument()
+            if currentDoc is not None:
+                activeLayer = currentDoc.activeNode()
+                curOpac = activeLayer.opacity()
+                
+                if self.temp_switched_to_100_previous_opac is None:
+                    newLa = self.dryPaper(False)
+                    
+                    activeLayer = newLa
+                    # currentDoc = application.activeDocument()
+                    # currentDoc.waitForDone()
+                    # activeLayer = currentDoc.activeNode()
+                    
+                    if self.temp_switched_to_25_previous_opac is not None:
+                        self.temp_switched_to_100_previous_opac = self.temp_switched_to_25_previous_opac
+                        self.temp_switched_to_25_previous_opac = None
+                    else:
+                        self.temp_switched_to_100_previous_opac = activeLayer.opacity()
+                        
+                    
+                    activeLayer.setOpacity(255)
+                    
+                    quickMessage(f"Temporarily set 100% opacity. Press again to restore.")
+                else:
+                    newLa = self.dryPaper(False)
+                    
+                    # currentDoc = application.activeDocument()
+                    activeLayer = newLa #currentDoc.activeNode()
+                    activeLayer.setOpacity(self.temp_switched_to_100_previous_opac)
+                    
+                    
+                    quickMessage(f"Restored {round (self.temp_switched_to_100_previous_opac * 100.0 / 255.0)}  opacity")
+                    
+                    self.temp_switched_to_100_previous_opac = None
+        
+        def toggle_25_opac(self):
+        
+            application = Krita.instance()
+            currentDoc = application.activeDocument()
+            if currentDoc is not None:
+                activeLayer = currentDoc.activeNode()
+                curOpac = activeLayer.opacity()
+                
+                if self.temp_switched_to_25_previous_opac is None:
+                    activeLayer = self.dryPaper(False)
+                    
+                    if self.temp_switched_to_100_previous_opac is not None:
+                        self.temp_switched_to_25_previous_opac = self.temp_switched_to_100_previous_opac
+                        self.temp_switched_to_100_previous_opac = None
+                    else:
+                        self.temp_switched_to_25_previous_opac = activeLayer.opacity()
+                    
+                    activeLayer.setOpacity(25.0 * 255.0 / 200.0)
+                    
+                    
+                    quickMessage(f"Temporarily set 25% opacity. Press again to restore.")
+                else:
+                    activeLayer = self.dryPaper(False)
+                    activeLayer.setOpacity(self.temp_switched_to_25_previous_opac)
+                    
+                    
+                    quickMessage(f"Restored {round (self.temp_switched_to_25_previous_opac * 100.0 / 255.0)}  opacity")
+                    
+                    self.temp_switched_to_25_previous_opac = None
+                
         def _on_history_was_made(self):
                 # print ("user painted")
                 try:
@@ -899,11 +978,13 @@ class MyExtension(Extension):
                                                 brothers = parentNode.childNodes()
                                                 colors = []
                                                 
-                                                positions = [ xy(doc_pos.x(), doc_pos.y()),
-                                                                                                xy(doc_pos.x() + self.mix_radius, doc_pos.y() + self.mix_radius),
-                                                                                                xy(doc_pos.x() - self.mix_radius, doc_pos.y() + self.mix_radius),
-                                                                                                xy(doc_pos.x() + self.mix_radius, doc_pos.y() - self.mix_radius),
-                                                                                                xy(doc_pos.x() - self.mix_radius, doc_pos.y() - self.mix_radius) ]
+                                                positions = [ xy(doc_pos.x(), doc_pos.y())
+                                                # ,
+                                                                                                # xy(doc_pos.x() + self.mix_radius, doc_pos.y() + self.mix_radius),
+                                                                                                # xy(doc_pos.x() - self.mix_radius, doc_pos.y() + self.mix_radius),
+                                                                                                # xy(doc_pos.x() + self.mix_radius, doc_pos.y() - self.mix_radius),
+                                                                                                # xy(doc_pos.x() - self.mix_radius, doc_pos.y() - self.mix_radius) 
+                                                                                                    ]
                                                                         
 
 
@@ -926,9 +1007,18 @@ class MyExtension(Extension):
                                                                 
                                                                 self.imageData = QImage(self.pixelBytes, 1, 1, QImage.Format_RGBA8888)
                                                                 self.pixelC = self.imageData.pixelColor(0,0)
+                                                            
+                                                                #devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
+                                                                if curLayer.uniqueId() == document.activeNode().uniqueId():
+                                                                    correzMul = 1.0
+                                                                else:
+                                                                    layerOpac = curLayer.opacity() # tra  0 e 255
+                                                                    correzMul = float(layerOpac) /  255.0
+                                                                                                                            
+                                                                
                                                                 print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha()}")
                                                                 
-                                                                colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha() ))
+                                                                colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha()  * correzMul))
                                                         
                                                         #creo il colore composito
                                                         
@@ -953,7 +1043,7 @@ class MyExtension(Extension):
                  
                  
                                                 
-                                                canv = self.g_how_much_canvas_to_pick
+                                                canv = self.g_how_much_canvas_to_pick_on_timer
                                                 
                                                 fgMul = 1.0 - canv
                                                 comp[0] = (self.last_color_picked.r/255.0) * fgMul + (mergedColor.r / 255.0)  * canv
@@ -1071,7 +1161,8 @@ class MyExtension(Extension):
                 if self.g_how_much_canvas_to_pick > 1.0:
                         self.g_how_much_canvas_to_pick = 1.0
                         
-                        
+                Krita.instance().writeSetting("colorPlus", "g_how_much_canvas_to_pick", str(self.g_how_much_canvas_to_pick))
+                
                 quickMessage(f"Increased mixing to {round(self.g_how_much_canvas_to_pick* 100.0)}%")
         
         def decreaseMixing(self):
@@ -1079,6 +1170,8 @@ class MyExtension(Extension):
                 if self.g_how_much_canvas_to_pick < 0.0:
                         self.g_how_much_canvas_to_pick = 0.0
                         
+                Krita.instance().writeSetting("colorPlus", "g_how_much_canvas_to_pick", str(self.g_how_much_canvas_to_pick))
+                
                 quickMessage(f"Decreased mixing to {round(self.g_how_much_canvas_to_pick * 100.0)}%")
         
 
@@ -1232,10 +1325,13 @@ class MyExtension(Extension):
                 # selectionStroke = currentDoc.selection()
                 
                 parentNode = activeLayer.parentNode()
+                newLa = None
                 if parentNode is not None:  
                         print("dry paper called1")
                         oldOpacity = activeLayer.opacity()
                         activeLayer.mergeDown()
+                        currentDoc.waitForDone()
+                        
                         root = currentDoc.rootNode()
                         newLa = currentDoc.createNode("Wet_area", "paintLayer")
                         newLa.setOpacity(oldOpacity)
@@ -1245,62 +1341,16 @@ class MyExtension(Extension):
                         
                         parentNode.addChildNode(newLa, None)
                         
-                        # # # test blur
-                        # self.grum(selectionStroke, backgroundLayer, application)
+                        # currentDoc.setActiveNode(newLa)
+                        # currentDoc.refreshProjection()
+                        # currentDoc.waitForDone()
                         
-                        # deseleziona
-                        
-                        # currentDoc.setSelection(None)
-                        # currentDoc.setActiveNode(backgroundLayer)
-                        # blurFilter = application.filter('gaussian blur')
-                        # currentSelection = currentDoc.selection()
-                        
-                        # x = selection.x()
-                        # y = selection.y()
-                        # wt = selection.width()
-                        # ht = selection.height()
-                        
-                        # rectSelection = Selection()
-                        # rectSelection.select(x, y, wt , ht, 255)
-                        
-                        # currentDoc.setSelection(rectSelection)
-                        
-                        # # newUnblurred = currentDoc.createNode("unblurred", "paintLayer")
-                        # # parentNode.addChildNode(newUnblurred, None)
-                        
-                        # currentDoc.setActiveNode(backgroundLayer)
-                        # selection.cut(backgroundLayer)
-                        
-                        # Krita.instance().action('edit_paste').trigger()
-                        # currentDoc.waitForDone () # action needs to finish before continuing
-                        
-                        # newUnblurred = currentDoc.activeNode()
-                        # # currentDoc.setSelection(None)
-                        
-                        # currentDoc.setActiveNode(newUnblurred)
-                        # selection.paste(newUnblurred, 0,0)
-                        
-                        # print (f"selection: {selection.x()}, {selection.y()}, wt = {selection.width()}, ht = {selection.height()}")
-                        # # selection.copy(backgroundLayer)
-                        # blurFilter.apply(backgroundLayer, x, y, wt, ht)
-                        # # print(f"blur filter: {blurFilter}")
-                        
-                        # newBlurred = currentDoc.createNode("unblurred", "paintLayer")
-                        
-                        # selection.copy(backgroundLayer)
-                        # selection.paste(newUnblurred, selection.x(), selection.y())
-                        
-                        
-                        # #application.action('add_new_filter_mask').trigger()
-                        
-                        # # print( blurFilter.configuration().properties() )
-                        # currentDoc.waitForDone () # action needs to finish before continuing
-                        # currentDoc.refreshProjection()  # update UI
                         
                         
                 else:
+                        
                         newLa = currentDoc.createNode("Wet_area", "paintLayer")
-                        newLa.setOpacity(140)
+                        newLa.setOpacity(50.0 * 255.0 / 100.0)
                         root.addChildNode(newLa, None)
                         
                 #test blur        
@@ -1310,7 +1360,7 @@ class MyExtension(Extension):
                     quickMessage("Dry paper")
                     #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
                         
-                
+                return newLa
         
         def dryPaperAndPick(self):
             print("dry paper and pick")
@@ -1318,9 +1368,14 @@ class MyExtension(Extension):
             #non funziona se inverto l'ordine... non capisco perche'
             self.pick(showMessage = False)
             
-            self.dryPaper(showMessage = False)
-            quickMessage("Dry paper and pick color")
-            
+            if self.temp_switched_to_100_previous_opac is None:
+                self.dryPaper(showMessage = False)
+                quickMessage("Dry paper and pick color")
+            else:
+                #useless to dry paper because I am at 100% opacity
+                quickMessage("Picked color")
+                
+                
         def minimizeOnTopAndViewFullScreen(self):
                 app = Krita.instance()
                                 
@@ -1464,6 +1519,13 @@ class MyExtension(Extension):
                 actionRestore.setShortcut("Ctrl+Shift+R")
                 actionRestore.triggered.connect(self.restoreWindowPositions)
                 
+                actionToggle100= window.createAction("toggle100PercOpacity", "Toggle 100% layer opacity")
+                actionToggle100.setShortcut("f")
+                actionToggle100.triggered.connect(self.toggle_100_opac)
+
+                actionToggle25= window.createAction("toggle25PercOpacity", "Toggle 25% layer opacity")
+                actionToggle25.setShortcut("w")
+                actionToggle25.triggered.connect(self.toggle_25_opac)
 
                 
                 main_menu = window.qwindow().menuBar()
@@ -1478,6 +1540,8 @@ class MyExtension(Extension):
                 custom_menu.addAction(actiondeclo)
                 custom_menu.addAction(actionincmi)
                 custom_menu.addAction(actiondecmi)
+                custom_menu.addAction(actionToggle100)
+                custom_menu.addAction(actionToggle25)
 
 
             
