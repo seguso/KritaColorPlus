@@ -532,6 +532,33 @@ class MyExtension(Extension):
                             
                             su.move( w2.x, w2.y)
                             su.resize(w2.wt, w2.ht)
+                            
+                            
+                #I activate any window that is not on top and not minimized
+                for su in subwins:
+                    flags = su.windowFlags()
+                    
+                    stayOnTop = False
+                    if su.windowFlags() & Qt.WindowStaysOnTopHint:
+                        stayOnTop = True
+                    else:
+                        stayOnTop = False
+                    
+
+                    isMinimized = False
+                    if su.windowState() & Qt.WindowMinimized:
+                        isMinimized = True
+                    else:
+                        isMinimized = False
+
+
+                    if not isMinimized and not stayOnTop:
+                        
+                        q_win = wi.qwindow()
+                        mdi_area = q_win.findChild(QMdiArea)
+                        mdi_area.setActiveSubWindow(su)
+
+
             except FileNotFoundError:
                 messageBox(f"The file where the window state is stored was not found: \n\n{self.filePathWindowState } \n\nYou need to save the windows state first. Then the file will be created.")
                 
@@ -644,6 +671,30 @@ class MyExtension(Extension):
                     
                     activeLayer.setOpacity(255)
                     
+                    
+                    # the brush opacity becomes equal to the layer opacityfg = view.foregroundColor()
+                    
+                    view  = Krita.instance().activeWindow().activeView()
+                    
+                    newPaintingOp = self.temp_switched_to_100_previous_opac / 255.0
+                    print(f"setting new painting op = {newPaintingOp}")
+                    view.setPaintingOpacity(newPaintingOp)
+                    
+                    # fg = view.foregroundColor()
+
+                    # comp = fg.components() 
+                    # print(f"fg color = {comp}")
+
+
+                    
+                    # comp[3] = self.temp_switched_to_100_previous_opac / 255.0
+                    
+                    # print(f"setting comp3  = {comp[3]}")
+                    # fg.setComponents(comp)
+                    
+                    # view.setForeGroundColor(fg)
+
+                    
                     quickMessage(f"Temporarily set 100% opacity. Press again to restore.")
                 else:
                     newLa = self.dryPaper(False)
@@ -654,6 +705,9 @@ class MyExtension(Extension):
                     
                     
                     quickMessage(f"Restored {round (self.temp_switched_to_100_previous_opac * 100.0 / 255.0)}  opacity")
+                    
+                    view  = Krita.instance().activeWindow().activeView()
+                    view.setPaintingOpacity(1.0)
                     
                     self.temp_switched_to_100_previous_opac = None
         
