@@ -1436,8 +1436,27 @@ class MyExtension(Extension):
                             su.setWindowState(su.windowState() & ~Qt.WindowMinimized)
                         else:
                             su.setWindowState(su.windowState() | Qt.WindowMinimized)
+                
+
+                #I activate any window that is not on top and not minimized
+                for su in subwins:
+                    flags = su.windowFlags()
                     
-                    if not isMinimized:
+                    stayOnTop = False
+                    if su.windowFlags() & Qt.WindowStaysOnTopHint:
+                        stayOnTop = True
+                    else:
+                        stayOnTop = False
+                    
+
+                    isMinimized = False
+                    if su.windowState() & Qt.WindowMinimized:
+                        isMinimized = True
+                    else:
+                        isMinimized = False
+
+
+                    if not isMinimized and not stayOnTop:
                         
                         q_win = wi.qwindow()
                         mdi_area = q_win.findChild(QMdiArea)
