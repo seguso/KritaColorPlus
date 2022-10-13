@@ -1506,7 +1506,7 @@ class MyExtension(Extension):
                                 break
                                 
                                 
-                            lastLayer = children[-1]
+                            lastLayer = children[1] # skip the background which has opacity 100%. but follow the order from closest to bg to farthest 
                         
                             lastLayer.mergeDown()
                         
