@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
-        <text>Mix Color</text>
+        <text>Mix Color with max distance</text>
 
-        <Action name="MixColor">
+        <Action name="MixColorSmall">
         <icon></icon>
-        <text>Pick some color from the canvas. Amount is configurable.</text>
+        <text>Pick some color from the canvas, but not more than a maximum distance</text>
         <whatsThis></whatsThis>
         <toolTip></toolTip>
         <iconText></iconText>
         <activationFlags>0</activationFlags>
         <activationConditions>0</activationConditions>
-        <shortcut>x</shortcut>
+        <shortcut>shift+x</shortcut>
         <isCheckable>false</isCheckable>
         <statusTip></statusTip>
         </Action>

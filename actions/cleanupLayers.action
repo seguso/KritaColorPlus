@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
-        <text>Mix Color</text>
+        <text>Cleanup wet layers</text>
 
-        <Action name="MixColor">
+        <Action name="cleanupLayers">
         <icon></icon>
-        <text>Pick some color from the canvas. Amount is configurable.</text>
+        <text>Cleanup layer list by merging all wet layers</text>
         <whatsThis></whatsThis>
         <toolTip></toolTip>
         <iconText></iconText>
         <activationFlags>0</activationFlags>
         <activationConditions>0</activationConditions>
-        <shortcut>x</shortcut>
+        <shortcut>g</shortcut>
         <isCheckable>false</isCheckable>
         <statusTip></statusTip>
         </Action>

@@ -331,7 +331,7 @@ class MyExtension(Extension):
                 
                 self.temp_switched_to_25_previous_opac = None
                 
-                self.mixing_target_distance = 25.0
+                self.mixing_target_distance = 20.0
                 
                 self.correct_color_for_transparency = True
                 
@@ -697,26 +697,13 @@ class MyExtension(Extension):
                     
                     # the brush opacity becomes equal to the layer opacityfg = view.foregroundColor()
                     
-                    view  = Krita.instance().activeWindow().activeView()
+                    # view  = Krita.instance().activeWindow().activeView()
                     
-                    newPaintingOp = self.temp_switched_to_100_previous_opac / 255.0
-                    print(f"setting new painting op = {newPaintingOp}")
-                    view.setPaintingOpacity(newPaintingOp)
+                    # newPaintingOp = self.temp_switched_to_100_previous_opac / 255.0
+                    # print(f"setting new painting op = {newPaintingOp}")
+                    # view.setPaintingOpacity(newPaintingOp)
                     
-                    # fg = view.foregroundColor()
-
-                    # comp = fg.components() 
-                    # print(f"fg color = {comp}")
-
-
                     
-                    # comp[3] = self.temp_switched_to_100_previous_opac / 255.0
-                    
-                    # print(f"setting comp3  = {comp[3]}")
-                    # fg.setComponents(comp)
-                    
-                    # view.setForeGroundColor(fg)
-
                     
                     quickMessage(f"Temporarily set 100% opacity. Press again to restore.")
                 else:
@@ -729,8 +716,8 @@ class MyExtension(Extension):
                     
                     quickMessage(f"Restored {round (self.temp_switched_to_100_previous_opac * 100.0 / 255.0)}  opacity")
                     
-                    view  = Krita.instance().activeWindow().activeView()
-                    view.setPaintingOpacity(1.0)
+                    # view  = Krita.instance().activeWindow().activeView()
+                    # view.setPaintingOpacity(1.0)
                     
                     self.temp_switched_to_100_previous_opac = None
         
@@ -787,44 +774,44 @@ class MyExtension(Extension):
                                 #self.timer_hm.stop()
                                 raise
 
-        def mixOldSingleLayer(self):
-                app = Krita.instance()
-                win = app.activeWindow()
-                if win is not None:
-                        view = win.activeView()
-                        if view is not None:
-                                document = view.document()
-                                if document:
-                                        center = QPointF(0.5 * document.width(), 0.5 * document.height())
-                                        p = get_cursor_in_document_coords()
-                                        if p is not None:
-                                                doc_pos = p + center
-                                                print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
+        # def mixOldSingleLayer(self):
+                # app = Krita.instance()
+                # win = app.activeWindow()
+                # if win is not None:
+                        # view = win.activeView()
+                        # if view is not None:
+                                # document = view.document()
+                                # if document:
+                                        # center = QPointF(0.5 * document.width(), 0.5 * document.height())
+                                        # p = get_cursor_in_document_coords()
+                                        # if p is not None:
+                                                # doc_pos = p + center
+                                                # print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
                                                 
-                                                self.pixelBytes = document.activeNode().pixelData(doc_pos.x(), doc_pos.y(), 1, 1)
+                                                # self.pixelBytes = document.activeNode().pixelData(doc_pos.x(), doc_pos.y(), 1, 1)
                                                 
-                                                self.imageData = QImage(self.pixelBytes, 1, 1, QImage.Format_RGBA8888)
-                                                self.pixelC = self.imageData.pixelColor(0,0)
-                                                print(f"color under cursor = {self.pixelC.red()}, {self.pixelC.green()}, {self.pixelC.blue()}")
+                                                # self.imageData = QImage(self.pixelBytes, 1, 1, QImage.Format_RGBA8888)
+                                                # self.pixelC = self.imageData.pixelColor(0,0)
+                                                # print(f"color under cursor = {self.pixelC.red()}, {self.pixelC.green()}, {self.pixelC.blue()}")
                                                 
-                                                fg = view.foregroundColor()
-                                                comp = fg.components() 
-                                                print(f"fg color = {comp}")
+                                                # fg = view.foregroundColor()
+                                                # comp = fg.components() 
+                                                # print(f"fg color = {comp}")
                  
                  
-                                                canv = 0.5 #I pick half color from canvas
-                                                fgMul = 1.0 - canv
-                                                comp[0] = comp[0] * fgMul + (self.pixelC.red() / 255.0)  * canv
-                                                comp[1] = comp[1] * fgMul + (self.pixelC.green() / 255.0)  * canv
-                                                comp[2] = comp[2] * fgMul + (self.pixelC.blue()  / 255.0)  * canv
+                                                # canv = 0.5 #I pick half color from canvas
+                                                # fgMul = 1.0 - canv
+                                                # comp[0] = comp[0] * fgMul + (self.pixelC.red() / 255.0)  * canv
+                                                # comp[1] = comp[1] * fgMul + (self.pixelC.green() / 255.0)  * canv
+                                                # comp[2] = comp[2] * fgMul + (self.pixelC.blue()  / 255.0)  * canv
                                           
-                                                fg.setComponents(comp)
+                                                # fg.setComponents(comp)
                                                 
-                                                view.setForeGroundColor(fg)
+                                                # view.setForeGroundColor(fg)
 
                 
 
-        def mixFgColorWithBgColor_distanceLogic(self):
+        def mixFgColorWithBgColor_maxDistanceLogic(self):
                 app = Krita.instance()
                 win = app.activeWindow()
                 if win is not None:
@@ -874,10 +861,10 @@ class MyExtension(Extension):
                                                 
                                                                 
                                                 # setto il fg color uguale a merged color mischiato con il fg
-                                                fg = view.foregroundColor() #tipo ManagedColor
+                                                fg = view.foregroundColor() #tipo ManagedColor, valori da 0 a 1
                                                 print(f"fg  = {fg}")
                                                 
-                                                fg2 = rgbOfManagedColor(fg)
+                                                fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
                                                 fg2.print("fg2")
                                                 
                                                 comp = fg.components() 
@@ -888,12 +875,18 @@ class MyExtension(Extension):
                  
                                                 
                                                 curDist = None
+                                                picked50 = False
                                                 
                                                 # calcola curFg
                                                 if dist  <= self.mixing_target_distance:
-                                                    #i colori sono molto vicini. prendi tutto il colore canvas
-                                                    curFg = bgColor
+                                                    #i colori sono molto vicini. fai 50%
+                                                    curMul = 0.5
+                                                    curFg = rgb( fg2.r * curMul + bgColor.r * (1.0 - curMul),
+                                                                                    fg2.g * curMul + bgColor.g * (1.0 - curMul),
+                                                                                    fg2.b * curMul + bgColor.b * (1.0 - curMul),
+                                                                                    255)
                                                     curDist = dist
+                                                    picked50 = True
                                                 else:  # i colori sono lontani. avvicina poco a poco finché la distanza del curFg dall'origFg non diventa > target
                                                 
                                                     stepMul = 0.001
@@ -917,7 +910,8 @@ class MyExtension(Extension):
                                                             
                                                         curMul += stepMul   
                                                             
-                                                        
+                                                    picked50 = False
+                                                    
                                                 #canv = howMuchCanvas # pick half color from canvas
                                                 
                                                 comp[0] = curFg.r / 255.0
@@ -943,8 +937,8 @@ class MyExtension(Extension):
                                                 
                                                 
                                                 # messaggio
-                                                if curFg.equals(bgColor):
-                                                    view.showFloatingMessage(f"Picked whole color from canvas because distance was small ({round(curDist)})", QIcon(), timeMessage, 1)
+                                                if picked50:
+                                                    view.showFloatingMessage(f"Picked 50% because distance was small ({round(curDist)})", QIcon(), timeMessage, 1)
                                                 else:
                                                     view.showFloatingMessage(f"Picked a bit of color from canvas. Distance: {round(curDist)}", QIcon(), timeMessage, 1)
                                                 
@@ -1391,7 +1385,7 @@ class MyExtension(Extension):
         def dryPaperWithMessage(self):
             self.dryPaper(True)
             
-        def dryPaper(self, showMessage = True):
+        def dryPaperOldWithMerge(self, showMessage = True):
                 print(f"dry paper called showMessage = {showMessage}")
                 application = Krita.instance()
                 currentDoc = application.activeDocument()
@@ -1439,6 +1433,119 @@ class MyExtension(Extension):
                         
                 return newLa
         
+        def dryPaper(self, showMessage = True):
+                print(f"dry paper called showMessage = {showMessage}")
+                application = Krita.instance()
+                currentDoc = application.activeDocument()
+                activeLayer = currentDoc.activeNode()
+                
+                # application.action('selectopaque').trigger()
+                # currentDoc.waitForDone () # action needs to finish before continuing
+                # selectionStroke = currentDoc.selection()
+                
+                parentNode = activeLayer.parentNode()
+                newLa = None
+                if parentNode is not None:  
+                        print("dry paper called1")
+                        oldOpacity = activeLayer.opacity()
+                        
+                        #activeLayer.mergeDown()
+                        #currentDoc.waitForDone()
+                        
+                        root = currentDoc.rootNode()
+                        newLa = currentDoc.createNode("Wet_area", "paintLayer")
+                        newLa.setOpacity(oldOpacity)
+                        
+                        backgroundLayer = parentNode.childNodes()[0]
+                        
+                        
+                        parentNode.addChildNode(newLa, None)
+                        
+                        # currentDoc.setActiveNode(newLa)
+                        # currentDoc.refreshProjection()
+                        # currentDoc.waitForDone()
+                        
+                        
+                        
+                else:
+                        messageBox("In order to call \"Dry paper\", the current layer needs to have a parent group")
+                        showMessage = False
+                        # newLa = currentDoc.createNode("Wet_area", "paintLayer")
+                        # newLa.setOpacity(50.0 * 255.0 / 100.0)
+                        # root.addChildNode(newLa, None)
+                        
+                #test blur        
+                
+                if showMessage:
+                    print("dry paper called message")
+                    quickMessage("Dry paper")
+                    #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
+                        
+                return newLa
+        
+        def mergeCleanup(self):
+                #print(f"dry paper called showMessage = {showMessage}")
+                application = Krita.instance()
+                currentDoc = application.activeDocument()
+                activeLayer = currentDoc.activeNode()
+                
+                # application.action('selectopaque').trigger()
+                # currentDoc.waitForDone () # action needs to finish before continuing
+                # selectionStroke = currentDoc.selection()
+                
+                parentNode = activeLayer.parentNode()
+                newLa = None
+                if parentNode is not None:  
+                        print("dry paper called1")
+                        oldOpacity = activeLayer.opacity()
+                        
+                        
+                        while True:
+                            children = parentNode.childNodes() 
+                            if len(children) <= 1:
+                                break
+                                
+                                
+                            lastLayer = children[-1]
+                        
+                            lastLayer.mergeDown()
+                        
+                        #merged all layers. Create a new one and set opacity
+                        
+                        currentDoc.waitForDone()
+                        
+                        # root = currentDoc.rootNode()
+                        newLa = currentDoc.createNode("Wet_area", "paintLayer")
+                        newLa.setOpacity(oldOpacity)
+                        
+                        # backgroundLayer = parentNode.childNodes()[0]
+                        
+                        
+                        parentNode.addChildNode(newLa, None)
+                        
+                        # # currentDoc.setActiveNode(newLa)
+                        # # currentDoc.refreshProjection()
+                        # # currentDoc.waitForDone()
+                        
+                        
+                        
+                else:
+                        messageBox("In order to call \"Cleanup layers\", the current layer needs to have a parent group")
+                        showMessage = False
+                        # newLa = currentDoc.createNode("Wet_area", "paintLayer")
+                        # newLa.setOpacity(50.0 * 255.0 / 100.0)
+                        # root.addChildNode(newLa, None)
+                        newLa = None
+                        
+                #test blur        
+                
+                
+                print("cleanup layers called message")
+                quickMessage("Cleanup layers")
+                 #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
+                        
+                return newLa
+        
         def dryPaperAndPick(self):
             print("dry paper and pick")
             
@@ -1452,6 +1559,20 @@ class MyExtension(Extension):
                 #useless to dry paper because I am at 100% opacity
                 quickMessage("Picked color")
                 
+        
+        def dryPaperAndMix(self):
+            print("dry paper and mix")
+            
+            #non funziona se inverto l'ordine... non capisco perche'
+            self.mixFgColorWithBgColor_normalLogic()
+            
+            if self.temp_switched_to_100_previous_opac is None:
+                self.dryPaper(showMessage = False)
+                #quickMessage("Dry paper and mix color")
+            else:
+                #useless to dry paper because I am at 100% opacity
+                pass
+                #quickMessage("Picked color")
                 
         def minimizeOnTopAndViewFullScreen(self):
                 app = Krita.instance()
@@ -1580,6 +1701,9 @@ class MyExtension(Extension):
                 actionMix = window.createAction("MixColor", "Pick some color from canvas and mix with fg color")
                 actionMix.triggered.connect(self.mixFgColorWithBgColor_normalLogic)
                 
+                actionMixSmall = window.createAction("MixColorSmall", "Pick some color from canvas, but no more than a given distance")
+                actionMixSmall.triggered.connect(self.mixFgColorWithBgColor_maxDistanceLogic)
+                
                 actionMix = window.createAction("DryPaperAndPick", "Dry the paper and pick color under cursor with a single key press")
                 actionMix.triggered.connect(self.dryPaperAndPick)
                 
@@ -1623,6 +1747,9 @@ class MyExtension(Extension):
                 actionToggle25.setShortcut("w")
                 actionToggle25.triggered.connect(self.toggle_25_opac)
 
+
+                actionToggleMc= window.createAction("cleanupLayers", "Cleanup layers")
+                actionToggleMc.triggered.connect(self.mergeCleanup)
                 
                 main_menu = window.qwindow().menuBar()
                 custom_menu = main_menu.addMenu("ColorPlus")
@@ -1631,6 +1758,7 @@ class MyExtension(Extension):
                 custom_menu.addAction(actionSave)
                 custom_menu.addAction(actionPick)
                 custom_menu.addAction(actionMix)
+                custom_menu.addAction(actionMixSmall)
                 custom_menu.addAction(actionViewFullScreen)
                 custom_menu.addAction(actionIncreaseLO)
                 custom_menu.addAction(actiondeclo)
@@ -1638,6 +1766,7 @@ class MyExtension(Extension):
                 custom_menu.addAction(actiondecmi)
                 custom_menu.addAction(actionToggle100)
                 custom_menu.addAction(actionToggle25)
+                custom_menu.addAction(actionToggleMc)
 
 
             
