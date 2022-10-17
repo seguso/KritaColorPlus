@@ -50,6 +50,82 @@ g_step_mixing_target_distance = 2.5
 
 
 
+
+from PyQt5.QtCore import Qt, QModelIndex, QItemSelectionModel
+from PyQt5.QtWidgets import QTreeView
+
+
+def get_layer_model():
+    app = Krita.instance()
+    kis_layer_box = next((d for d in app.dockers() if d.objectName() == 'KisLayerBox'), None)
+    view = kis_layer_box.findChild(QTreeView, 'listLayers')
+    return view.model(), view.selectionModel()
+
+
+def node_to_index(node, model):
+    path = list()
+    while node and (node.index() >= 0):
+        path.insert(0, node.index())
+        node = node.parentNode()
+
+    index = QModelIndex()    
+    for i in path:
+        last_row = model.rowCount(index) - 1
+        index = model.index(last_row - i, 0, index)
+    return index
+
+
+def index_to_node(index, document):
+    if not index.isValid():
+        raise RuntimeError('Invalid index')
+    model = index.model()
+    path = list()
+    while index.isValid():
+        last_row = model.rowCount(index.parent()) - 1
+        path.insert(0, last_row - index.row())
+        index = index.parent()
+        
+    node = None
+    children = document.topLevelNodes()
+    for i in path:
+        node = children[i]
+        children = node.childNodes()
+    return node
+
+class AutoFocusSetter(QObject):
+
+    # Q_OBJECT
+    # ...
+# # protected
+    # eventFilter = bool(QObject obj, QEvent event)
+
+    def eventFilter(self, obj, event):
+        # if event.type() == QEvent.HoverEnter:
+            # print(f"hover ")
+        if event.type() == QEvent.Enter:
+            #if obj.type() == QMdiSubWindow:
+            if isinstance(obj, QMdiSubWindow):
+                print(f"enter {obj} ")
+                
+                wi = Krita.instance().activeWindow()
+                q_win = wi.qwindow()
+                mdi_area = q_win.findChild(QMdiArea)
+                mdi_area.setActiveSubWindow(obj)
+                #obj.activateWindow()
+                
+                
+        return False
+        #return QObject.eventFilter(obj, event)
+        
+        # if event.type() == QEvent.KeyPress:
+            # print(f"keypress")
+            # keyEvent = QKeyEvent(event)
+            # qDebug("Ate key press %d", keyEvent.key())
+            # return True
+        # else:
+            # # standard event processing
+            # return QObject.eventFilter(obj, event)
+
 #print(Krita.instance().filters())
 
 class Dict2Class(object):
@@ -324,6 +400,8 @@ class MyExtension(Extension):
                 self.last_color_picked = None # di tipo rgb
                 self.g_how_much_canvas_to_pick_on_timer = 0.8
                 
+                self.g_auto_focus = Krita.instance().readSetting("colorPlus", "g_auto_focus", "true")
+                
                 
                 self.mix_radius = 2 # pixel
                 
@@ -347,7 +425,12 @@ class MyExtension(Extension):
                 # self.timer.start(2000)
                 
                 
+                # self.timer = QTimer()
+                # self.timer.timeout.connect(self.mergeOnTimer)
+                # self.timer.start(4000)
+                
             
+                
                 home = str(Path.home())
                 
                 home= os.getenv('APPDATA')
@@ -356,6 +439,8 @@ class MyExtension(Extension):
                 
                 self.filePathWindowState = f"{self.plugin_state_dir}/windowPositions.txt"
                 
+                self.windows_with_autofocus = []
+                self.ef_autofocus  = AutoFocusSetter(self)
                 
                 if not os.path.exists(self.plugin_state_dir):
                 
@@ -363,10 +448,44 @@ class MyExtension(Extension):
                     
                 
                 Krita.instance().notifier().windowCreated.connect(self.onWindowCreated)
+                # Krita.instance().notifier().viewCreated.connect(self.onViewOpenedEvent)
+                
+                
+                self.timer = QTimer()
+                self.timer.timeout.connect(self.updateAutoFocus)
+                self.timer.start(1000)
+                
+                
                 print(f"init ok. home = {home}")
 
 
+        def updateAutoFocus(self):
+                
         
+                wi = Krita.instance().activeWindow()
+                if wi is not None:
+                    subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
+                    
+                    if self.g_auto_focus ==  "true":
+                        for su in subwins:
+                                if su not in self.windows_with_autofocus:
+                                    print(f"installing autofocus for window {su}")
+                                    su.installEventFilter(self.ef_autofocus)
+                                    self.windows_with_autofocus.append(su)
+                    else:
+                        for su in subwins:
+                            if su  in self.windows_with_autofocus:
+                                print(f"uninstalling autofocus for window {su}")
+                                su.removeEventFilter(self.ef_autofocus)
+                                self.windows_with_autofocus.remove(su)
+                        
+                        
+                
+        def onViewOpenedEvent(openedView):
+            
+            print(f"view opened {openedView}");
+            openedView.updateAutoFocus()
+
         def onWindowCreated(self): #called by framework
                 print("on window created  ")
                 
@@ -432,42 +551,42 @@ class MyExtension(Extension):
 
             return js
             
-        def restoreWindowPositionsOld(self): #relies on sessions to open the files
+        # def restoreWindowPositionsOld(self): #relies on sessions to open the files
         
-            #restore last saved window state
-            f = open(self.filePathWindowState)
-            windows = json.load(f)
-            print(f"roba letta: {windows}")
+            # #restore last saved window state
+            # f = open(self.filePathWindowState)
+            # windows = json.load(f)
+            # print(f"roba letta: {windows}")
             
             
 
-            f.close()
+            # f.close()
             
-            wi = Krita.instance().activeWindow()
-            subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
+            # wi = Krita.instance().activeWindow()
+            # subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
             
             
-            for w in windows:
-                w2 = Dict2Class(w)
-                print(f"titolo = {w2.title}, x = {w2.x}")
+            # for w in windows:
+                # w2 = Dict2Class(w)
+                # print(f"titolo = {w2.title}, x = {w2.x}")
                 
-                for su in subwins:
-                    tit = su.windowTitle().replace(" *", "")
-                    if tit == w2.title:
-                        # devo settare questa finestra come era
-                        if w2.isMaximized: # se era massimizzata                    
-                            su.setWindowState(su.windowState() | Qt.WindowMaximized)  # la massimizzo
-                        else:
-                            su.setWindowState(su.windowState() & ~Qt.WindowMaximized)  # tolgo lo stato maximixed
+                # for su in subwins:
+                    # tit = su.windowTitle().replace(" *", "")
+                    # if tit == w2.title:
+                        # # devo settare questa finestra come era
+                        # if w2.isMaximized: # se era massimizzata                    
+                            # su.setWindowState(su.windowState() | Qt.WindowMaximized)  # la massimizzo
+                        # else:
+                            # su.setWindowState(su.windowState() & ~Qt.WindowMaximized)  # tolgo lo stato maximixed
                             
-                        if w2.isAlwaysOnTop : # se era always on top
-                            su.setWindowFlags(su.windowFlags() | Qt.WindowStaysOnTopHint)  # la metto on top
-                        else:
-                            su.setWindowFlags(su.windowFlags() & ~Qt.WindowStaysOnTopHint)  # tolgo lo stato on top
+                        # if w2.isAlwaysOnTop : # se era always on top
+                            # su.setWindowFlags(su.windowFlags() | Qt.WindowStaysOnTopHint)  # la metto on top
+                        # else:
+                            # su.setWindowFlags(su.windowFlags() & ~Qt.WindowStaysOnTopHint)  # tolgo lo stato on top
                         
                         
-                        su.move( w2.x, w2.y)
-                        su.resize(w2.wt, w2.ht)
+                        # su.move( w2.x, w2.y)
+                        # su.resize(w2.wt, w2.ht)
         
         def restoreWindowPositions(self):
         
@@ -574,7 +693,13 @@ class MyExtension(Extension):
                         q_win = wi.qwindow()
                         mdi_area = q_win.findChild(QMdiArea)
                         mdi_area.setActiveSubWindow(su)
+                        su.activateWindow() # test
 
+
+                    
+                # subwins = window.qwindow().findChild(QMdiArea).subWindowList()
+                # for su in subwins:
+          
 
 
 
@@ -1483,6 +1608,55 @@ class MyExtension(Extension):
                         
                 return newLa
         
+        def mergeOnTimer(self): # does not work. cannot set the active layer after merging down.
+                    #print(f"dry paper called showMessage = {showMessage}")
+                application = Krita.instance()
+                currentDoc = application.activeDocument()
+                if currentDoc is not None:
+                    activeLayer = currentDoc.activeNode()
+                    if activeLayer is not None:
+                        
+                        # application.action('selectopaque').trigger()
+                        # currentDoc.waitForDone () # action needs to finish before continuing
+                        # selectionStroke = currentDoc.selection()
+                        
+                        parentNode = activeLayer.parentNode()
+
+                        if parentNode is not None:  
+                                
+                                
+                                
+                                
+                                
+                                children = parentNode.childNodes() 
+                                if len(children) > 3:
+                                        
+                                        
+                                        
+                                    lastLayer = children[1] # skip the background which has opacity 100%. but follow the order from closest to bg to farthest 
+                                
+                                    lastLayer.mergeDown()
+                                    currentDoc.waitForDone()
+                                    #merged all layers. Create a new one and set opacity
+                                    #currentDoc.setActiveNode(children[-1])
+                                    
+                                    quickMessage("auto dry layer")
+                                    
+                                    
+                                    
+                                    #setActiveNode does not work. Workaround is:
+                                    children = parentNode.childNodes() 
+                                    target_node = children[1]
+                                    model, s_model = get_layer_model()
+                                    index = node_to_index(target_node, model)
+                                    print (f"index is {index}")
+
+                                    s_model.setCurrentIndex(index, QItemSelectionModel.Select)
+                                    
+                                    #currentDoc.setActiveNode(children[1])
+                                    
+                                
+              
         def mergeCleanup(self):
                 #print(f"dry paper called showMessage = {showMessage}")
                 application = Krita.instance()
@@ -1552,7 +1726,34 @@ class MyExtension(Extension):
             #non funziona se inverto l'ordine... non capisco perche'
             self.pick(showMessage = False)
             
-            if self.temp_switched_to_100_previous_opac is None:
+            
+            
+            # find if there is a parent node
+            hasParentNode = False
+            app = Krita.instance()
+            win = app.activeWindow()
+            if win is not None:
+                        # print("pick called 1")
+                        view = win.activeView()
+                        if view is not None:
+                                # print("pick called 2")
+                                document = view.document()
+                                if document:
+                                        
+                                        parentNode = document.activeNode().parentNode() # could be root node, so I need to do parent again
+                                        
+                                        
+                                        if parentNode is not None:
+                                                pa = parentNode.parentNode()
+                                                if pa is not None:
+                                                    print(f"has parent node. document file {document.fileName()}. parentNode = {parentNode.name()}")
+                                                    hasParentNode = True
+            
+            
+            
+            
+            
+            if self.temp_switched_to_100_previous_opac is None and hasParentNode: # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
                 self.dryPaper(showMessage = False)
                 quickMessage("Dry paper and pick color")
             else:
@@ -1684,6 +1885,20 @@ class MyExtension(Extension):
                     # print(f"errore trovato in setup {e}")
                     
                                 
+        def onEnter(self):
+            print(f"enter event")
+            
+            
+        def toggleAutoFocus(self):
+            if self.g_auto_focus == "true":
+                
+                self.g_auto_focus = "false"
+            else:
+                
+                self.g_auto_focus = "true"
+                
+            Krita.instance().writeSetting("colorPlus", "g_auto_focus", self.g_auto_focus)
+            
         def createActions(self, window):
         
 
@@ -1751,6 +1966,13 @@ class MyExtension(Extension):
                 actionToggleMc= window.createAction("cleanupLayers", "Cleanup layers")
                 actionToggleMc.triggered.connect(self.mergeCleanup)
                 
+                
+                self.actionAutoFocus= window.createAction("autoFocus", "Autofocus windows")
+                self.actionAutoFocus.setCheckable(True)
+                self.actionAutoFocus.setChecked(self.g_auto_focus == "true")
+                self.actionAutoFocus.triggered.connect(self.toggleAutoFocus)
+                
+                
                 main_menu = window.qwindow().menuBar()
                 custom_menu = main_menu.addMenu("ColorPlus")
                 custom_menu.addAction(actionDryPaper)
@@ -1767,6 +1989,8 @@ class MyExtension(Extension):
                 custom_menu.addAction(actionToggle100)
                 custom_menu.addAction(actionToggle25)
                 custom_menu.addAction(actionToggleMc)
+                custom_menu.addAction(self.actionAutoFocus)
+
 
 
             
