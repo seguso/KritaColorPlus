@@ -1967,7 +1967,7 @@ class MyExtension(Extension):
                 actionToggleMc.triggered.connect(self.mergeCleanup)
                 
                 
-                self.actionAutoFocus= window.createAction("autoFocus", "Autofocus windows")
+                self.actionAutoFocus= window.createAction("autoFocus", "Autofocus windows on mouse over")
                 self.actionAutoFocus.setCheckable(True)
                 self.actionAutoFocus.setChecked(self.g_auto_focus == "true")
                 self.actionAutoFocus.triggered.connect(self.toggleAutoFocus)
@@ -1975,6 +1975,8 @@ class MyExtension(Extension):
                 
                 main_menu = window.qwindow().menuBar()
                 custom_menu = main_menu.addMenu("ColorPlus")
+                
+                custom_menu.addAction(self.actionAutoFocus)
                 custom_menu.addAction(actionDryPaper)
                 custom_menu.addAction(actionRestore)
                 custom_menu.addAction(actionSave)
@@ -1989,7 +1991,7 @@ class MyExtension(Extension):
                 custom_menu.addAction(actionToggle100)
                 custom_menu.addAction(actionToggle25)
                 custom_menu.addAction(actionToggleMc)
-                custom_menu.addAction(self.actionAutoFocus)
+                
 
 
 
