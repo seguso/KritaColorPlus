@@ -9,7 +9,7 @@ Basically it allows watercolor style. It's difficult to explain, so please refer
 
 Basically, with this technique, colors merge together instead of overlapping, until you decide to dry the paper. 
 
-More precisely: you can paint with a semi-transparent brush. If you lift the pen, and make another stroke, you don't see the "overlap". The strokes "merge together". Only when you press a shortcut to "dry the paper", subsequent strokes overlap. 
+More precisely: you can paint with a semi-transparent brush. If you lift the pen, and make another stroke, you don't see the "overlap". The strokes "merge together". Only when you press a shortcut to "dry the paper", the new strokes will start overlapping the _old_ strokes (but not other new strokes). 
 
 Note: you need to have two layers. Put the two layers in a group. These need to be the only layers in that group. The top layer needs to be partially transparent (typically from 50% to 70%). You will only paint on the top layer. You need to use a completely opaque brush. In particular, the brush should not have pressure assigned to opacity, or to flow. (I suggest pressure size).
 
