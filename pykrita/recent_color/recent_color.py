@@ -1428,30 +1428,37 @@ class MyExtension(Extension):
                                                     fg = view.foregroundColor() 
                                                     comp = fg.components() 
                                                     
-                                                    canv = self.g_how_much_canvas_to_pick
+                                                    if len(comp ) == 4:    
+                                                        
+                                                        canv = self.g_how_much_canvas_to_pick
+                                                        
+                                                        
+                                                        fgMul = 1.0 - canv
+                                                        comp[0] = comp[0] * fgMul + (bgColor.r / 255.0)  * canv
+                                                        comp[1] = comp[1] * fgMul + (bgColor.g / 255.0)  * canv
+                                                        comp[2] = comp[2] * fgMul + (bgColor.b  / 255.0)  * canv
+                                                        
                                                     
-                                                    
-                                                    fgMul = 1.0 - canv
-                                                    comp[0] = comp[0] * fgMul + (bgColor.r / 255.0)  * canv
-                                                    comp[1] = comp[1] * fgMul + (bgColor.g / 255.0)  * canv
-                                                    comp[2] = comp[2] * fgMul + (bgColor.b  / 255.0)  * canv
-                                                    
-                                                
-                                              
-                                                    fg.setComponents(comp)
-                                                    
-                                                    view.setForeGroundColor(fg)
-                                                    
-                                                    
-                                                    # setto anche il virtual fg color al result del mix
-                                                    self.last_color_picked = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
-                                                    
-                                                    
-                                                    
-                                                    # messaggio
-                                                    
-                                                    quickMessage(f"Picked {round(canv * 100)}%  color from the canvas.")
-                                                    
+                                                  
+                                                        fg.setComponents(comp)
+                                                        
+                                                        view.setForeGroundColor(fg)
+                                                        
+                                                        
+                                                        # setto anche il virtual fg color al result del mix
+                                                        self.last_color_picked = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
+                                                        
+                                                        
+                                                        
+                                                        # messaggio
+                                                        
+                                                        quickMessage(f"Picked {round(canv * 100)}%  color from the canvas.")
+                                                    elif len(comp ) == 2:
+                                                        messageBox(" Your foreground color is currently grayscale. In order to use \"Mix\", please set your foreground color to an RGB color first.")
+                                                    else:
+                                                        messageBox("In order to use \"Mix\", please set your foreground color to an RGB color first.")
+            
+        
 
         def updateColorUnderMouse(self):
             #print("updateColorUnderMouse")
@@ -1651,21 +1658,32 @@ class MyExtension(Extension):
                                                 # setto il fg color uguale a merged color
                                                 fg = view.foregroundColor()
                                                 comp = fg.components() 
-                                                #print(f"fg color = {comp}")
-                 
-                                                comp[0] =  (mergedColor.r / 255.0)  
-                                                comp[1] =  (mergedColor.g / 255.0)
-                                                comp[2] = (mergedColor.b  / 255.0)
-                                          
-                                                fg.setComponents(comp)
                                                 
-                                                view.setForeGroundColor(fg)
+                                                #wrokaround in case your fg color is [1,1], which means greyscale
+                                                print(f"fg color = {comp}")
+                                                
+                                                if len(comp ) == 4:    
+                                                        
+                                                    
+                     
+                                                    comp[0] =  (mergedColor.r / 255.0)  
+                                                    comp[1] =  (mergedColor.g / 255.0)
+                                                    comp[2] = (mergedColor.b  / 255.0)
+                                              
+                                                    print(f"fg color after = {comp}")
+                                                    
+                                                    fg.setComponents(comp)
+                                                    
+                                                    view.setForeGroundColor(fg)
 
-                                                # messaggio
-                                                if showMessage:
-                                                    view.showFloatingMessage("Pick color", QIcon(), timeMessage, 1)
-                                                
-        
+                                                    # messaggio
+                                                    if showMessage:
+                                                        view.showFloatingMessage("Pick color", QIcon(), timeMessage, 1)
+                                                elif len(comp ) == 2:
+                                                    messageBox(" Your foreground color is currently grayscale. In order to use \"pick\", please set your foreground color to an RGB color first.")
+                                                else:
+                                                    messageBox("In order to use pick, please set your foreground color to an RGB color first.")
+            
         
         
         def increaseMixing(self):
