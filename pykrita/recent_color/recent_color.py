@@ -2343,18 +2343,28 @@ class MyExtension(Extension):
                 custom_menu = main_menu.addMenu("ColorPlus")
                 
                 custom_menu.addAction(self.actionAutoFocus)
+                custom_menu.addSeparator()
+                custom_menu.addAction(actionViewFullScreen)
+                
+                custom_menu.addSeparator()
                 custom_menu.addAction(actionDryPaper)
+                
                 custom_menu.addAction(actionToggleMc)
+                
+                custom_menu.addSeparator()
                 custom_menu.addAction(actionRestore)
                 custom_menu.addAction(actionSave)
+                custom_menu.addSeparator()
                 # custom_menu.addAction(actionPick)
                 # custom_menu.addAction(actionMix)
                 # custom_menu.addAction(actionMixSmall)
-                custom_menu.addAction(actionViewFullScreen)
+                
                 custom_menu.addAction(actionIncreaseLO)
                 custom_menu.addAction(actiondeclo)
+                custom_menu.addSeparator()
                 custom_menu.addAction(actionincmi)
                 custom_menu.addAction(actiondecmi)
+                custom_menu.addSeparator()
                 custom_menu.addAction(actionToggle100)
                 custom_menu.addAction(actionToggle25)
                 
