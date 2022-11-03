@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ActionCollection version="2" name="Scripts">
+    <Actions category="Scripts">
+        <text>Decrease auto-reset opacity on pick-and-dry</text>
+
+        <Action name="DecreaseAutoResetOpacityOnPick">
+        <icon></icon>
+        <text>Decrease the level to which layer opacity is reset when you use "pick a color and dry paper"</text>
+        <whatsThis></whatsThis>
+        <toolTip></toolTip>
+        <iconText></iconText>
+        <activationFlags>0</activationFlags>
+        <activationConditions>0</activationConditions>
+        <shortcut>q</shortcut>
+        <isCheckable>false</isCheckable>
+        <statusTip></statusTip>
+        </Action>
+    </Actions>
+</ActionCollection>
