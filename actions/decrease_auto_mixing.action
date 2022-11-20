@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
-        <text>Increase default layer opacity</text>
+        <text>Decrease auto-mixing level</text>
 
-        <Action name="IncreaseAutoResetOpacityOnPick">
+        <Action name="decreaseAutoMixing">
         <icon></icon>
-        <text>Increase the default layer opacity</text>
+        <text>Pick less of the background at each stroke</text>
         <whatsThis></whatsThis>
         <toolTip></toolTip>
         <iconText></iconText>
         <activationFlags>0</activationFlags>
         <activationConditions>0</activationConditions>
-        <shortcut>w</shortcut>
+        <shortcut>shift+q</shortcut>
         <isCheckable>false</isCheckable>
         <statusTip></statusTip>
         </Action>

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
-        <text>Decrease auto-reset opacity on pick-and-dry</text>
+        <text>Decrease default layer opacity</text>
 
         <Action name="DecreaseAutoResetOpacityOnPick">
         <icon></icon>
-        <text>Decrease the level to which layer opacity is reset when you use "pick a color and dry paper"</text>
+        <text>Decrease the defalt layer opacity</text>
         <whatsThis></whatsThis>
         <toolTip></toolTip>
         <iconText></iconText>

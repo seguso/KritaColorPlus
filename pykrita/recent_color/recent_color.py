@@ -45,24 +45,46 @@ import xml
 import math
 import json
 
+g_blur_on_dry = False
+
 timeMessage = 300
 g_normal_step_layer_opacity = 20
 
 g_mixing_step = 0.05
 
-g_auto_mixing_uses_distance_logic = True
+g_auto_mixing_uses_distance_logic = False # perche' io posso prendere un colore molto diverso o molto simile. voglio contrastare sempre poco, mai tanto. altrimenti non attivo l'auto mixing.
+g_auto_mixing_just_once_logic = False
+g_auto_mixing_just_once_now_on = False
 
 g_step_mixing_target_distance = 2.5
 
-g_auto_mixing_target_distance = 30.0
-
+g_auto_mixing_target_distance = 50.0
+g_auto_mix__how_much_canvas_to_pick = 0.5 # value is ignored: will be read from settings --- 0.999 to drag color from canvas , e.g. to remove overlap. then set auto-mixing. 
 g_auto_opacity_max_distance = 40
+
+g_auto_dry_each_stroke = False
+
+g_auto_mix_paused = False
 
 global g_auto_mixing_dirty_brush
 g_auto_mixing_dirty_brush = False
 
 from PyQt5.QtCore import Qt, QModelIndex, QItemSelectionModel
 from PyQt5.QtWidgets import QTreeView
+
+
+
+class HelloDocker(DockWidget):
+    def __init__(self):
+        super().__init__()
+        label = QLabel("Hello", self)
+        self.setWidget(label)
+        self.label = label
+ 
+    def canvasChanged(self, canvas):
+        self.label.setText("Hellodocker: canvas changed");
+ 
+
 
 
 def get_layer_model():
@@ -126,6 +148,109 @@ def getColorUnderCursor(skipCurrentLayer = False):
         return None
 
 
+def dryPaper( showMessage = True):
+                global g_blur_on_dry
+                
+                print(f"dry paper called showMessage = {showMessage}")
+                application = Krita.instance()
+                currentDoc = application.activeDocument()
+                activeLayer = currentDoc.activeNode()
+                
+                if g_blur_on_dry:
+                    application.action('selectopaque').trigger()
+                    currentDoc.waitForDone () # action needs to finish before continuing
+                    selectionStroke = currentDoc.selection()
+                    blurFilter = application.filter('gaussian blur')
+                    blurFilter.setProperty('level', 50)
+                    blurFilter.setProperty('radius', 50)
+                
+                
+                parentNode = activeLayer.parentNode()
+                newLa = None
+                if parentNode is not None:  
+                
+                
+                        
+                
+                        print("dry paper called1")
+                        oldOpacity = activeLayer.opacity()
+                        
+                        #activeLayer.mergeDown()
+                        #currentDoc.waitForDone()
+                        
+                        root = currentDoc.rootNode()
+                        newLa = currentDoc.createNode("Wet_area", "paintLayer")
+                        newLa.setOpacity(oldOpacity)
+                        
+                        
+                        backgroundLayer = parentNode.childNodes()[0]
+                        
+                        
+                        parentNode.addChildNode(newLa, None)
+                        
+                        
+                        
+                        if g_blur_on_dry:
+                            # al layer precedente ad activeLayer, applica il blur
+                            for layerPrima in parentNode.childNodes()[ : -2]:
+                                
+                                print(f"applicando blur a  {layerPrima.name()}:{selectionStroke.x()}, {selectionStroke.y()}, {selectionStroke.width()},{selectionStroke.height()}")
+                                
+                                selFuori = Selection()
+                                selFuori.select(selectionStroke.x(), selectionStroke.y(), selectionStroke.width(), selectionStroke.height(), 255)
+                                selFuori.subtract(selectionStroke)
+                                
+                                currentDoc.setSelection(selFuori)
+                                selFuori.copy(layerPrima)
+                                
+                                blurFilter.apply(layerPrima, selectionStroke.x(), selectionStroke.y(), selectionStroke.width(), selectionStroke.height()) 
+                                
+                                currentDoc.setSelection(None)
+                                #paste è bacata, non posso usarlo                               
+                                #selFuori.paste(layerPrima, selectionStroke.x() + 20  , selectionStroke.y() + 20 ) # copia il pezzo che non doveva essere blurred
+                                
+                                currentDoc.setActiveNode(layerPrima)
+                                Krita.instance().action('edit_paste').trigger()
+                                
+                                
+                                currentDoc.waitForDone () # action needs to finish before continuing
+                                
+                                
+                                
+                                # ora ci devo 
+                                
+                                
+                            currentDoc.refreshProjection()
+                            currentDoc.setSelection(None)
+                            #currentDoc.setSelection(None)
+                        
+                        global g_opacity_decided_for_layer
+                        g_opacity_decided_for_layer = False
+                        
+                        
+                        # currentDoc.setActiveNode(newLa)
+                        
+                        
+                        
+                        # currentDoc.refreshProjection() # tenta di agggirare il bug di quickmessage a tutto schermo
+                        # currentDoc.waitForDone()
+                else:
+                        messageBox("In order to call \"Dry paper\", the current layer needs to have a parent group")
+                        showMessage = False
+                        # newLa = currentDoc.createNode("Wet_area", "paintLayer")
+                        # newLa.setOpacity(50.0 * 255.0 / 100.0)
+                        # root.addChildNode(newLa, None)
+                        
+                #test blur        
+                
+                if showMessage:
+                    print("dry paper called message")
+                    quickMessage("Dry paper")
+                    #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
+                        
+                return newLa
+        
+
 def node_to_index(node, model):
     path = list()
     while node and (node.index() >= 0):
@@ -164,9 +289,17 @@ class AutoFocusSetter(QObject):
     # eventFilter = bool(QObject obj, QEvent event)
 
     def eventFilter(self, obj, event):
+        global g_auto_mix_paused
         # if event.type() == QEvent.HoverEnter:
             # print(f"hover ")
         if event.type() == QEvent.Enter:
+            #print(f"enter")
+            # if obj.objectName() == "ColorSelectorNg":
+                # print(f"enter color selector ")
+            
+            # if isinstance(obj, QDockWidget):
+                # print(f"enter dock widget {obj.objectName()} ")
+                        
             #if obj.type() == QMdiSubWindow:
             if isinstance(obj, QMdiSubWindow):
                 #print(f"enter {obj} ")
@@ -175,8 +308,16 @@ class AutoFocusSetter(QObject):
                 q_win = wi.qwindow()
                 mdi_area = q_win.findChild(QMdiArea)
                 mdi_area.setActiveSubWindow(obj)
+                
+                
+                
+                if g_auto_mix_paused:
+                    g_auto_mix_paused = False
+                
                 #obj.activateWindow()
         if event.type() == QEvent.Leave:
+            #print(f"leave")
+            
             # logic: if the mouse leaver an always-on-top window, focus the first window that's not always on top. 
             # print(f"leave event ")
             if isinstance(obj, QMdiSubWindow):
@@ -187,6 +328,8 @@ class AutoFocusSetter(QObject):
                 
                 subwin = obj
                 isAlwaysOnTop = True if subwin.windowFlags() & Qt.WindowStaysOnTopHint else False
+                
+                
                 
                 if isAlwaysOnTop: #if mouse left an always-on-top window:
                     print ("is always-on-top")
@@ -204,6 +347,16 @@ class AutoFocusSetter(QObject):
                             break
                             
                             print ("focusing first window that's not always on top")
+                else:
+                    # mouse left a normal window. possibly it entered the color picker. So pause automixing, so you can use the picker
+                    
+                    if g_auto_mix_enabled:
+                        g_auto_mix_paused = True
+                        #print("pausing automix")
+                        resetForegroundColorToLastColorPicked()
+                    else:
+                        pass
+                        #print("leave, doing nothing, auto mix disabled")
                 
         # if event.type() == QEvent.MouseMove:
             # print (f"mousemove")
@@ -223,11 +376,20 @@ class AutoFocusSetter(QObject):
             
         global g_auto_mixing_dirty_brush
         global g_color_on_down_dirty_brush
+        global g_auto_mixing_just_once_now_on
+        global g_auto_mixing_just_once_logic
+        global g_auto_dry_each_stroke
         
         if event.type() == QEvent.MouseButtonRelease:
             # print("mouse buttonpress")
             
             
+            if g_auto_dry_each_stroke:
+                newLa = dryPaper(showMessage = False)
+            
+            
+            
+                
             # uncomment this to have dirty brush ===============
             
             if g_auto_mixing_dirty_brush:
@@ -282,6 +444,10 @@ class AutoFocusSetter(QObject):
         if event.type() == QEvent.MouseButtonPress:
             # print("mouse buttonpress")
             
+            
+            
+            if g_auto_mixing_just_once_logic:
+                g_auto_mixing_just_once_now_on = False
             
             
             if g_auto_mixing_dirty_brush:
@@ -496,6 +662,30 @@ class AutoFocusSetter(QObject):
 
 #print(Krita.instance().filters())
 
+def resetForegroundColorToLastColorPicked():
+                global g_last_color_picked
+                if g_last_color_picked is not None:
+                
+                    app = Krita.instance()
+                    win = app.activeWindow()
+                    if win is not None:
+                            view = win.activeView()
+                            if view is not None:
+                                fg = view.foregroundColor() 
+                                comp = fg.components() 
+                                # print(f"fg color = {comp}")
+                                     
+                                     
+                                
+                                comp[0] = (g_last_color_picked.r/255.0) 
+                                comp[1] = (g_last_color_picked.g / 255.0)
+                                comp[2] = (g_last_color_picked.b / 255.0) 
+                                
+                                fg.setComponents(comp)
+                                
+                                view.setForeGroundColor(fg)
+                                #print(f"color reset to {g_last_color_picked.toString()}")
+        
 class Dict2Class(object):
       
     def __init__(self, my_dict):
@@ -770,6 +960,10 @@ class MyExtension(Extension):
                 g_auto_reset_opacity_on_pick_level = float(Krita.instance().readSetting("colorPlus", "g_auto_reset_opacity_on_pick_level","68.0"))
                 
                 
+                global g_auto_mix__how_much_canvas_to_pick
+                g_auto_mix__how_much_canvas_to_pick = float(Krita.instance().readSetting("colorPlus", "g_auto_mix__how_much_canvas_to_pick","0.5"))
+                
+                
                 global g_auto_reset_opacity_on_pick
                 
                 g_auto_reset_opacity_on_pick = int(Krita.instance().readSetting("colorPlus", "g_auto_reset_opacity_on_pick","0"))
@@ -783,12 +977,14 @@ class MyExtension(Extension):
                 # dev values , only read when timer is active
                 global g_last_color_picked
                 g_last_color_picked = None # di tipo rgb
-                self.g_how_much_canvas_to_pick_on_timer = 0.75
+                
+                
+                
                 
                 self.g_auto_focus = Krita.instance().readSetting("colorPlus", "g_auto_focus", "true")
                 
                 
-                self.mix_radius = 2 # pixel
+                self.mix_radius = 1 # pixel
                 
                 self.temp_switched_to_100_previous_opac = None
                 
@@ -801,9 +997,9 @@ class MyExtension(Extension):
                 
                 
                 #creo il timer per il mixing
-                # self.timerMixon = QTimer()
-                # self.timerMixon.timeout.connect(self.mixOnTimer)
-                # self.timerMixon.start(40)
+                self.timerMixon = QTimer()
+                self.timerMixon.timeout.connect(self.mixOnTimer)
+                self.timerMixon.start(40)
                 
                 
                 #creo il timer 
@@ -854,6 +1050,8 @@ class MyExtension(Extension):
                 self.timer.start(1000)
                 
                 
+                Application.addDockWidgetFactory(DockWidgetFactory("hello", DockWidgetFactoryBase.DockRight, HelloDocker))
+                
                 print(f"init ok. home = {home}")
 
 
@@ -901,29 +1099,33 @@ class MyExtension(Extension):
         
         def onFgColorChanged(self):
             
-            
-            global g_timer_mix_active
-            if not g_timer_mix_active:  # otherwise it is the auto-mixing timer that changed the color. ignore
+            # |print("fg color changed event")
+            global g_auto_mix_enabled
+            global g_auto_mix_paused
+            if not g_auto_mix_enabled or g_auto_mix_paused:  # otherwise it is the auto-mixing timer that changed the color. ignore
                     
                     
                 # devo settare questo colore come target per l'auto-mixing
                 view  = Krita.instance().activeWindow().activeView()
                 if view is not None:
                     fg = view.foregroundColor()
-                    comp = fg.components() 
-                    
-                    if len(comp) == 4:
+                    if fg is not None:
+                        comp = fg.components() 
                         
-                        mergedColor = rgb(comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255)
+                        if len(comp) == 4:
                             
+                            mergedColor = rgb(comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255)
+                                
 
-                        global g_last_color_picked
-                        g_last_color_picked = mergedColor #lo memorizzo
-                        
-                        print(f"setting last_color_picked = {g_last_color_picked.toString()}")
+                            global g_last_color_picked
+                            g_last_color_picked = mergedColor #lo memorizzo
+                            
+                            #print(f"setting last_color_picked = {g_last_color_picked.toString()}")
+                                                            
                                                         
-                                                        
-                                                
+            else:
+                    pass
+                    #print(f"fg color changed event ignored. paused = {g_auto_mix_paused}")
 
         def onWindowCreated(self): #called by framework
                 print("on window created  ")
@@ -1260,7 +1462,7 @@ class MyExtension(Extension):
                 curOpac = activeLayer.opacity()
                 
                 if self.temp_switched_to_100_previous_opac is None:
-                    newLa = self.dryPaper(False)
+                    newLa = dryPaper(False)
                     
                     activeLayer = newLa
                     # currentDoc = application.activeDocument()
@@ -1289,7 +1491,7 @@ class MyExtension(Extension):
                     
                     quickMessage(f"Temporarily set 100% opacity. Press again to restore.")
                 else:
-                    newLa = self.dryPaper(False)
+                    newLa = dryPaper(False)
                     
                     # currentDoc = application.activeDocument()
                     activeLayer = newLa #currentDoc.activeNode()
@@ -1312,7 +1514,7 @@ class MyExtension(Extension):
                 curOpac = activeLayer.opacity()
                 
                 if self.temp_switched_to_25_previous_opac is None:
-                    activeLayer = self.dryPaper(False)
+                    activeLayer = dryPaper(False)
                     
                     if self.temp_switched_to_100_previous_opac is not None:
                         self.temp_switched_to_25_previous_opac = self.temp_switched_to_100_previous_opac
@@ -1325,7 +1527,7 @@ class MyExtension(Extension):
                     
                     quickMessage(f"Temporarily set 25% opacity. Press again to restore.")
                 else:
-                    activeLayer = self.dryPaper(False)
+                    activeLayer = dryPaper(False)
                     activeLayer.setOpacity(self.temp_switched_to_25_previous_opac)
                     
                     
@@ -1644,49 +1846,32 @@ class MyExtension(Extension):
                 print (f"key {k}")
             
             
+        
         def toggleAutoMixing(self):
-            global g_timer_mix_active
+            global g_auto_mix_enabled
+            global g_auto_mixing_just_once_logic
+            global g_auto_mixing_just_once_now_on
             
-            if g_timer_mix_active:
+            if g_auto_mix_enabled:
                 
-                g_timer_mix_active = False
+                g_auto_mix_enabled = False
                 
                 # you probably disabled auto-mixing in order to manually change the fg color (= target color). but the color selector has probably changed. so reset it to the current target
-                
-                global g_last_color_picked
-                if g_last_color_picked is not None:
-                
-                    app = Krita.instance()
-                    win = app.activeWindow()
-                    if win is not None:
-                            view = win.activeView()
-                            if view is not None:
-                                fg = view.foregroundColor() 
-                                comp = fg.components() 
-                                # print(f"fg color = {comp}")
-                                     
-                                     
-                                
-                                comp[0] = (g_last_color_picked.r/255.0) 
-                                comp[1] = (g_last_color_picked.g / 255.0)
-                                comp[2] = (g_last_color_picked.b / 255.0) 
-                                
-                                fg.setComponents(comp)
-                                
-                                view.setForeGroundColor(fg)
-                                print(f"color reset to {g_last_color_picked.toString()}")
+                resetForegroundColorToLastColorPicked()
                                 
                 quickMessage("Disabled auto-mixing")                                        
             else:
                 quickMessage("Enabled auto-mixing")
-                g_timer_mix_active = True
+                g_auto_mix_enabled = True
                 
                 
         def mixOnTimer(self):
-                global g_timer_mix_active
+                global g_auto_mix_enabled
                 # print("timer 1")
                 global g_last_color_picked
-                if g_last_color_picked is None or not g_timer_mix_active :
+                global g_auto_mix_paused
+                
+                if g_last_color_picked is None or not g_auto_mix_enabled  or g_auto_mix_paused or (g_auto_mixing_just_once_logic and not g_auto_mixing_just_once_now_on):
                         return
                         
                 # print("timer 2")        
@@ -1713,15 +1898,15 @@ class MyExtension(Extension):
                                         if parentNode is not None:
                                         
                                                 brothers = parentNode.childNodes()
-                                                colors = []
                                                 
-                                                #positions = [ xy(doc_pos.x(), doc_pos.y())
-                                                # ,
-                                                                                                # xy(doc_pos.x() + self.mix_radius, doc_pos.y() + self.mix_radius),
-                                                                                                # xy(doc_pos.x() - self.mix_radius, doc_pos.y() + self.mix_radius),
-                                                                                                # xy(doc_pos.x() + self.mix_radius, doc_pos.y() - self.mix_radius),
-                                                                                                # xy(doc_pos.x() - self.mix_radius, doc_pos.y() - self.mix_radius) 
-                                                  #                                                  ]
+                                                
+                                                positions = [ xy(doc_pos.x(), doc_pos.y())
+                                                ,
+                                                                                                xy(doc_pos.x() + self.mix_radius, doc_pos.y() + self.mix_radius),
+                                                                                                xy(doc_pos.x() - self.mix_radius, doc_pos.y() + self.mix_radius),
+                                                                                                xy(doc_pos.x() + self.mix_radius, doc_pos.y() - self.mix_radius),
+                                                                                                xy(doc_pos.x() - self.mix_radius, doc_pos.y() - self.mix_radius) 
+                                                                                                   ]
                                                                         
 
 
@@ -1729,180 +1914,185 @@ class MyExtension(Extension):
 
 
                                                                         
-                                                # merged_colors = [] # lista di rgb, uno per posizione
+                                                merged_colors = [] # lista di rgb, uno per posizione. ognuno è il risultato di un merge di ogni layer, in quella data posizione
                                                 
                                                                                          
                                                 
                                                 
-                                                pos =  xy(doc_pos.x(), doc_pos.y())
-                                                #for pos in positions:
+                                                # pos =  xy(doc_pos.x(), doc_pos.y())
                                                 
-                                                #costruisco colors
-                                                for curLayer in brothers:
-                                                    
-                                                    
-                                                    # important choice: skip the fg layer or not? I f you don't skip the curent layer, if you click on the previous stroke it adds to it. The problem is that you can drag the color along.
-                                                    #if curLayer.uniqueId() != document.activeNode().uniqueId() : 
-                                                        
-                                                        self.pixelBytes = curLayer.pixelData(pos.x, pos.y, 1, 1)
-                                                        
-                                                        self.imageData = QImage(self.pixelBytes, 1, 1, QImage.Format_RGBA8888)
-                                                        self.pixelC = self.imageData.pixelColor(0,0)
-                                                    
-                                                        #devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
-                                                        # if curLayer.uniqueId() == document.activeNode().uniqueId():
-                                                            # correzMul = 1.0
-                                                        # else:
-                                                        layerOpac = curLayer.opacity() # tra  0 e 255
-                                                        correzMul = float(layerOpac) /  255.0
-                                                                                                                
-                                                        
-                                                        #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha()}")
-                                                        
-                                                        colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha()  * correzMul))
                                                 
-                                                #creo il colore composito
-                                                if len(colors) > 0:  # altrimenti c'è un solo layer, quello attuale
-                                                    mergedColor = calcolaCompositeColor(colors); # tipo rgb
-                                                                                                            
-                                                    # merged_colors.append(mergedColor)
+                                                
+                                                for pos in positions:
+                                                
+                                                    #costruisco colors  , uno per layer                                              
+                                                    colors = []
+                                                    for curLayer in brothers:
+                                                        
+                                                        
+                                                        # important choice: skip the fg layer or not? I f you don't skip the curent layer, if you click on the previous stroke it adds to it. The problem is that you can drag the color along.
+                                                        #if curLayer.uniqueId() != document.activeNode().uniqueId() : 
+                                                            
+                                                            self.pixelBytes = curLayer.pixelData(pos.x, pos.y, 1, 1)
+                                                            
+                                                            self.imageData = QImage(self.pixelBytes, 1, 1, QImage.Format_RGBA8888)
+                                                            self.pixelC = self.imageData.pixelColor(0,0)
+                                                        
+                                                            #devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
+                                                            # if curLayer.uniqueId() == document.activeNode().uniqueId():
+                                                                # correzMul = 1.0
+                                                            # else:
+                                                            layerOpac = curLayer.opacity() # tra  0 e 255
+                                                            correzMul = float(layerOpac) /  255.0
+                                                                                                                    
+                                                            
+                                                            #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha()}")
+                                                            
+                                                            colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha()  * correzMul))
+                                                    
+                                                    mergedColorOfAllLayers = calcolaCompositeColor(colors); # tipo rgb
+                                                    merged_colors.append(mergedColorOfAllLayers)
 
-                                                        
-                                                                
-                                                    # # faccio la media di tutti i merged colors
-                                                
-                                                    # media  = merged_colors[0]
-                                                    # for  m in merged_colors:
-                                                            # media = m.average(media)
-                                                            
-                                                    # mergedColor = media
-                                                                    
-                                                                    
-                                                                    
-                                                                    
-                                                                    
-                                                                    
-                                                    # setto il fg color uguale a merged color mischiato con il memorizzato (non con il fg)
-                                                    
-                                                    fg = view.foregroundColor() 
-                                                    comp = fg.components() 
-                                                    
-                                                    
-                                                    global g_auto_mixing_uses_distance_logic
-                                                    if g_auto_mixing_uses_distance_logic:
-                                                    
-                                                                                    
-                                                                                    
-                                                            bgColor = mergedColor
 
+
+                                                #creo il colore composito tra tutte le posizioni
+                                                # faccio la media di tutti i merged colors
+                                            
+                                                media  = merged_colors[0]
+                                                for  m in merged_colors:
+                                                        media = m.average(media)
+                                                        
+                                                mergedColor = media
                                                                 
-                                                            # setto il fg color uguale a merged color (cioè bg color) mischiato con l'ultimo colore memorizzato
+                                                                
+                                                                
+                                                                
+                                                                
+                                                                
+                                                # setto il fg color uguale a merged color mischiato con il memorizzato (non con il fg)
+                                                
+                                                fg = view.foregroundColor() 
+                                                comp = fg.components() 
+                                                
+                                                
+                                                global g_auto_mixing_uses_distance_logic
+                                                if g_auto_mixing_uses_distance_logic:
+                                                
+                                                                                
+                                                                                
+                                                        bgColor = mergedColor
+
                                                             
-                                                            fg2 = g_last_color_picked # rgbOfManagedColor(fg) # valori da 0 a 255
-                                                            #fg2.print("fg2")
+                                                        # setto il fg color uguale a merged color (cioè bg color) mischiato con l'ultimo colore memorizzato
+                                                        
+                                                        fg2 = g_last_color_picked # rgbOfManagedColor(fg) # valori da 0 a 255
+                                                        #fg2.print("fg2")
+                                                        
+                                                        comp = fg.components() 
+                                                        #print(f"fg color = {comp}")
+                         
+                                                        dist = fg2.distance(bgColor)
+                                                        #print(f"distance = {dist}, target distance = {self.mixing_target_distance}")
+                         
+                                                        
+                                                        curDist = None
+                                                        picked50 = False
+                                                        global g_auto_mixing_target_distance
+                                                        
+                                                        curLayerTransp01 = float(document.activeNode().opacity()) / 255.0
+                                                        target_distance_corretta_per_layer_transp = g_auto_mixing_target_distance / curLayerTransp01
+                                                        
+                                                        # calcola curFg
+                                                        if dist  <= target_distance_corretta_per_layer_transp:
+                                                            #i colori sono molto vicini. fai 50%
+                                                            curMul = 0.5
+                                                            curFg = rgb( fg2.r * curMul + bgColor.r * (1.0 - curMul),
+                                                                                            fg2.g * curMul + bgColor.g * (1.0 - curMul),
+                                                                                            fg2.b * curMul + bgColor.b * (1.0 - curMul),
+                                                                                            255)
+                                                            curDist = dist
+                                                            picked50 = True
+                                                        else:  # i colori sono lontani. avvicina poco a poco finché la distanza del curFg dall'origFg non diventa > target
+                                                        
+                                                            stepMul = 0.005
                                                             
-                                                            comp = fg.components() 
-                                                            #print(f"fg color = {comp}")
-                             
-                                                            dist = fg2.distance(bgColor)
-                                                            #print(f"distance = {dist}, target distance = {self.mixing_target_distance}")
-                             
                                                             
-                                                            curDist = None
-                                                            picked50 = False
-                                                            global g_auto_mixing_target_distance
+                                                            curMul = 1.0
                                                             
-                                                            # calcola curFg
-                                                            if dist  <= g_auto_mixing_target_distance:
-                                                                #i colori sono molto vicini. fai 50%
-                                                                curMul = 0.5
+                                                            while True:
+                                                                
                                                                 curFg = rgb( fg2.r * curMul + bgColor.r * (1.0 - curMul),
-                                                                                                fg2.g * curMul + bgColor.g * (1.0 - curMul),
-                                                                                                fg2.b * curMul + bgColor.b * (1.0 - curMul),
-                                                                                                255)
-                                                                curDist = dist
-                                                                picked50 = True
-                                                            else:  # i colori sono lontani. avvicina poco a poco finché la distanza del curFg dall'origFg non diventa > target
-                                                            
-                                                                stepMul = 0.005
+                                                                                            fg2.g * curMul + bgColor.g * (1.0 - curMul),
+                                                                                            fg2.b * curMul + bgColor.b * (1.0 - curMul),
+                                                                                            255)
+                                                                                            
+                                                                curDist = curFg.distance(bgColor)
                                                                 
+                                                                #print(f"iterando. mul  = {curMul}, dist  tra {curFg.toString()} e {fg2.toString()} = {curDist}. ")
                                                                 
-                                                                curMul = 1.0
-                                                                
-                                                                while True:
+                                                                if curDist <= target_distance_corretta_per_layer_transp:  
+                                                                    break
                                                                     
-                                                                    curFg = rgb( fg2.r * curMul + bgColor.r * (1.0 - curMul),
-                                                                                                fg2.g * curMul + bgColor.g * (1.0 - curMul),
-                                                                                                fg2.b * curMul + bgColor.b * (1.0 - curMul),
-                                                                                                255)
-                                                                                                
-                                                                    curDist = curFg.distance(bgColor)
+                                                                if curMul <= 0:
+                                                                    break
                                                                     
-                                                                    #print(f"iterando. mul  = {curMul}, dist  tra {curFg.toString()} e {fg2.toString()} = {curDist}. ")
+                                                                curMul -= stepMul   
                                                                     
-                                                                    if curDist <= g_auto_mixing_target_distance:  
-                                                                        break
-                                                                        
-                                                                    if curMul <= 0:
-                                                                        break
-                                                                        
-                                                                    curMul -= stepMul   
-                                                                        
-                                                                picked50 = False
-                                                                
-                                                            #canv = howMuchCanvas # pick half color from canvas
+                                                            picked50 = False
                                                             
-                                                            comp[0] = curFg.r / 255.0
-                                                            comp[1] = curFg.g / 255.0
-                                                            comp[2] = curFg.b / 255.0
-                                                            
-                                                            
-                                                            # fgMul = 1.0 - canv
-                                                            # comp[0] = comp[0] * fgMul + (bgColor.r / 255.0)  * canv
-                                                            # comp[1] = comp[1] * fgMul + (bgColor.g / 255.0)  * canv
-                                                            # comp[2] = comp[2] * fgMul + (bgColor.b  / 255.0)  * canv
-                                                            
+                                                        #canv = howMuchCanvas # pick half color from canvas
                                                         
-                                                      
-                                                            fg.setComponents(comp)
-                                                            
-                                                            view.setForeGroundColor(fg)
-                                                            
-                                                            
-                                                         
-                                                            
-                                                                                    
+                                                        comp[0] = curFg.r / 255.0
+                                                        comp[1] = curFg.g / 255.0
+                                                        comp[2] = curFg.b / 255.0
+                                                        
+                                                        
+                                                        # fgMul = 1.0 - canv
+                                                        # comp[0] = comp[0] * fgMul + (bgColor.r / 255.0)  * canv
+                                                        # comp[1] = comp[1] * fgMul + (bgColor.g / 255.0)  * canv
+                                                        # comp[2] = comp[2] * fgMul + (bgColor.b  / 255.0)  * canv
+                                                        
                                                     
-                                                    
-                                                    else: # normal logic
-                                                    
-                                                        
-                                                        
-                                                        
-                                                        
-                                                        
-                                                        
-                                                        
-                                                        
-                                                        # print(f"fg color = {comp}")
-                         
-                         
-                                                        
-                                                        canv = self.g_how_much_canvas_to_pick_on_timer
-                                                        
-                                                        fgMul = 1.0 - canv
-                                                        comp[0] = (g_last_color_picked.r/255.0) * fgMul + (mergedColor.r / 255.0)  * canv
-                                                        comp[1] = (g_last_color_picked.g / 255.0) * fgMul + (mergedColor.g / 255.0)  * canv
-                                                        comp[2] = (g_last_color_picked.b / 255.0) * fgMul + (mergedColor.b  / 255.0)  * canv
-                                                        
-                                                        # comp[0] =  (mergedColor.r / 255.0)  
-                                                        # comp[1] =  (mergedColor.g / 255.0)
-                                                        # comp[2] = (mergedColor.b  / 255.0)
                                                   
                                                         fg.setComponents(comp)
                                                         
                                                         view.setForeGroundColor(fg)
+                                                        
+                                                        
+                                                     
+                                                        
+                                                                                
                                                 
+                                                
+                                                else: # normal logic
+                                                
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    # print(f"fg color = {comp}")
+                     
+                     
+                                                    global g_auto_mix__how_much_canvas_to_pick
+                                                    canv = g_auto_mix__how_much_canvas_to_pick
+                                                    
+                                                    fgMul = 1.0 - canv
+                                                    comp[0] = (g_last_color_picked.r/255.0) * fgMul + (mergedColor.r / 255.0)  * canv
+                                                    comp[1] = (g_last_color_picked.g / 255.0) * fgMul + (mergedColor.g / 255.0)  * canv
+                                                    comp[2] = (g_last_color_picked.b / 255.0) * fgMul + (mergedColor.b  / 255.0)  * canv
+                                                    
+                                                    # comp[0] =  (mergedColor.r / 255.0)  
+                                                    # comp[1] =  (mergedColor.g / 255.0)
+                                                    # comp[2] = (mergedColor.b  / 255.0)
+                                              
+                                                    fg.setComponents(comp)
+                                                    
+                                                    view.setForeGroundColor(fg)
+                                            
                                                 
 
                 
@@ -1914,6 +2104,8 @@ class MyExtension(Extension):
         
                                    
         def pick(self, showMessage = True):
+                global g_auto_mixing_just_once_now_on
+                global g_auto_mixing_just_once_logic
                 # print("pick called")
                 app = Krita.instance()
                 win = app.activeWindow()
@@ -2001,7 +2193,10 @@ class MyExtension(Extension):
                                                     fg.setComponents(comp)
                                                     
                                                     view.setForeGroundColor(fg)
-
+                            
+                                                    if g_auto_mixing_just_once_logic:
+                                                        g_auto_mixing_just_once_now_on = True
+                                                        
                                                     # messaggio
                                                     if showMessage:
                                                         view.showFloatingMessage("Pick color", QIcon(), timeMessage, 1)
@@ -2031,7 +2226,29 @@ class MyExtension(Extension):
                 quickMessage(f"Decreased mixing to {round(self.g_how_much_canvas_to_pick * 100.0)}%")
         
 
+        def increaseAutoMixing(self):
+                global g_auto_mix__how_much_canvas_to_pick
+                global g_mixing_step
+                g_auto_mix__how_much_canvas_to_pick += g_mixing_step
+                if g_auto_mix__how_much_canvas_to_pick > 1.0:
+                        g_auto_mix__how_much_canvas_to_pick = 1.0
+                        
+                Krita.instance().writeSetting("colorPlus", "g_auto_mix__how_much_canvas_to_pick", str(g_auto_mix__how_much_canvas_to_pick))
+                
+                quickMessage(f"Increased auto-mixing to {round(g_auto_mix__how_much_canvas_to_pick * 100.0)}%")
         
+        def decreaseAutoMixing(self):
+                global g_auto_mix__how_much_canvas_to_pick
+                global g_mixing_step
+                g_auto_mix__how_much_canvas_to_pick -= g_mixing_step
+                if g_auto_mix__how_much_canvas_to_pick < 0.0:
+                        g_auto_mix__how_much_canvas_to_pick = 0.0
+                        
+                Krita.instance().writeSetting("colorPlus", "g_auto_mix__how_much_canvas_to_pick", str(g_auto_mix__how_much_canvas_to_pick))
+                
+                quickMessage(f"Decreased auto-mixing to {round(g_auto_mix__how_much_canvas_to_pick * 100.0)}%")
+        
+
         
         def increaseAutoResetOpacityOnPick (self):
                 global g_auto_reset_opacity_on_pick_level
@@ -2041,7 +2258,7 @@ class MyExtension(Extension):
                         
                 Krita.instance().writeSetting("colorPlus", "g_auto_reset_opacity_on_pick_level", str(g_auto_reset_opacity_on_pick_level))
                 
-                quickMessage(f"Increased auto-reset-opacity-on-pick to {round(g_auto_reset_opacity_on_pick_level)}%")
+                quickMessage(f"Increased default opacity to {round(g_auto_reset_opacity_on_pick_level)}%")
         def decreaseAutoResetOpacityOnPick (self):
                 global g_auto_reset_opacity_on_pick_level
                 g_auto_reset_opacity_on_pick_level -= 5.0
@@ -2050,7 +2267,7 @@ class MyExtension(Extension):
                         
                 Krita.instance().writeSetting("colorPlus", "g_auto_reset_opacity_on_pick_level", str(g_auto_reset_opacity_on_pick_level))
                 
-                quickMessage(f"Decreased auto-reset-opacity-on-pick to {round(g_auto_reset_opacity_on_pick_level)}%")
+                quickMessage(f"Decreased default opacity to {round(g_auto_reset_opacity_on_pick_level)}%")
         
 
         
@@ -2075,11 +2292,21 @@ class MyExtension(Extension):
         
                 global g_normal_step_layer_opacity
                 
-                #self.dryPaper() # conviene, perche' tanto significa che i segni precedenti non si vedono.
+                #dryPaper() # conviene, perche' tanto significa che i segni precedenti non si vedono.
                 
                 application = Krita.instance()
                 currentDoc = application.activeDocument()
-                activeLayer = currentDoc.activeNode()
+                
+                if g_auto_dry_each_stroke:
+                    parentNode = currentDoc.activeNode().parentNode()
+                    if parentNode is not None:
+                         activeLayer = parentNode.childNodes()[-2]
+                    else:
+                            activeLayer = currentDoc.activeNode()
+                else:
+                    activeLayer = currentDoc.activeNode()
+                    
+                
                 curOpac = activeLayer.opacity()
                 
                 if curOpac <= 12.0 * 255.0 / 100.0:
@@ -2151,7 +2378,16 @@ class MyExtension(Extension):
                 
                 application = Krita.instance()
                 currentDoc = application.activeDocument()
-                activeLayer = currentDoc.activeNode()
+                if g_auto_dry_each_stroke:
+                    parentNode = currentDoc.activeNode().parentNode()
+                    if parentNode is not None:
+                         activeLayer = parentNode.childNodes()[-2]
+                    else:
+                            activeLayer = currentDoc.activeNode()
+                else:
+                    activeLayer = currentDoc.activeNode()
+                    
+                    
                 curOpac = activeLayer.opacity()
                 
                 global g_normal_step_layer_opacity
@@ -2234,7 +2470,7 @@ class MyExtension(Extension):
                                         
                                         
         def dryPaperWithMessage(self):
-            self.dryPaper(True)
+            dryPaper(True)
             
         def dryPaperOldWithMerge(self, showMessage = True):
                 global g_opacity_decided_for_layer
@@ -2292,59 +2528,6 @@ class MyExtension(Extension):
                         
                 return newLa
         
-        def dryPaper(self, showMessage = True):
-                print(f"dry paper called showMessage = {showMessage}")
-                application = Krita.instance()
-                currentDoc = application.activeDocument()
-                activeLayer = currentDoc.activeNode()
-                
-                # application.action('selectopaque').trigger()
-                # currentDoc.waitForDone () # action needs to finish before continuing
-                # selectionStroke = currentDoc.selection()
-                
-                parentNode = activeLayer.parentNode()
-                newLa = None
-                if parentNode is not None:  
-                        print("dry paper called1")
-                        oldOpacity = activeLayer.opacity()
-                        
-                        #activeLayer.mergeDown()
-                        #currentDoc.waitForDone()
-                        
-                        root = currentDoc.rootNode()
-                        newLa = currentDoc.createNode("Wet_area", "paintLayer")
-                        newLa.setOpacity(oldOpacity)
-                        
-                        backgroundLayer = parentNode.childNodes()[0]
-                        
-                        
-                        parentNode.addChildNode(newLa, None)
-                        
-                        global g_opacity_decided_for_layer
-                        g_opacity_decided_for_layer = False
-                        
-                        
-                        # currentDoc.setActiveNode(newLa)
-                        # currentDoc.refreshProjection()
-                        # currentDoc.waitForDone()
-                        
-                        
-                        
-                else:
-                        messageBox("In order to call \"Dry paper\", the current layer needs to have a parent group")
-                        showMessage = False
-                        # newLa = currentDoc.createNode("Wet_area", "paintLayer")
-                        # newLa.setOpacity(50.0 * 255.0 / 100.0)
-                        # root.addChildNode(newLa, None)
-                        
-                #test blur        
-                
-                if showMessage:
-                    print("dry paper called message")
-                    quickMessage("Dry paper")
-                    #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
-                        
-                return newLa
         
         def mergeOnTimer(self): # does not work. cannot set the active layer after merging down.
                     #print(f"dry paper called showMessage = {showMessage}")
@@ -2458,6 +2641,20 @@ class MyExtension(Extension):
                         
                 return newLa
         
+        def manualResetLayerOpacityToDefault(self):
+                global g_auto_reset_opacity_on_pick_level
+                
+                application = Krita.instance()
+                document = application.activeDocument()
+                
+                                        
+                if document is not None :
+                    document.activeNode().setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) # bm_djiwejdie
+                    
+                    document.refreshProjection()
+                    
+                    quickMessage(f"Reset layer opacity to default ({round(g_auto_reset_opacity_on_pick_level )}%)")
+        
         def dryPaperAndPick(self):
             print("dry paper and pick")
             
@@ -2499,16 +2696,24 @@ class MyExtension(Extension):
             global g_auto_reset_opacity_on_pick
             
             if  self.temp_switched_to_100_previous_opac is None and hasParentNode: # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
-                newLa = self.dryPaper(showMessage = False)
+                newLa = dryPaper(showMessage = False)
                 
                 # if active layer opacity < 70, set to 70
                                         
-                if g_auto_reset_opacity_on_pick == 1 and  document is not None and newLa.opacity() < g_auto_reset_opacity_on_pick_level * 255.0 / 100.0:
+                if g_auto_reset_opacity_on_pick == 1 and  document is not None :
                     newLa.setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) # bm_djiwejdie
                     
                     document.refreshProjection()
                     
                 quickMessage("Dry paper and pick color")
+            elif self.temp_switched_to_100_previous_opac is not None and hasParentNode:
+                # non faccio dry, ma devo cmq resettare l'opacità del layer attuale
+                
+                if g_auto_reset_opacity_on_pick == 1 and  document is not None :
+                    document.activeNode().setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) # bm_djiwejdie
+                    
+                    document.refreshProjection()
+                
             else:
                 #useless to dry paper because I am at 100% opacity
                 quickMessage("Picked color")
@@ -2682,8 +2887,8 @@ class MyExtension(Extension):
                 actionMix = window.createAction("MixColor", "Mix color  (pick some color under cursor but not all of it)")
                 actionMix.triggered.connect(self.mixFgColorWithBgColor_normalLogic)
                 
-                actionMixSmall = window.createAction("MixColorSmall", "Pick some color from canvas, but no more than a given distance")
-                actionMixSmall.triggered.connect(self.mixFgColorWithBgColor_maxDistanceLogic)
+                # actionMixSmall = window.createAction("MixColorSmall", "Pick some color from canvas, but no more than a given distance")
+                # actionMixSmall.triggered.connect(self.mixFgColorWithBgColor_maxDistanceLogic)
                 
                 actionPickAndDry = window.createAction("DryPaperAndPick", "Pick color under cursor and dry the paper")
                 actionPickAndDry.triggered.connect(self.dryPaperAndPick)
@@ -2714,19 +2919,19 @@ class MyExtension(Extension):
                 # actiondecao = window.createAction("DecreaseMaxDistanceAutoOpacity", "Decrease max distance for auto opacity")
                 # actiondecao.triggered.connect(self.decreaseAutoOpacityMaxDistance)
 
-                actionincmi = window.createAction("IncreaseMixing", "Increase mixing level (increase amount of color you pick from canvas when mixing)")
+                actionincmi = window.createAction("IncreaseMixing", "Increase mixing level (amount of color you pick from canvas when mixing)")
                 actionincmi.triggered.connect(self.increaseMixing)
 
-                actiondecmi = window.createAction("DecreaseMixing", "Decrease mixing level (decrease amount of color you pick from canvas when mixing)")
+                actiondecmi = window.createAction("DecreaseMixing", "Decrease mixing level (amount of color you pick from canvas when mixing)")
                 actiondecmi.triggered.connect(self.decreaseMixing)
 
 
-                actioninaro= window.createAction("IncreaseAutoResetOpacityOnPick", "Increase target opacity for auto-reset on pick")
+                actioninaro= window.createAction("IncreaseAutoResetOpacityOnPick", "Increase default layer opacity")
                 actioninaro.setShortcut("w")
                 actioninaro.triggered.connect(self.increaseAutoResetOpacityOnPick)
 
 
-                actiondearo= window.createAction("DecreaseAutoResetOpacityOnPick", "Decrease target opacity for auto-reset on pick")
+                actiondearo= window.createAction("DecreaseAutoResetOpacityOnPick", "Decrease default layer opacity")
                 actiondearo.setShortcut("q")
                 actiondearo.triggered.connect(self.decreaseAutoResetOpacityOnPick)
 
@@ -2759,20 +2964,19 @@ class MyExtension(Extension):
                 
 
                 global g_auto_reset_opacity_on_pick
-                self.actionAutoResOpPick= window.createAction("toggleAutoResetOpacityOnPick", "Auto reset opacity on color pick")
+                self.actionAutoResOpPick= window.createAction("toggleAutoResetOpacityOnPick", "Auto-reset layer opacity to default on color pick")
                 self.actionAutoResOpPick.setCheckable(True)
                 self.actionAutoResOpPick.setChecked(g_auto_reset_opacity_on_pick == 1)
                 self.actionAutoResOpPick.triggered.connect(self.toggleAutoResetOpacityOnPick)
                 
 
-                global g_timer_mix_active
-                g_timer_mix_active = False
-                # self.actionAutoPicking= window.createAction("toggleAutoMixing", "Auto mixing (each stroke picks a bit of color from the bg layer)")
-                # self.actionAutoPicking.setCheckable(True)
-                # self.actionAutoPicking.setShortcut("q")                
-                # self.actionAutoPicking.triggered.connect(self.toggleAutoMixing)
 
+                self.manualResOpPick= window.createAction("manualResetLayerOpacityToDefault", "Reset layer opacity to default now")
+                self.manualResOpPick.setShortcut("v")
+                self.manualResOpPick.triggered.connect(self.manualResetLayerOpacityToDefault)
+                
 
+                
                 
                 main_menu = window.qwindow().menuBar()
                 custom_menu = main_menu.addMenu("ColorPlus")
@@ -2781,8 +2985,27 @@ class MyExtension(Extension):
                 custom_menu.addSeparator()
                 custom_menu.addAction(actionViewFullScreen)
                 
-                # custom_menu.addSeparator()
-                # custom_menu.addAction(self.actionAutoPicking)
+                
+                global g_auto_mix_enabled
+                g_auto_mix_enabled = False
+                self.actionAutoMix= window.createAction("toggleAutoMixing", "Auto mixing (each stroke picks a bit of color from the bg layer)")
+                self.actionAutoMix.setCheckable(True)
+                self.actionAutoMix.setShortcut("r")                
+                self.actionAutoMix.triggered.connect(self.toggleAutoMixing)
+
+
+                self.actionIncAutoMix = window.createAction("increaseAutoMixing", "Increase auto-mixing (amount of bg color you pick at each stroke)")
+                self.actionIncAutoMix.setShortcut("shift+w")
+                self.actionIncAutoMix.triggered.connect(self.increaseAutoMixing)
+                
+                self.actionDecAutoMix = window.createAction("decreaseAutoMixing", "Decrease auto-mixing (amount of bg color you pick at each stroke)")
+                self.actionDecAutoMix.setShortcut("shift+q")
+                self.actionDecAutoMix.triggered.connect(self.decreaseAutoMixing)
+
+                custom_menu.addSeparator()
+                custom_menu.addAction(self.actionAutoMix)
+                custom_menu.addAction(self.actionIncAutoMix)
+                custom_menu.addAction(self.actionDecAutoMix)
                 
                 custom_menu.addSeparator()
                 custom_menu.addAction(actionDryPaper)
@@ -2801,6 +3024,7 @@ class MyExtension(Extension):
                 custom_menu.addAction(self.actionAutoResOpPick)
                 custom_menu.addAction(actioninaro)
                 custom_menu.addAction(actiondearo)
+                custom_menu.addAction(self.manualResOpPick)
                 
                 
                 custom_menu.addSeparator()

@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
-        <text>Decrease layer opacity</text>
+        <text>Decrease current layer opacity</text>
 
         <Action name="DecreaseLayerOpacity">
         <icon></icon>
-        <text>Decrease layer opacity</text>
+        <text>Decrease opacity of current layer</text>
         <whatsThis></whatsThis>
         <toolTip></toolTip>
         <iconText></iconText>
         <activationFlags>0</activationFlags>
         <activationConditions>0</activationConditions>
-        <shortcut>shift+a</shortcut>
+        <shortcut>a</shortcut>
         <isCheckable>false</isCheckable>
         <statusTip></statusTip>
         </Action>

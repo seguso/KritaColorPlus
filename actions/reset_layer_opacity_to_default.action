@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
-        <text>Toggle auto-mixing</text>
+        <text>Reset layer opacity to default</text>
 
-        <Action name="toggleAutoMixing">
+        <Action name="manualResetLayerOpacityToDefault">
         <icon></icon>
-        <text>Each stroke picks a bit of color from the background layer</text>
+        <text>Manually reset the current layer opacity to default</text>
         <whatsThis></whatsThis>
         <toolTip></toolTip>
         <iconText></iconText>
         <activationFlags>0</activationFlags>
         <activationConditions>0</activationConditions>
-        <shortcut>q</shortcut>
-        <isCheckable>true</isCheckable>
+        <shortcut>v</shortcut>
+        <isCheckable>false</isCheckable>
         <statusTip></statusTip>
         </Action>
     </Actions>
