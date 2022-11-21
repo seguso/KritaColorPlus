@@ -310,8 +310,10 @@ class AutoFocusSetter(QObject):
                 mdi_area.setActiveSubWindow(obj)
                 
                 
+                subwin = obj
+                isAlwaysOnTop = True if subwin.windowFlags() & Qt.WindowStaysOnTopHint else False
                 
-                if g_auto_mix_paused:
+                if g_auto_mix_paused and not isAlwaysOnTop: #if I am entering a window that is not always on top (the part "and not isalwaysontop" is there to attemp to fix a bug: auto-mix sometimes stops pausing when you hover the color picker)
                     g_auto_mix_paused = False
                 
                 #obj.activateWindow()
