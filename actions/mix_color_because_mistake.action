@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
-        <text>Mix Color</text>
+        <text>Mix color because it is wrong</text>
 
-        <Action name="MixColor">
+        <Action name="MixColorBecauseWrong">
         <icon></icon>
-        <text>Pick some color from the canvas. Amount is configurable.</text>
+        <text>Make the current color more similar with the canvas color, because the current color is wrong. (Also clears current layer, erasing your mistake.)</text>
         <whatsThis></whatsThis>
         <toolTip></toolTip>
         <iconText></iconText>

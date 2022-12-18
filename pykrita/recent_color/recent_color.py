@@ -50,7 +50,7 @@ g_blur_on_dry = False
 
 countColorChanged = 0
 
-g_mix_auto_clears_cur_layer = "1"
+# g_mix_auto_clears_cur_layer = "1"
 
 g_color_changed_from_selector_probably = False
 global g_virtual_fg_color_rgb
@@ -1212,8 +1212,8 @@ class MyExtension(Extension):
                 g_auto_reset_opacity_on_pick_level = float(Krita.instance().readSetting("colorPlus", "g_auto_reset_opacity_on_pick_level","68.0"))
                 
                 
-                global g_mix_auto_clears_cur_layer
-                g_mix_auto_clears_cur_layer = Krita.instance().readSetting("colorPlus", "g_mix_auto_clears_cur_layer","1")
+                # global g_mix_auto_clears_cur_layer
+                # g_mix_auto_clears_cur_layer = Krita.instance().readSetting("colorPlus", "g_mix_auto_clears_cur_layer","1")
                 
                 global g_auto_mix__how_much_canvas_to_pick
                 g_auto_mix__how_much_canvas_to_pick = float(Krita.instance().readSetting("colorPlus", "g_auto_mix__how_much_canvas_to_pick","0.5"))
@@ -1776,6 +1776,7 @@ class MyExtension(Extension):
                                 
                                 
                                 # I also want to create a new layer, to have the overlay effect
+                                global g_auto_reset_opacity_on_pick
                                 
                                 document = acView.document()
                                 if document is not None:
@@ -1996,7 +1997,7 @@ class MyExtension(Extension):
                                                 # view.setForeGroundColor(fg)
 
                 
-
+        # Never used. this mixing logic makes sense when the current color is mostly correct, and you only want to introduce a small variation. In practice it is useless.
         def mixFgColorWithBgColor_maxDistanceLogic(self):
                 app = Krita.instance()
                 win = app.activeWindow()
@@ -2010,7 +2011,7 @@ class MyExtension(Extension):
                                         
                                         doc_pos = p + center
                                         
-                                        print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
+                                        #print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
                                         
                                         
                                         parentNode = document.activeNode().parentNode()
@@ -2130,7 +2131,7 @@ class MyExtension(Extension):
                                                 else:
                                                     view.showFloatingMessage(f"Picked a bit of color from canvas. Distance: {round(curDist)}", QIcon(), timeMessage, 1)
                                                 
-        def mixFgColorWithBgColor_normalLogic(self):
+        def mixFgColorWithBgColor_normalLogic(self, createLayer = False, eraseCurLayer = False):
                 app = Krita.instance()
                 win = app.activeWindow()
                 if win is not None:
@@ -2156,7 +2157,8 @@ class MyExtension(Extension):
                                                 # I build colors[]
                                                 for curLayer in brothers:
                                                     # If this is the current layer and it is transparent, I skip this layer, because I only want to pick from layers below it.  Why? Because you typically use the mix shortcut when the stroke you just made is wrong, and it needs to be more similar to the background layer. But then, you want to be able to click on the stroke you just did and pick the color BELOW it. 
-                                                    if curLayer.uniqueId() != document.activeNode().uniqueId() or curLayer.opacity() == 255: 
+                                                    # the exception is if I've switched to single-layer mode, aka temp_switched_to_100_previous_opac
+                                                    if curLayer.uniqueId() != document.activeNode().uniqueId() or curLayer.opacity() == 255 or self.temp_switched_to_100_previous_opac is not None: 
                                                     
                                                         self.pixelBytes = curLayer.pixelData(doc_pos.x(), doc_pos.y(), 1, 1)
                                                         
@@ -2209,20 +2211,32 @@ class MyExtension(Extension):
                                                         g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
                                                         
                                                         
-                                                        # clear the current layer, because if you mixed the color it means your current color was wrong.
-                                                        global g_mix_auto_clears_cur_layer
                                                         
-                                                        if self.temp_switched_to_100_previous_opac is None:
+                                                        quickMessage(f"Picked {round(canv * 100)}%  color from the canvas.")
+                                                        
+                                                        # 1) if I mixed because the color is wrong, i.e. I made a mistake, then erase the mistake                                                        
+                                                        if eraseCurLayer and  self.temp_switched_to_100_previous_opac is None:
                                                             
-                                                            if g_mix_auto_clears_cur_layer == "1":
+                                                            #if g_mix_auto_clears_cur_layer == "1":
                                                                 app.action('clear').trigger()
                                                                 document.waitForDone () # action needs to finish before continuing
                                                             
+                                                        # 2) if I didn't make a mistake, I just want to fade the current color, then create a new layer
+                                                        if createLayer:
+                                                            if  self.temp_switched_to_100_previous_opac is None: # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
+                                                                newLa = dryPaper(showMessage = False)
+                                                                
+                                                                # if active layer opacity < 70, set to 70
+                                                                global g_auto_reset_opacity_on_pick
+                                                                if g_auto_reset_opacity_on_pick == 1 and  document is not None :
+                                                                    newLa.setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) 
+                                                                    
+                                                                    document.refreshProjection()
                                                             
                                                             
                                                         # messaggio
                                                         
-                                                        quickMessage(f"Picked {round(canv * 100)}%  color from the canvas.")
+                                                        
                                                     elif len(comp ) == 2:
                                                         messageBox(" Your foreground color is currently grayscale. In order to use \"Mix\", please set your foreground color to an RGB color first.")
                                                     else:
@@ -3327,17 +3341,17 @@ class MyExtension(Extension):
             Krita.instance().writeSetting("colorPlus", "g_auto_reset_opacity_on_pick", str(g_auto_reset_opacity_on_pick))
         
         
-        def toggleMixClearsCurrentLayer(self):
-            global g_mix_auto_clears_cur_layer
-            if g_mix_auto_clears_cur_layer == "1":
-                g_mix_auto_clears_cur_layer = "0"
-                quickMessage("Color mix will not clear current layer automatically")
-            else:
-                g_mix_auto_clears_cur_layer = "1"
-                quickMessage("Color mix will clear current layer automatically")
+        # def toggleMixClearsCurrentLayer(self):
+            # global g_mix_auto_clears_cur_layer
+            # if g_mix_auto_clears_cur_layer == "1":
+                # g_mix_auto_clears_cur_layer = "0"
+                # quickMessage("Color mix will not clear current layer automatically")
+            # else:
+                # g_mix_auto_clears_cur_layer = "1"
+                # quickMessage("Color mix will clear current layer automatically")
                 
                 
-            Krita.instance().writeSetting("colorPlus", "g_mix_auto_clears_cur_layer", g_mix_auto_clears_cur_layer)
+            # Krita.instance().writeSetting("colorPlus", "g_mix_auto_clears_cur_layer", g_mix_auto_clears_cur_layer)
         
         
         def createActions(self, window):
@@ -3354,8 +3368,11 @@ class MyExtension(Extension):
                 # action2.triggered.connect(self.mixSmall)
 
 
-                actionMix = window.createAction("MixColor", "Mix color  (pick some color under cursor but not all of it)")
-                actionMix.triggered.connect(self.mixFgColorWithBgColor_normalLogic)
+                actionMixW = window.createAction("MixColorBecauseWrong", "Mix color because current color is wrong (also clears current layer)")
+                actionMixW.triggered.connect(lambda : self.mixFgColorWithBgColor_normalLogic(eraseCurLayer = True, createLayer = False))
+                
+                actionMixC = window.createAction("MixColorBecauseWantNew", "Mix color because you want to fade out (also creates new layer)")
+                actionMixC.triggered.connect(lambda  : self.mixFgColorWithBgColor_normalLogic(eraseCurLayer = False, createLayer = True))
                 
                 # actionMixSmall = window.createAction("MixColorSmall", "Pick some color from canvas, but no more than a given distance")
                 # actionMixSmall.triggered.connect(self.mixFgColorWithBgColor_maxDistanceLogic)
@@ -3395,11 +3412,11 @@ class MyExtension(Extension):
                 actiondecmi = window.createAction("DecreaseMixing", "Decrease mixing level (amount of color you pick from canvas when mixing)")
                 actiondecmi.triggered.connect(self.decreaseMixing)
 
-                global g_mix_auto_clears_cur_layer
-                actionmixClear = window.createAction("MixClearCurrentLayer", "Mixing color auto-clears current layer")
-                actionmixClear.setCheckable(True)
-                actionmixClear.setChecked(g_mix_auto_clears_cur_layer == "1")
-                actionmixClear.triggered.connect(self.toggleMixClearsCurrentLayer)
+                # global g_mix_auto_clears_cur_layer
+                # actionmixClear = window.createAction("MixClearCurrentLayer", "Mixing color auto-clears current layer")
+                # actionmixClear.setCheckable(True)
+                # actionmixClear.setChecked(g_mix_auto_clears_cur_layer == "1")
+                # actionmixClear.triggered.connect(self.toggleMixClearsCurrentLayer)
 
 
                 actioninaro= window.createAction("IncreaseAutoResetOpacityOnPick", "Increase default layer opacity")
@@ -3511,8 +3528,10 @@ class MyExtension(Extension):
                 custom_menu.addAction(actionIncreaseLO)
                 custom_menu.addAction(actiondeclo)
                 custom_menu.addSeparator()
-                custom_menu.addAction(actionmixClear)
-                custom_menu.addAction(actionMix)
+                # custom_menu.addAction(actionmixClear)
+                custom_menu.addAction(actionMixW)
+                custom_menu.addAction(actionMixC)
+                
                 custom_menu.addAction(actionincmi)
                 custom_menu.addAction(actiondecmi)
                 

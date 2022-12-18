@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
-        <text>Dry paper</text>
+        <text>Mix color because you want to fade out</text>
 
-        <Action name="LayerMergeDownAndNew">
+        <Action name="MixColorBecauseWantNew">
         <icon></icon>
-        <text>Dry the paper (creates a new layer and sets its opacity)</text>
+        <text>Make the current color more similar with the canvas color, because you want to fade it out. </text>
         <whatsThis></whatsThis>
         <toolTip></toolTip>
         <iconText></iconText>
         <activationFlags>0</activationFlags>
         <activationConditions>0</activationConditions>
-        <shortcut>d</shortcut>
+        <shortcut>s</shortcut>
         <isCheckable>false</isCheckable>
         <statusTip></statusTip>
         </Action>
