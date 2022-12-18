@@ -11,7 +11,7 @@
         <iconText></iconText>
         <activationFlags>0</activationFlags>
         <activationConditions>0</activationConditions>
-        <shortcut>r</shortcut>
+        <shortcut>a</shortcut>
         <isCheckable>false</isCheckable>
         <statusTip></statusTip>
         </Action>

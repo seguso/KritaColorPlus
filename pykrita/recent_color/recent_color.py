@@ -50,6 +50,8 @@ g_blur_on_dry = False
 
 countColorChanged = 0
 
+g_mix_auto_clears_cur_layer = "1"
+
 g_color_changed_from_selector_probably = False
 global g_virtual_fg_color_rgb
 
@@ -1210,6 +1212,9 @@ class MyExtension(Extension):
                 g_auto_reset_opacity_on_pick_level = float(Krita.instance().readSetting("colorPlus", "g_auto_reset_opacity_on_pick_level","68.0"))
                 
                 
+                global g_mix_auto_clears_cur_layer
+                g_mix_auto_clears_cur_layer = Krita.instance().readSetting("colorPlus", "g_mix_auto_clears_cur_layer","1")
+                
                 global g_auto_mix__how_much_canvas_to_pick
                 g_auto_mix__how_much_canvas_to_pick = float(Krita.instance().readSetting("colorPlus", "g_auto_mix__how_much_canvas_to_pick","0.5"))
                 
@@ -1760,14 +1765,39 @@ class MyExtension(Extension):
                                 col.setComponents(comp)
                                 acView.setForeGroundColor(col)
                                 
+                             
                                 
-                                # setto anche il fg virtuale
-                                # global g_virtual_fg_color_rgb
-                                # g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
                                 
-                                # self.previousColor = self.currentColor
-                                
+                             
+                                    
+                                    
                                 acView.showFloatingMessage("Last color", QIcon(), timeMessage , 1)
+                                
+                                
+                                
+                                # I also want to create a new layer, to have the overlay effect
+                                
+                                document = acView.document()
+                                if document is not None:
+                                
+                                    parentNode = document.activeNode().parentNode() # could be root node, so I need to do parent again
+                                        
+                                        
+                                    if parentNode is not None:
+                                        
+                                        if  self.temp_switched_to_100_previous_opac is None : # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
+                                            newLa = dryPaper(showMessage = False)
+                                            
+                                            
+                                                                    
+                                            if g_auto_reset_opacity_on_pick == 1 :
+                                                newLa.setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) 
+                                                
+                                                document.refreshProjection()
+                                                
+                                            
+
+                                        
                                         
                 except Exception as e:
                                 acView.showFloatingMessage(f"error {e}.", QIcon(), timeMessage * 2, 1)
@@ -2007,7 +2037,7 @@ class MyExtension(Extension):
                                                             correzMul = float(layerOpac) /  255.0
                                                         
 
-                                                        print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
+                                                        #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
                                                         
                                                         colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha() * correzMul ))
                                                 
@@ -2141,7 +2171,7 @@ class MyExtension(Extension):
                                                             correzMul = float(layerOpac) /  255.0
                                                     
 
-                                                        print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
+                                                        #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
                                                         
                                                         colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha() * correzMul ))
                                                 
@@ -2179,7 +2209,17 @@ class MyExtension(Extension):
                                                         g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
                                                         
                                                         
+                                                        # clear the current layer, because if you mixed the color it means your current color was wrong.
+                                                        global g_mix_auto_clears_cur_layer
                                                         
+                                                        if self.temp_switched_to_100_previous_opac is None:
+                                                            
+                                                            if g_mix_auto_clears_cur_layer == "1":
+                                                                app.action('clear').trigger()
+                                                                document.waitForDone () # action needs to finish before continuing
+                                                            
+                                                            
+                                                            
                                                         # messaggio
                                                         
                                                         quickMessage(f"Picked {round(canv * 100)}%  color from the canvas.")
@@ -3286,6 +3326,20 @@ class MyExtension(Extension):
                 
             Krita.instance().writeSetting("colorPlus", "g_auto_reset_opacity_on_pick", str(g_auto_reset_opacity_on_pick))
         
+        
+        def toggleMixClearsCurrentLayer(self):
+            global g_mix_auto_clears_cur_layer
+            if g_mix_auto_clears_cur_layer == "1":
+                g_mix_auto_clears_cur_layer = "0"
+                quickMessage("Color mix will not clear current layer automatically")
+            else:
+                g_mix_auto_clears_cur_layer = "1"
+                quickMessage("Color mix will clear current layer automatically")
+                
+                
+            Krita.instance().writeSetting("colorPlus", "g_mix_auto_clears_cur_layer", g_mix_auto_clears_cur_layer)
+        
+        
         def createActions(self, window):
         
 
@@ -3313,7 +3367,7 @@ class MyExtension(Extension):
                 actionPick = window.createAction("PickColor", "Pick color under cursor")
                 actionPick.triggered.connect(self.pick)
 
-                actionDryPaper = window.createAction("LayerMergeDownAndNew", "Dry the paper")
+                actionDryPaper = window.createAction("LayerMergeDownAndNew", "Dry the paper (create new layer and set opacity)")
                 actionDryPaper.triggered.connect(self.dryPaperWithMessage)
 
                 actionViewFullScreen = window.createAction("ViewSingleWindow", "Hide always on top windows and go fullscreen")
@@ -3340,6 +3394,12 @@ class MyExtension(Extension):
 
                 actiondecmi = window.createAction("DecreaseMixing", "Decrease mixing level (amount of color you pick from canvas when mixing)")
                 actiondecmi.triggered.connect(self.decreaseMixing)
+
+                global g_mix_auto_clears_cur_layer
+                actionmixClear = window.createAction("MixClearCurrentLayer", "Mixing color auto-clears current layer")
+                actionmixClear.setCheckable(True)
+                actionmixClear.setChecked(g_mix_auto_clears_cur_layer == "1")
+                actionmixClear.triggered.connect(self.toggleMixClearsCurrentLayer)
 
 
                 actioninaro= window.createAction("IncreaseAutoResetOpacityOnPick", "Increase default layer opacity")
@@ -3369,7 +3429,7 @@ class MyExtension(Extension):
                 actionToggle25.triggered.connect(self.toggle_25_opac)
 
 
-                actionToggleMc= window.createAction("cleanupLayers", "Cleanup all wet layers")
+                actionToggleMc= window.createAction("cleanupLayers", "Cleanup (merge all temp layers)")
                 actionToggleMc.triggered.connect(self.mergeCleanup)
                 
                 
@@ -3425,6 +3485,7 @@ class MyExtension(Extension):
                 custom_menu.addAction(self.actionIncAutoMix)
                 custom_menu.addAction(self.actionDecAutoMix)
                 
+                
                 custom_menu.addSeparator()
                 custom_menu.addAction(actionDryPaper)
                 
@@ -3450,10 +3511,13 @@ class MyExtension(Extension):
                 custom_menu.addAction(actionIncreaseLO)
                 custom_menu.addAction(actiondeclo)
                 custom_menu.addSeparator()
+                custom_menu.addAction(actionmixClear)
                 custom_menu.addAction(actionMix)
                 custom_menu.addAction(actionincmi)
                 custom_menu.addAction(actiondecmi)
+                
                 custom_menu.addSeparator()
+                
                 custom_menu.addAction(actionToggle100)
                 custom_menu.addAction(actionToggle25)
                 
