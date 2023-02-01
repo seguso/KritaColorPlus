@@ -157,29 +157,40 @@ class HelloDocker(DockWidget):
         
         
         # active color
+        
+        layoutHorizColorAndDry = QHBoxLayout()
+        mainLayout.addLayout(layoutHorizColorAndDry)
+        
+        
+        
+        
+        btnDry = QPushButton("Dry paper", mainWidget)
+        layoutHorizColorAndDry.addWidget(btnDry)
+        font = btnDry.font()
+        font.setPixelSize(15)
+        btnDry.setFont(font)
+        btnDry.setMinimumHeight(50)
+        
+        btnDry.clicked.connect(lambda: dryPaper())
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         global lblActiveColor
         lblActiveColor = QLabel()
         lblActiveColor.setToolTip("Current foreground color")
-        mainLayout.addWidget(lblActiveColor)
+        layoutHorizColorAndDry.addWidget(lblActiveColor)
         #lblActiveColor.setStyleSheet("background-color: red")
         lblActiveColor.setMinimumHeight(45)
         lblActiveColor.setMinimumWidth(65)
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         
         
         
