@@ -367,6 +367,23 @@ class HelloDocker(DockWidget):
             newLa = dryPaper(showMessage = False)  # I create the layer, but if not multi-layer-mode I will then delete it when the color is actually picked
             
             
+            # I need to reset to default opacity
+            application = Krita.instance()
+            document = application.activeDocument()
+            if document is not None:
+                global g_auto_reset_opacity_on_pick_level
+                global g_auto_reset_opacity_on_pick
+                global g_temp_switched_to_100_previous_opac
+                global g_multi_layer_mode
+                if  g_temp_switched_to_100_previous_opac is None and g_multi_layer_mode: # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
+                    
+                    
+                                            
+                    if g_auto_reset_opacity_on_pick == 1 :
+                        newLa.setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) # bm_djiwejdie
+                        
+                        document.refreshProjection()
+                
             
             
         else:
@@ -705,10 +722,10 @@ class AutoFocusSetter(QObject):
                     l_color_changed_from_selector = False
                     
                     
-                print ("debug 1")
+                #print ("debug 1")
                 if not isAlwaysOnTop and  l_color_changed_from_selector and (not g_auto_mix_enabled or g_auto_mix_paused) and g_top_layer_is_dirty  and g_multi_layer_mode:
                 
-                        print ("debug 2 creating layer")
+                        #print ("debug 2 creating layer")
                         newLa = dryPaper(False)
                         
                         
@@ -908,7 +925,7 @@ class AutoFocusSetter(QObject):
                         
                         comp = fg.components() 
                         
-                        canv = 0.18
+                        canv = 0.12 # 0.18 troppo difficile fare contorni scuri
                     
                         fgMul = 1.0 - canv
                         comp[0] = comp[0] * fgMul + (bgColorAverage.r / 255.0)  * canv
@@ -974,8 +991,9 @@ class AutoFocusSetter(QObject):
                                 
                 
                         
-                        # skip current layer because  I am deciding the correct color, so the color on the current layer is incorrect
-                        g_color_on_down_dirty_brush = getColorUnderCursorOrAtPos( skipCurrentLayer = True)
+                        # in theory I should skip current layer because  I am deciding the correct color, so the color on the current layer is incorrect. but I can also try the other logic because then you can drag around color without getting dirty. 
+                        # kind of like auto-mixing with 100 background pick.
+                        g_color_on_down_dirty_brush = getColorUnderCursorOrAtPos( skipCurrentLayer = False)
                         
                         
             # uncomment this to have dirty brush ===============
