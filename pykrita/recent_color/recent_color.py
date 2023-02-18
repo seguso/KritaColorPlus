@@ -837,7 +837,13 @@ class AutoFocusSetter(QObject):
             
             
             if g_mixing_color:
-                mixFgColorWithBgColor_normalLogic( createLayer = False, deleteCurLayer = True, clearCurLayer = False)
+            
+                if g_multi_layer_mode:
+                    # TODO dovrei cancellare il precedente layer, non il corrente. perché è un errore
+                    mixFgColorWithBgColor_normalLogic( createLayer = False, deleteCurLayer = True, clearCurLayer = False)
+                    
+                else:
+                    mixFgColorWithBgColor_normalLogic( createLayer = False, deleteCurLayer = True, clearCurLayer = False)
                 g_mixing_color = False
                 global g_btn_mix
                 g_btn_mix.setChecked(False)
@@ -1709,6 +1715,56 @@ class PluginState:
 global g_opacity_decided_for_layer
 g_opacity_decided_for_layer = False
     
+    
+    
+# def onTimerDebug():
+        # application = Krita.instance()
+        # # currentDoc = application.activeDocument()
+        # # if currentDoc is not None:
+            # # print(f"x offset: {currentDoc.xOffset()}")
+            
+            
+        # wi = Krita.instance().activeWindow()
+        # subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
+        
+        
+        # # fullPaths = []
+        # # for wi in Krita.instance().windows():
+            # # print(f"wi = {wi}  title = {wi.qwindow().windowTitle()}")
+            # # for vi in wi.views():
+                # # print(f"view filename {vi.document().fileName()}")
+                # # fullPaths.append(vi.document().fileName())
+        
+        
+        
+        # windows = []
+        # for su in subwins:
+        
+            # print(f"parent = {su.parent()}, par par = {su.parent().parent()}")
+            # tit = su.windowTitle().replace(" *", "")
+            
+            # #path = [ fp for fp in fullPaths if fp.endswith(tit) ] [0]
+            # print(f"window {tit}, position {su.pos()}")
+            # newWin = Window()
+            # newWin.x = su.pos().x()
+            # newWin.y = su.pos().y()
+            # newWin.wt = su.size().width()
+            # newWin.ht = su.size().height()
+            # #newWin.fullPath = path
+            # newWin.title = tit
+            # newWin.isMaximized = True if su.windowState() & Qt.WindowMaximized else False
+            # newWin.isMinimized = True if su.windowState() & Qt.WindowMinimized else False
+            # newWin.isAlwaysOnTop = True if su.windowFlags() & Qt.WindowStaysOnTopHint else False
+            # windows.append(newWin)
+        
+        
+        # js = json.dumps([ w.__dict__ for w in windows] )
+            
+            
+            
+            
+        #print(f"dump json = {js}")
+
 class MyExtension(Extension):
 
         def __init__(self, parent):  # bm_init
@@ -1777,6 +1833,11 @@ class MyExtension(Extension):
                 
                 self.correct_color_for_transparency = True
                 
+                
+                
+                # self.timerDebug = QTimer()
+                # self.timerDebug.timeout.connect(onTimerDebug)
+                # self.timerDebug.start(2000)
                 
                 
                 #creo il timer per il mixing
@@ -3655,50 +3716,11 @@ class MyExtension(Extension):
                 
                 
                 
-                app.action('view_show_canvas_only').trigger()
-                app.activeDocument().waitForDone () # action needs to finish before continuing
-                
-                
-                #workaround per mancanza di fit to page
-                app.action('zoom_to_100pct').trigger()
-                app.activeDocument().waitForDone () # action needs to finish before continuing
-                
-                app.action('toggle_zoom_to_fit').trigger()
-                app.activeDocument().waitForDone () # action needs to finish before continuing
                 
                 
                 
-                
-                # ordina le finestre in modo che la always on top sia per prima, altrimenti poi l'action fit to window avviene alla finestra sbagliata.
-                
-                
-                for su in subwins:
-                    flags = su.windowFlags()
-                    
-                    stayOnTop = False
-                    if su.windowFlags() & Qt.WindowStaysOnTopHint:
-                        stayOnTop = True
-                    else:
-                        stayOnTop = False
-                    
-
-                    isMinimized = False
-                    if su.windowState() & Qt.WindowMinimized:
-                        isMinimized = True
-                    else:
-                        isMinimized = False
-
-                    print(f"subwindow title = {su.windowTitle()}, stay on top = {stayOnTop    }, minimized = {isMinimized}")
-
-                    
-                    if stayOnTop:
-                        if isMinimized:
-                            su.setWindowState(su.windowState() & ~Qt.WindowMinimized)
-                        else:
-                            su.setWindowState(su.windowState() | Qt.WindowMinimized)
-                
-
-                #I activate any window that is not on top and not minimized
+                # cerca di capire in che stato siamo. se c'è una window on top non minimizzata, siamo in stato normale. altrimenti siamo in stato view full screen
+                siamoInStatoNormale = False
                 for su in subwins:
                     flags = su.windowFlags()
                     
@@ -3716,11 +3738,151 @@ class MyExtension(Extension):
                         isMinimized = False
 
 
-                    if not isMinimized and not stayOnTop:
+                    if stayOnTop and not isMinimized:
+                        siamoInStatoNormale = True
+                
+                print(f"siamo in stato normale: {siamoInStatoNormale}")
+                
+                if siamoInStatoNormale:
+                    # devo minimizzare le on top e massimizzare la prima delle non-on-top
                         
-                        q_win = wi.qwindow()
-                        mdi_area = q_win.findChild(QMdiArea)
-                        mdi_area.setActiveSubWindow(su)
+                    for su in subwins:
+                        flags = su.windowFlags()
+                        
+                        stayOnTop = False
+                        if su.windowFlags() & Qt.WindowStaysOnTopHint:
+                            stayOnTop = True
+                        else:
+                            stayOnTop = False
+                        
+                        if stayOnTop:
+                            # è una finestra di reference: minimizzala
+                            su.setWindowState(su.windowState() | Qt.WindowMinimized)
+                        else:
+                            # è è una finestra normal: massimizza
+                            #su.setWindowState(su.windowState() & ~Qt.WindowMinimized)
+                            
+                            su.setWindowState(su.windowState() | Qt.WindowMaximized)  # la massimizzo
+                            
+
+                    # ora nascondo i docker
+                    app.action('view_show_canvas_only').trigger()
+                    app.activeDocument().waitForDone () # action needs to finish before continuing
+                    
+                    
+                    #workaround per mancanza di fit to page
+                    app.action('zoom_to_100pct').trigger()
+                    app.activeDocument().waitForDone () # action needs to finish before continuing
+                    
+                    app.action('toggle_zoom_to_fit').trigger()
+                    app.activeDocument().waitForDone () # action needs to finish before continuing
+                    
+                
+                else:
+                        # devo tornare in stato normale, quindi alle on top devo togliere il minimized e alle normali devo togliere il maximized
+                            
+                        for su in subwins:
+                            flags = su.windowFlags()
+                            
+                            stayOnTop = False
+                            if su.windowFlags() & Qt.WindowStaysOnTopHint:
+                                stayOnTop = True
+                            else:
+                                stayOnTop = False
+                            
+                            if stayOnTop:
+                                # è una finestra di reference: togli il minimized
+                                su.setWindowState(su.windowState() & ~Qt.WindowMinimized)
+                            else:
+                                # è è una finestra normal: togli il massimizza
+                                su.setWindowState(su.windowState() & ~Qt.WindowMaximized)  # tolgo lo stato maximixed
+                                
+                        # ora ri-mostro i docker (richiamando la stessa action)                   
+                        app.action('view_show_canvas_only').trigger()
+                        app.activeDocument().waitForDone () # action needs to finish before continuing
+                        
+
+                        # isMinimized = False
+                        # if su.windowState() & Qt.WindowMinimized:
+                            # isMinimized = True
+                        # else:
+                            # isMinimized = False
+
+                        # print(f"subwindow title = {su.windowTitle()}, stay on top = {stayOnTop    }, minimized = {isMinimized}")
+
+                        
+                        # if stayOnTop:
+                            # if isMinimized:
+                                # su.setWindowState(su.windowState() & ~Qt.WindowMinimized)
+                            # else:
+                                # su.setWindowState(su.windowState() | Qt.WindowMinimized)
+                    
+                # app.action('view_show_canvas_only').trigger()
+                # app.activeDocument().waitForDone () # action needs to finish before continuing
+                
+                
+                # #workaround per mancanza di fit to page
+                # app.action('zoom_to_100pct').trigger()
+                # app.activeDocument().waitForDone () # action needs to finish before continuing
+                
+                # app.action('toggle_zoom_to_fit').trigger()
+                # app.activeDocument().waitForDone () # action needs to finish before continuing
+                
+                
+                
+                
+                # # ordina le finestre in modo che la always on top sia per prima, altrimenti poi l'action fit to window avviene alla finestra sbagliata.
+                
+                
+                # for su in subwins:
+                    # flags = su.windowFlags()
+                    
+                    # stayOnTop = False
+                    # if su.windowFlags() & Qt.WindowStaysOnTopHint:
+                        # stayOnTop = True
+                    # else:
+                        # stayOnTop = False
+                    
+
+                    # isMinimized = False
+                    # if su.windowState() & Qt.WindowMinimized:
+                        # isMinimized = True
+                    # else:
+                        # isMinimized = False
+
+                    # print(f"subwindow title = {su.windowTitle()}, stay on top = {stayOnTop    }, minimized = {isMinimized}")
+
+                    
+                    # if stayOnTop:
+                        # if isMinimized:
+                            # su.setWindowState(su.windowState() & ~Qt.WindowMinimized)
+                        # else:
+                            # su.setWindowState(su.windowState() | Qt.WindowMinimized)
+                
+
+                # #I activate any window that is not on top and not minimized
+                # for su in subwins:
+                    # flags = su.windowFlags()
+                    
+                    # stayOnTop = False
+                    # if su.windowFlags() & Qt.WindowStaysOnTopHint:
+                        # stayOnTop = True
+                    # else:
+                        # stayOnTop = False
+                    
+
+                    # isMinimized = False
+                    # if su.windowState() & Qt.WindowMinimized:
+                        # isMinimized = True
+                    # else:
+                        # isMinimized = False
+
+
+                    # if not isMinimized and not stayOnTop:
+                        
+                        # q_win = wi.qwindow()
+                        # mdi_area = q_win.findChild(QMdiArea)
+                        # mdi_area.setActiveSubWindow(su)
 
 
                 # end for
