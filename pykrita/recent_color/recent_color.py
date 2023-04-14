@@ -47,6 +47,84 @@ import math
 import json
 import queue
 
+### BEGIN imported from urzeye https://krita-artists.org/t/i-realized-the-spectral-mixing-of-mypaint-in-krita/33473/197?u=seguso
+from math import sqrt
+
+R = [0.327457414, 0.323750578, 0.313439461, 0.288879383, 0.239205681, 0.189702037, 0.121746068, 0.074578271, 0.044433159, 0.028928632, 0.022316653, 0.016911307, 0.014181107, 0.013053143, 0.011986164, 0.011288715, 0.010906066, 0.010400713, 0.010637360, 0.010907663, 0.011032712, 0.011310657, 0.011154642, 0.010148770, 0.008918582, 0.007685576, 0.006705708, 0.005995806, 0.005537257, 0.005193784, 0.005025362, 0.005136363, 0.005433200, 0.005819986, 0.006400573, 0.007449529, 0.008583636, 0.010395762, 0.013565434, 0.019384516, 0.032084071, 0.074356038, 0.624393724, 0.918310033, 0.949253030, 0.958187833, 0.958187751, 0.958187625, 0.955679061, 0.958006155, 0.954101573, 0.947607606, 0.938681328, 0.924466683, 0.904606025, 0.880412199, 0.847787873, 0.805779127, 0.752531854, 0.686439397, 0.618694571, 0.540264444, 0.472964416, 0.432701597, 0.405358046, 0.385491835, 0.370983585, 0.357608702, 0.348712800, 0.344880119, 0.341917877, 0.339531093, 0.337169504, 0.336172019, 0.335167443, 0.334421625, 0.334008760, 0.333915793, 0.333818455, 0.333672775, 0.333569513]
+
+G = [0.331861713, 0.329688188, 0.327860022, 0.319173580, 0.294322584, 0.258697065, 0.188894319, 0.125388382, 0.078687060, 0.053143271, 0.042288146, 0.033318346, 0.029755948, 0.030331251, 0.030988572, 0.031686355, 0.034669962, 0.034551957, 0.040684806, 0.054460037, 0.080905287, 0.146348303, 0.379679643, 0.766744269, 0.876214748, 0.918491656, 0.940655563, 0.953731885, 0.961643280, 0.967200020, 0.970989746, 0.972852304, 0.973116594, 0.973351069, 0.973351116, 0.972261080, 0.973351022, 0.973148495, 0.971061306, 0.966371306, 0.954941968, 0.913578990, 0.364348804, 0.071507243, 0.041230434, 0.032423874, 0.031924630, 0.031276033, 0.032630370, 0.029530872, 0.031561761, 0.035674218, 0.041403005, 0.050604260, 0.063434300, 0.078918245, 0.099542743, 0.125595760, 0.157590910, 0.195398239, 0.231474475, 0.268852136, 0.296029164, 0.309754994, 0.317815883, 0.322990347, 0.326353848, 0.329143902, 0.330808727, 0.331482690, 0.331984550, 0.332341173, 0.332912009, 0.332919280, 0.333027673, 0.333179705, 0.333247031, 0.333259349, 0.333275050, 0.333294328, 0.333309425]
+
+B = [0.340680792, 0.346561187, 0.358700493, 0.391947027, 0.466471731, 0.551600896, 0.689359611, 0.800033347, 0.876879781, 0.917928097, 0.935395201, 0.949770347, 0.956062945, 0.956615607, 0.957025265, 0.957024931, 0.954423973, 0.955047329, 0.948677833, 0.934632300, 0.908062000, 0.842341039, 0.609165715, 0.223106961, 0.114866670, 0.073822768, 0.052638729, 0.040272309, 0.032819463, 0.027606196, 0.023984891, 0.022011333, 0.021450205, 0.020828945, 0.020248311, 0.020289391, 0.018065342, 0.016455742, 0.015373260, 0.014244178, 0.012973962, 0.012064974, 0.011257478, 0.010182725, 0.009516535, 0.009388293, 0.009887619, 0.010536342, 0.011690569, 0.012462973, 0.014336665, 0.016718175, 0.019915666, 0.024929056, 0.031959674, 0.040669554, 0.052669382, 0.068625111, 0.089877232, 0.118162359, 0.149830947, 0.190883409, 0.231006403, 0.257543385, 0.276826039, 0.291517773, 0.302662506, 0.313247301, 0.320478325, 0.323636995, 0.326097309, 0.328127369, 0.329917976, 0.330907901, 0.331803633, 0.332396627, 0.332740781, 0.332820857, 0.332901731, 0.333025967, 0.333111083]
+
+X = [0.000032348, 0.000055345, 0.000109712, 0.000248676, 0.000560325, 0.000955933, 0.001883435, 0.003396138, 0.005940683, 0.009151623, 0.011644017, 0.014886349, 0.017280890, 0.018269793, 0.018613167, 0.017704928, 0.016210296, 0.013821903, 0.010617328, 0.007758482, 0.005245854, 0.003081053, 0.001648031, 0.000758713, 0.000253535, 0.000123299, 0.000474370, 0.001463582, 0.003137073, 0.005509365, 0.008432888, 0.011327476, 0.014345805, 0.017738600, 0.021338869, 0.024718236, 0.028129296, 0.031510755, 0.034737572, 0.038293448, 0.041529413, 0.042708709, 0.043065991, 0.044671789, 0.045236160, 0.044428484, 0.042504837, 0.039361202, 0.035455761, 0.030395676, 0.025316176, 0.021408237, 0.017738193, 0.013975302, 0.010734839, 0.008290878, 0.006258656, 0.004659214, 0.003402523, 0.002415889, 0.001732401, 0.001151995, 0.000748856, 0.000529624, 0.000384871, 0.000280078, 0.000203686, 0.000132161, 0.000084501, 0.000063740, 0.000047616, 0.000034298, 0.000024514, 0.000015617, 0.000009990, 0.000006116, 0.000003646, 0.000003134, 0.000002624, 0.000001817, 0.000001260]
+
+Y = [0.000000922, 0.000001584, 0.000003103, 0.000007054, 0.000015506, 0.000026382, 0.000052378, 0.000095370, 0.000176832, 0.000311062, 0.000475768, 0.000763124, 0.001141210, 0.001564213, 0.002103808, 0.002666572, 0.003344628, 0.004067856, 0.004944536, 0.006147819, 0.007625247, 0.009001248, 0.010709887, 0.013347152, 0.016712607, 0.020924893, 0.025656760, 0.030589357, 0.035203447, 0.039872520, 0.043922355, 0.045904502, 0.047127747, 0.048343480, 0.048981677, 0.048273090, 0.047079310, 0.045454635, 0.043393477, 0.041606911, 0.039430961, 0.035625505, 0.031765522, 0.029376763, 0.026872545, 0.024083841, 0.021324489, 0.018506141, 0.015809755, 0.012985110, 0.010443317, 0.008572776, 0.006930529, 0.005353067, 0.004051597, 0.003093441, 0.002315209, 0.001713760, 0.001245775, 0.000881268, 0.000629695, 0.000417379, 0.000270842, 0.000191353, 0.000138986, 0.000101140, 0.000073559, 0.000047731, 0.000030518, 0.000023020, 0.000017195, 0.000012381, 0.000008846, 0.000005643, 0.000003611, 0.000002212, 0.000001318, 0.000001125, 0.000000948, 0.000000647, 0.000000450]
+
+Z = [0.000152519, 0.000261131, 0.000518438, 0.001177069, 0.002656749, 0.004542641, 0.008977810, 0.016243540, 0.028540741, 0.044275240, 0.056829693, 0.073546267, 0.086685286, 0.093569306, 0.098109991, 0.096891008, 0.093047543, 0.084114895, 0.069980019, 0.056886438, 0.044590306, 0.032761780, 0.023949742, 0.018234915, 0.014073774, 0.010906837, 0.008069383, 0.005617940, 0.003879817, 0.002877839, 0.002148221, 0.001497284, 0.001002823, 0.000660821, 0.000430765, 0.000277570, 0.000184532, 0.000127734, 0.000095721, 0.000081814, 0.000074783, 0.000061100, 0.000046159, 0.000042275, 0.000034070, 0.000025495, 0.000014414, 0.000010067, 0.000007884, 0.000004045, 0.000001970, 0.000001185, 0.000000792, 0.000000387, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000]
+
+def concentration(sr, sg, sb, sw, dr, dg, db):
+    sl = 0.212648173 * sr + 0.715179242 * sg + 0.072172585 * sb
+    dl = 0.212648173 * sr + 0.715179242 * sg + 0.072172585 * sb
+
+    dw = 1.0 - sw
+
+    sw = sl * sw * sw
+    dw = dl * dw * dw
+
+    return sw / (sw + dw)
+
+def rgb_spectral(r, g, b):
+    spectral = [0.0 for x in range(0, 81)]
+    for i in range(81):
+        spectral[i] = R[i] * r + G[i] * g + B[i] * b
+    return spectral
+
+def mixSpectral(spectral_s, spectral_d, sw):
+    for i in range(81):
+        ks = inv = 0.0
+
+        inv = (1.0 - spectral_s[i])
+        ks += sw * (inv * inv / (2.0 * spectral_s[i]))
+
+        inv = (1.0 - spectral_d[i])
+        ks += (1.0 - sw) * (inv * inv / (2.0 * spectral_d[i]))
+
+        spectral_d[i] = 1.0 + ks - sqrt(ks * ks + 2.0 * ks)
+    return spectral_d
+
+def spectral_rgb(spectral):
+    x = y = z = 0.0
+    for i in range(81):
+        x += X[i] * spectral[i]
+        y += Y[i] * spectral[i]
+        z += Z[i] * spectral[i]
+
+    r =  3.240830229 * x - 1.537316904 * y - 0.498589266 * z
+    g = -0.969229321 * x + 1.875939794 * y + 0.041554444 * z
+    b =  0.055645287 * x - 0.204032720 * y + 1.057260459 * z
+
+    return [r, g, b]
+
+def mixRGB(sr, sg, sb, t, dr, dg, db):
+    sr = max(sr, 0.0001)
+    sg = max(sg, 0.0001)
+    sb = max(sb, 0.0001)
+    dr = max(dr, 0.0001)
+    dg = max(dg, 0.0001)
+    db = max(db, 0.0001)
+
+    spectral_s = rgb_spectral(sr, sg, sb)
+    spectral_d = rgb_spectral(dr, dg, db)
+    t = concentration(sr, sg, sb, t, dr, dg, db)
+    spectral = mixSpectral(spectral_s, spectral_d, t)
+    return spectral_rgb(spectral)
+
+print(mixRGB(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0))
+
+###END urzeye
+
+
+
 g_blur_on_dry = False
 
 countColorChanged = 0
@@ -1480,7 +1558,7 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                         center = QPointF(0.5 * document.width(), 0.5 * document.height())
                                         p = get_cursor_in_document_coords()
                                         
-                                        doc_pos = p + center
+                                        doc_pos = p + center # float
                                         print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
                                         
                                         
@@ -1498,7 +1576,7 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                     # the exception is if I've switched to single-layer mode, aka temp_switched_to_100_previous_opac
                                                     if curLayer.uniqueId() != document.activeNode().uniqueId() or curLayer.opacity() == 255 or g_temp_switched_to_100_previous_opac is not None: 
                                                     
-                                                        pixelBytes = curLayer.pixelData(doc_pos.x(), doc_pos.y(), 1, 1)
+                                                        pixelBytes = curLayer.pixelData( int(round(doc_pos.x())), int(round(doc_pos.y())), 1, 1)
                                                         
                                                         imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA8888)
                                                         pixelC = imageData.pixelColor(0,0)
@@ -1532,12 +1610,56 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                         canv = g_how_much_canvas_to_pick
                                                         
                                                         
-                                                        fgMul = 1.0 - canv
-                                                        comp[0] = comp[0] * fgMul + (bgColor.r / 255.0)  * canv
-                                                        comp[1] = comp[1] * fgMul + (bgColor.g / 255.0)  * canv
-                                                        comp[2] = comp[2] * fgMul + (bgColor.b  / 255.0)  * canv
+                                                        # BEGIN mix color the old way (non spectral) 
                                                         
+                                                        # fgMul = 1.0 - canv
+                                                        # comp[0] = comp[0] * fgMul + (bgColor.r / 255.0)  * canv
+                                                        # comp[1] = comp[1] * fgMul + (bgColor.g / 255.0)  * canv
+                                                        # comp[2] = comp[2] * fgMul + (bgColor.b  / 255.0)  * canv
+                                                        # end
                                                     
+                                                    
+                                                        #begin mix colors spectral, bgr
+                                                        fgMul = 1.0 - canv
+                                                        sb = comp[0] 
+                                                        sg = comp[1]
+                                                        sr = comp[2]
+                                                        
+                                                       
+                                                        db = bgColor.r / 255.0
+                                                        dg = bgColor.g / 255.0
+                                                        dr = bgColor.b / 255.0
+                                                       
+                                                       
+                                                        resultColor = mixRGB(sr, sg, sb, fgMul, dr, dg, db)
+                                                        # resultColor is [r,g,b]. copy back to bgr:
+                                                        
+                                                        comp[0] = resultColor[2]
+                                                        comp[1] = resultColor[1]
+                                                        comp[2] = resultColor[0]
+                                                        
+                                                        # END
+                                                  
+                                                  
+                                                        # begin mix colors spectral, rgb
+                                                        # fgMul = 1.0 - canv
+                                                        # sr = comp[0] 
+                                                        # sg = comp[1]
+                                                        # sb = comp[2]
+                                                        
+                                                       
+                                                        # dr = bgColor.r / 255.0
+                                                        # dg = bgColor.g / 255.0
+                                                        # db = bgColor.b / 255.0
+                                                       
+                                                       
+                                                        # resultColor = mixRGB(sr, sg, sb, fgMul, dr, dg, db)
+                                                        
+                                                        # comp[0] = resultColor[0]
+                                                        # comp[1] = resultColor[1]
+                                                        # comp[2] = resultColor[2]
+                                                        
+                                                        # END
                                                   
                                                         fg.setComponents(comp)
                                                         
@@ -1827,7 +1949,8 @@ class MyExtension(Extension):
                 global g_temp_switched_to_100_previous_opac
                 g_temp_switched_to_100_previous_opac = None
                 
-                self.temp_switched_to_25_previous_opac = None
+                global g_temp_switched_to_25_previous_opac
+                g_temp_switched_to_25_previous_opac = None
                 
                 self.mixing_target_distance = 20.0
                 
@@ -2397,6 +2520,7 @@ class MyExtension(Extension):
 
         def toggle_100_opac(self):
             global g_temp_switched_to_100_previous_opac
+            global g_temp_switched_to_25_previous_opac
             application = Krita.instance()
             currentDoc = application.activeDocument()
             if currentDoc is not None:
@@ -2411,9 +2535,9 @@ class MyExtension(Extension):
                     # currentDoc.waitForDone()
                     # activeLayer = currentDoc.activeNode()
                     
-                    if self.temp_switched_to_25_previous_opac is not None:
-                        g_temp_switched_to_100_previous_opac = self.temp_switched_to_25_previous_opac
-                        self.temp_switched_to_25_previous_opac = None
+                    if g_temp_switched_to_25_previous_opac is not None:
+                        g_temp_switched_to_100_previous_opac = g_temp_switched_to_25_previous_opac
+                        g_temp_switched_to_25_previous_opac = None
                     else:
                         g_temp_switched_to_100_previous_opac = activeLayer.opacity()
                         
@@ -2449,20 +2573,21 @@ class MyExtension(Extension):
         
         def toggle_25_opac(self):
             global g_temp_switched_to_100_previous_opac
+            global g_temp_switched_to_25_previous_opac
             application = Krita.instance()
             currentDoc = application.activeDocument()
             if currentDoc is not None:
                 activeLayer = currentDoc.activeNode()
                 curOpac = activeLayer.opacity()
                 
-                if self.temp_switched_to_25_previous_opac is None:
+                if g_temp_switched_to_25_previous_opac is None:
                     activeLayer = dryPaper(False)
                     
                     if g_temp_switched_to_100_previous_opac is not None:
-                        self.temp_switched_to_25_previous_opac = g_temp_switched_to_100_previous_opac
+                        g_temp_switched_to_25_previous_opac = g_temp_switched_to_100_previous_opac
                         g_temp_switched_to_100_previous_opac = None
                     else:
-                        self.temp_switched_to_25_previous_opac = activeLayer.opacity()
+                        g_temp_switched_to_25_previous_opac = activeLayer.opacity()
                     
                     activeLayer.setOpacity(25.0 * 255.0 / 100.0)
                     
@@ -2470,12 +2595,12 @@ class MyExtension(Extension):
                     quickMessage(f"Temporarily set 25% opacity. Press again to restore.")
                 else:
                     activeLayer = dryPaper(False)
-                    activeLayer.setOpacity(self.temp_switched_to_25_previous_opac)
+                    activeLayer.setOpacity(g_temp_switched_to_25_previous_opac)
                     
                     
-                    quickMessage(f"Restored {round (self.temp_switched_to_25_previous_opac * 100.0 / 255.0)}  opacity")
+                    quickMessage(f"Restored {round (g_temp_switched_to_25_previous_opac * 100.0 / 255.0)}  opacity")
                     
-                    self.temp_switched_to_25_previous_opac = None
+                    g_temp_switched_to_25_previous_opac = None
                 
                 
             
@@ -3002,10 +3127,39 @@ class MyExtension(Extension):
                                                     canv = g_auto_mix__how_much_canvas_to_pick
                                                     
                                                     fgMul = 1.0 - canv
-                                                    comp[0] = (g_virtual_fg_color_rgb.r/255.0) * fgMul + (mergedColor.r / 255.0)  * canv
-                                                    comp[1] = (g_virtual_fg_color_rgb.g / 255.0) * fgMul + (mergedColor.g / 255.0)  * canv
-                                                    comp[2] = (g_virtual_fg_color_rgb.b / 255.0) * fgMul + (mergedColor.b  / 255.0)  * canv
                                                     
+                                                    
+                                                    # BEGIN mix colors old way
+                                                    # comp[0] = (g_virtual_fg_color_rgb.r/255.0) * fgMul + (mergedColor.r / 255.0)  * canv
+                                                    # comp[1] = (g_virtual_fg_color_rgb.g / 255.0) * fgMul + (mergedColor.g / 255.0)  * canv
+                                                    # comp[2] = (g_virtual_fg_color_rgb.b / 255.0) * fgMul + (mergedColor.b  / 255.0)  * canv
+                                                    
+                                                    #END
+                                                    
+                                                    
+                                                    #begin mix colors spectral, bgr
+                                                    fgMul = 1.0 - canv
+                                                    sb = g_virtual_fg_color_rgb.r/255.0
+                                                    sg = g_virtual_fg_color_rgb.g/255.0
+                                                    sr = g_virtual_fg_color_rgb.b/255.0
+                                                    
+                                                   
+                                                    db = mergedColor.r / 255.0
+                                                    dg = mergedColor.g / 255.0
+                                                    dr = mergedColor.b / 255.0
+                                                   
+                                                   
+                                                    resultColor = mixRGB(sr, sg, sb, fgMul, dr, dg, db)
+                                                    # resultColor is [r,g,b]. copy back to bgr:
+                                                    
+                                                    comp[0] = resultColor[2]
+                                                    comp[1] = resultColor[1]
+                                                    comp[2] = resultColor[0]
+                                                    
+                                                    # END
+                                              
+                                                  
+                                                  
                                                     # comp[0] =  (mergedColor.r / 255.0)  
                                                         # comp[1] =  (mergedColor.g / 255.0)
                                                         # comp[2] = (mergedColor.b  / 255.0)
@@ -3054,7 +3208,7 @@ class MyExtension(Extension):
                                                 #costruisco colors
                                                 for curLayer in brothers:
                                                 
-                                                        self.pixelBytes = curLayer.pixelData(doc_pos.x(), doc_pos.y(), 1, 1)
+                                                        self.pixelBytes = curLayer.pixelData(int (round(doc_pos.x())), int(round(doc_pos.y())), 1, 1)
                                                         
                                                         self.imageData = QImage(self.pixelBytes, 1, 1, QImage.Format_RGBA8888)
                                                         self.pixelC = self.imageData.pixelColor(0,0) # valori tra 0 e 255
@@ -3664,7 +3818,7 @@ class MyExtension(Extension):
                 
                 # if active layer opacity < 70, set to 70
                                         
-                if g_auto_reset_opacity_on_pick == 1 and  document is not None :
+                if g_auto_reset_opacity_on_pick == 1 and  document is not None and g_temp_switched_to_25_previous_opac is None :
                     newLa.setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) # bm_djiwejdie
                     
                     document.refreshProjection()
