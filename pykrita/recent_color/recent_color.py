@@ -224,9 +224,13 @@ global g_virtual_fg_color_rgb
 
 global g_virtual_fg_color_rgb_previous_when_dirty_brush_on
 
+g_layer_is_dirty = {}
+
+g_diminishing_opacity = False #True to have auto-mixing with amount that auto-decreases
+
 g_btn_pick_color = None
 
-g_top_layer_is_dirty = False
+
 
 g_virtual_color_used_last_rgb  = None
 g_virtual_fg_color_rgb = None
@@ -239,6 +243,8 @@ g_normal_step_layer_opacity = 20
 g_mixing_step = 0.05
 
 g_auto_mixing_distance_step = 5
+
+g_set_spectral_blend_mode_when_creating_layer = True
 
 g_multi_layer_mode = False
 
@@ -254,6 +260,8 @@ g_auto_mixing_target_distance = None  # value is ignored, will be read from sett
 
 #when distance logic is not active
 g_auto_mix__how_much_canvas_to_pick = None # value is ignored: will be read from settings --- 0.999 to drag color from canvas , e.g. to remove overlap. then set auto-mixing. 
+
+g_auto_mix_ignore_current_layer = False # metti false se vuoi trascinare il colore appena messo, true se vuoi evitarlo
 
 #g_auto_mix_snap_distance = 30
 
@@ -441,7 +449,7 @@ class HelloDocker(DockWidget):
         
         val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
         g_dial_auto_mix_level.setValue(val099)
-                
+        
         g_dial_auto_mix_level.valueChanged.connect(self.autoMixLevelValueChanged)
         
         
@@ -468,7 +476,9 @@ class HelloDocker(DockWidget):
         
         
         
-        
+    def leaveEvent(self, event):
+        pass
+         #print("Mouse left the dock widget")
         
         # label = QLabel("Hello", self)
         # self.setWidget(label)
@@ -536,6 +546,11 @@ class HelloDocker(DockWidget):
             # I need to reset to default opacity
             application = Krita.instance()
             document = application.activeDocument()
+            
+            print(f"color profile = {document.colorProfile()}")
+            print(f"color depth = {document.colorDepth()}")  #   U16  or U8
+            print(f"color model  = {document.colorModel()}")  #     RGBA
+            
             if document is not None:
                 global g_auto_reset_opacity_on_pick_level
                 global g_auto_reset_opacity_on_pick
@@ -546,7 +561,7 @@ class HelloDocker(DockWidget):
                     
                                             
                     if g_auto_reset_opacity_on_pick == 1 :
-                        newLa.setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) # bm_djiwejdie
+                        newLa.setOpacity(int( g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) # bm_djiwejdie
                         
                         document.refreshProjection()
                 
@@ -570,11 +585,11 @@ def get_layer_model():
     return view.model(), view.selectionModel()
 
 
-def getColorUnderCursorOrAtPos(skipCurrentLayer = False, forcedPos = None, pretendLastLayerIsFgColor = False):  
+def getColorUnderCursorOrAtPos( forcedPos = None):  
     #forcedPos is of type xy
     
-    if skipCurrentLayer and pretendLastLayerIsFgColor:
-        raise "Makes no sense to skipCurrentLayer and pretendLastLayerIsFgColor. these are exclusive."
+    # if skipCurrentLayer and pretendLastLayerIsFgColor:
+        # raise "Makes no sense to skipCurrentLayer and pretendLastLayerIsFgColor. these are exclusive."
         
     
     application = Krita.instance()
@@ -597,66 +612,96 @@ def getColorUnderCursorOrAtPos(skipCurrentLayer = False, forcedPos = None, prete
             
             
             
-            parentNode = document.activeNode().parentNode()
+            #parentNode = document.activeNode().parentNode()
             
-            fgCol = None
-            if pretendLastLayerIsFgColor:
+            # fgCol = None
+            # if pretendLastLayerIsFgColor:
                 
-                if win is not None:
-                        view = win.activeView()
-                        if view is not None:
-                            fg = view.foregroundColor() 
-                            comp = fg.components() 
+                # if win is not None:
+                        # view = win.activeView()
+                        # if view is not None:
+                            # fg = view.foregroundColor() 
+                            # comp = fg.components() 
                             
-                            fgCol = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
-                else:
-                    return None
+                            # fgCol = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
+                # else:
+                    # return None
                     
                     
             
-            if parentNode is not None:
+            if True: #parentNode is not None:
             
-                    brothers = parentNode.childNodes()
-                    colors = []
+                    # brothers = parentNode.childNodes()
+                    # colors = []
                     
-                    #costruisco colors
-                    for curLayer in brothers:
+                    # #costruisco colors
+                    # for curLayer in brothers:
                     
                             
-                            if curLayer.uniqueId() == document.activeNode().uniqueId() and skipCurrentLayer:
-                                #print ("salto cur layer")
-                                continue
+                            # if curLayer.uniqueId() == document.activeNode().uniqueId() and skipCurrentLayer:
+                                # #print ("salto cur layer")
+                                # continue
                                 
-                            if curLayer.uniqueId() == document.activeNode().uniqueId() and pretendLastLayerIsFgColor :
+                            # if curLayer.uniqueId() == document.activeNode().uniqueId() and pretendLastLayerIsFgColor :
                                 
-                                    layerOpac = curLayer.opacity() # tra  0 e 255
+                                    # layerOpac = curLayer.opacity() # tra  0 e 255
                                     
-                                    paintingOp01 = win.activeView().paintingOpacity()  
-                                    # print(f"opacity = {paintingOp}")
-                                    colors.append( rgb(fgCol.r, fgCol.g, fgCol.b, int(layerOpac * paintingOp01)))
+                                    # paintingOp01 = win.activeView().paintingOpacity()  
+                                    # # print(f"opacity = {paintingOp}")
+                                    # colors.append( rgb(fgCol.r, fgCol.g, fgCol.b, int(layerOpac * paintingOp01)))
                                     
                                 
-                            else:
+                            # else:
                                     
-                                pixelBytes = curLayer.pixelData(doc_posxy.x, doc_posxy.y, 1, 1)
+                                # pixelBytes = curLayer.pixelData(doc_posxy.x, doc_posxy.y, 1, 1)
                                 
-                                imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA8888)
-                                pixelC = imageData.pixelColor(0,0)
+                                # imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA8888)
+                                # pixelC = imageData.pixelColor(0,0)
                                 
-                                # devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
-                                # if curLayer.uniqueId() == document.activeNode().uniqueId():
-                                    # correzMul = 1.0
-                                # else:
-                                layerOpac = curLayer.opacity() # tra  0 e 255
-                                correzMul = float(layerOpac) /  255.0
+                                # # devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
+                                # # if curLayer.uniqueId() == document.activeNode().uniqueId():
+                                    # # correzMul = 1.0
+                                # # else:
+                                # layerOpac = curLayer.opacity() # tra  0 e 255
+                                # correzMul = float(layerOpac) /  255.0
                             
 
-                                #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
+                                # #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
                                 
-                                colors.append(  rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(),  pixelC.alpha() * correzMul ))
+                                # colors.append(  rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(),  pixelC.alpha() * correzMul ))
                     
-                    #creo il colore composito dei layer. questo è il bgcolor                                                
-                    bgColor = calcolaCompositeColor(colors)
+                    # #creo il colore composito dei layer. questo è il bgcolor                                                
+                    # bgColor = calcolaCompositeColor(colors)
+                    
+                    doc_pos = doc_posxy
+                    
+                    
+                    pixBytes= document.pixelData(int(doc_pos.x), int(doc_pos.y), 1,1)  # 3 or 6 bytes depending on the image format
+                                                
+                                                
+                    # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
+                    # concatenated_string = '-'.join(byte_values)
+                    
+                    # print(f'Dati letti: {concatenated_string}')
+                    
+                    
+                    
+                    # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
+                    if len(pixBytes) == 4:
+                        imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA8888)  
+                    elif len(pixBytes) == 8:
+                        imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA64)  
+                    else:
+                        raise f"unsupported len {len(pixBytes)}"
+                        
+                    pixelC = imageData.pixelColor(0,0)
+                    
+                    #e ora da colore qt a colore mio 
+                    mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255)
+                    
+                    bgColor = mergedColor
+                    
+                    
                     #print(f"color under cursor  = {bgColor.toString()}")
                     return bgColor
             else:
@@ -671,7 +716,7 @@ def dryPaper( showMessage = True):
                 
                 
                 
-                print(f"dry paper called showMessage = {showMessage}")
+                #print(f"dry paper called showMessage = {showMessage}")
                 application = Krita.instance()
                 currentDoc = application.activeDocument()
                 if currentDoc is  None:
@@ -712,7 +757,10 @@ def dryPaper( showMessage = True):
                             
                             parentNode.addChildNode(newLa, None)
                             
-                            
+                            global g_set_spectral_blend_mode_when_creating_layer
+                            if g_set_spectral_blend_mode_when_creating_layer:
+                                #print("setting over spectral")
+                                newLa.setBlendingMode("over spectral");
                             
                             if g_blur_on_dry:
                                 # al layer precedente ad activeLayer, applica il blur
@@ -752,8 +800,6 @@ def dryPaper( showMessage = True):
                             g_opacity_decided_for_layer = False
                             
                             
-                            global g_top_layer_is_dirty
-                            g_top_layer_is_dirty = False
                             
                             # currentDoc.setActiveNode(newLa)
                             
@@ -829,7 +875,7 @@ class AutoFocusSetter(QObject):
         global g_color_changed_from_selector_probably
         global g_auto_mix_paused
         global g_auto_mix_enabled
-        global g_top_layer_is_dirty
+        
         global g_virtual_fg_color_rgb
         global g_color_changed_from_selector_probably
         global g_virtual_color_used_last_rgb
@@ -841,13 +887,16 @@ class AutoFocusSetter(QObject):
         global g_auto_dry_each_stroke
         global g_last_coord_mouse_up
         global g_last_coord_mouse_down
-        
+        global g_diminishing_opacity
+        global g_auto_mix__how_much_canvas_to_pick
+        global g_dial_auto_mix_level
+        global g_layer_is_dirty
         
         # if event.type() == QEvent.HoverEnter:
             # print(f"hover ")
         if event.type() == QEvent.Enter:
             #print(f"enter")
-            # if obj.objectName() == "ColorSelectorNg":
+            # if obj.objectName() == "KisAdvancedColorSelector":
                 # print(f"enter color selector ")
             
             # if isinstance(obj, QDockWidget):
@@ -855,7 +904,7 @@ class AutoFocusSetter(QObject):
                         
             #if obj.type() == QMdiSubWindow:
             if isinstance(obj, QMdiSubWindow):
-                print(f"enter subwindow")
+                #print(f"enter subwindow")
                 
                 wi = Krita.instance().activeWindow()
                 q_win = wi.qwindow()
@@ -878,18 +927,29 @@ class AutoFocusSetter(QObject):
                 
                 # if the color has just been changed manually, create a new layer
             
+                global g_layer_is_dirty
                 
                 if g_color_changed_from_selector_probably:
-                    if g_virtual_fg_color_rgb.equals(g_virtual_color_used_last_rgb):
-                        l_color_changed_from_selector = False
-                    else:
+                    #print ("color changed probably")
+
+                    
+                    if(Krita.instance().activeDocument().activeNode().uniqueId() in g_layer_is_dirty ):  # if cur layer is dirty
                         l_color_changed_from_selector = True
+                    else:
+                        l_color_changed_from_selector = False
+                        
+                    # questo era bacato! a volte era uguale. lo commento. così crea layer anche se esco e rientro dal canvas, ma può essere comodo invece che premere D per rafforzare.
+                    # TODO aggiungi controllo "se il layer attuale è dirty"
+                    # if g_virtual_fg_color_rgb.equals(g_virtual_color_used_last_rgb):
+                        # l_color_changed_from_selector = False
+                    # else:
+                        # l_color_changed_from_selector = True
                 else:
                     l_color_changed_from_selector = False
                     
                     
                 #print ("debug 1")
-                if not isAlwaysOnTop and  l_color_changed_from_selector and (not g_auto_mix_enabled or g_auto_mix_paused) and g_top_layer_is_dirty  and g_multi_layer_mode:
+                if not isAlwaysOnTop and  l_color_changed_from_selector and (not g_auto_mix_enabled or g_auto_mix_paused) and g_multi_layer_mode:
                 
                         #print ("debug 2 creating layer")
                         newLa = dryPaper(False)
@@ -916,7 +976,7 @@ class AutoFocusSetter(QObject):
                 
                         document = Krita.instance().activeDocument()
                         if g_auto_reset_opacity_on_pick == 1 and  document is not None :
-                            newLa.setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) 
+                            newLa.setOpacity(int (g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) 
                     
                             document.refreshProjection()
             
@@ -924,6 +984,15 @@ class AutoFocusSetter(QObject):
             
                         g_color_changed_from_selector_probably = False
                 
+                
+                        
+                        if g_diminishing_opacity:
+                            g_auto_mix__how_much_canvas_to_pick = 1.0
+                            
+                            val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+                            g_dial_auto_mix_level.setValue(val099)
+        
+                        
                 
                 if g_auto_mix_paused and not isAlwaysOnTop: #if I am entering a window that is not always on top (the part "and not isalwaysontop" is there to attemp to fix a bug: auto-mix sometimes stops pausing when you hover the color picker)
                     g_auto_mix_paused = False
@@ -950,7 +1019,7 @@ class AutoFocusSetter(QObject):
                 
                 
                 if isAlwaysOnTop: #if mouse left an always-on-top window:
-                    print ("is always-on-top")
+                    #print ("is always-on-top")
                 
                     subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
                     for su in subwins:
@@ -1004,12 +1073,25 @@ class AutoFocusSetter(QObject):
             
             if g_mixing_color:
             
+                app = Krita.instance()
+            
+                # hide current layer, because I need to pick the color excluding the stroke just made
+                app.activeDocument().activeNode().setVisible(False)
+                app.activeDocument().refreshProjection()
+                
+                
+                
                 if g_multi_layer_mode:
                     # TODO dovrei cancellare il precedente layer, non il corrente. perché è un errore
                     mixFgColorWithBgColor_normalLogic( createLayer = False, deleteCurLayer = True, clearCurLayer = False)
                     
                 else:
                     mixFgColorWithBgColor_normalLogic( createLayer = False, deleteCurLayer = True, clearCurLayer = False)
+
+
+                app.activeDocument().activeNode().setVisible(True)
+                
+                
                 g_mixing_color = False
                 global g_btn_mix
                 g_btn_mix.setChecked(False)
@@ -1019,12 +1101,17 @@ class AutoFocusSetter(QObject):
                 # clear layer first, otherwise I pick the color just painted
                 app = Krita.instance()
                 
+                # hide current layer, because I need to pick the color excluding the stroke just made
+                app.activeDocument().activeNode().setVisible(False)
+                app.activeDocument().refreshProjection()
                 
-                # now,  pick color ignoring stroke just made (which is on its own layer)
-                col = getColorUnderCursorOrAtPos(forcedPos = xyOfQpoint(g_last_coord_mouse_down ), skipCurrentLayer = True) 
+                # now,  pick color ignoring stroke just made (which is on its own layer) 
+                col = getColorUnderCursorOrAtPos(forcedPos = xyOfQpoint(g_last_coord_mouse_down )) 
                 setFgColor(col)
                 g_virtual_fg_color_rgb  = col
                 g_picking_color = False
+                
+                app.activeDocument().activeNode().setVisible(True)
                 
                 
                 # now I have to delete the stroke just made. normally I would just clear the layer. But if I'm in single layer mode I need to DELETE the layer
@@ -1049,6 +1136,14 @@ class AutoFocusSetter(QObject):
                 
                 #lblActiveColor.setStyleSheet("background-color: blue")
                 
+                
+
+                if g_diminishing_opacity:
+                    g_auto_mix__how_much_canvas_to_pick = 1.0
+                    
+                    val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+                    g_dial_auto_mix_level.setValue(val099)
+
                 return True # annulla l'evento, ma non funziona
                 
                 
@@ -1056,13 +1151,78 @@ class AutoFocusSetter(QObject):
             g_last_coord_mouse_up = get_cursor_in_document_coords()
             
             # print(f"mouse buttonreleased. {g_last_coord_mouse_up}")
+            
+            # remember layer is dirty
+            
+            g_layer_is_dirty[ Krita.instance().activeDocument().activeNode().uniqueId()] = True
+            
+            
+            
             if g_auto_dry_each_stroke and g_multi_layer_mode:
                 newLa = dryPaper(showMessage = False)
             
             
             
                 
-            # uncomment this to have dirty brush ===============
+            # uncomment this to have dirty brush =============== mouse released
+            
+            
+            if g_diminishing_opacity:
+                g_auto_mix__how_much_canvas_to_pick = g_auto_mix__how_much_canvas_to_pick * 0.9
+                
+                val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+                g_dial_auto_mix_level.setValue(val099)
+        
+                
+                # if g_auto_mix__how_much_canvas_to_pick > 1.0:
+                    # g_auto_mix__how_much_canvas_to_pick = 1.0
+            
+                                                    
+            
+            # if g_diminishing_opacity:
+            
+                # doc = Krita.instance().activeDocument()
+
+                # # # Get the current brush
+                # brush = doc.activeNode()
+                # current_opacity = brush.opacity()
+                # if current_opacity > 20:
+                    # newLa = dryPaper(False)
+            
+                    # newLa.setOpacity(current_opacity * 0.82) 
+            
+
+                # # Get the current opacity of the brush
+                # current_opacity = brush.opacity()
+
+                # # Calculate the new opacity
+                # new_opacity = current_opacity * 0.9
+
+                # # Set the new opacity of the brush
+                # brush.setOpacity(new_opacity)
+                
+                
+                # # Get the active document
+                # doc = Krita.instance().activeDocument()
+
+                # # Get the current brush
+                # brush = doc.activeBrush()
+
+                # # Get the current opacity of the brush
+                # current_opacity = brush.opacity()
+
+                # # Calculate the new opacity
+                # new_opacity = current_opacity * 0.5
+                
+                # brush.setOpacity(new_opacity)
+
+                # # Create a new brush preset with the modified opacity
+                # new_preset = brush.duplicatePreset()
+                # new_preset.setOpacity(new_opacity)
+
+                # # Select the new brush preset
+                # doc.setActiveBrushPreset(new_preset)
+                                
             
             if g_dirty_brush_currently_on and g_dirty_brush_overall_enabled:
                 application = Krita.instance()
@@ -1410,9 +1570,9 @@ def setFgColorEqualToColorOfLastStrokeAfterOpacityAdjust():
                 
             visited[hashCurPos] = 1
             
-            col = getColorUnderCursorOrAtPos(forcedPos = curPos, pretendLastLayerIsFgColor = True)
+            col = getColorUnderCursorOrAtPos(forcedPos = curPos)
             
-            colExcludingLast = getColorUnderCursorOrAtPos(forcedPos = curPos, skipCurrentLayer = True)
+            colExcludingLast = getColorUnderCursorOrAtPos(forcedPos = curPos)  # , skipCurrentLayer = True  no longer possible
             
             if not col.equals(colExcludingLast):
                 # print(f"found color at {curPos}. color is {col.toString()}, col excluding curlayer is {colExcludingLast.toString()}")
@@ -1459,7 +1619,7 @@ def setFgColorEqualToColorOfLastStrokeAfterOpacityAdjust():
         
         newLa = dryPaper(False)
         
-        newLa.setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) 
+        newLa.setOpacity(int(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) 
                         
         application = Krita.instance()
         currentDoc = application.activeDocument()
@@ -1636,6 +1796,10 @@ def get_q_canvas(q_view):
 
 def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = False, deleteCurLayer = False):
                 global g_temp_switched_to_100_previous_opac
+                global g_dial_auto_mix_level
+                global g_auto_mix__how_much_canvas_to_pick
+                global g_diminishing_opacity
+                
                 app = Krita.instance()
                 win = app.activeWindow()
                 if win is not None:
@@ -1650,43 +1814,75 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                         print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
                                         
                                         
-                                        parentNode = document.activeNode().parentNode()
+                                        #parentNode = document.activeNode().parentNode()
                                         
                                         
-                                        if parentNode is not None:
+                                        if True: #parentNode is not None:
                                         
-                                                brothers = parentNode.childNodes()
-                                                colors = []
+                                                #brothers = parentNode.childNodes()
+                                                #colors = []
                                                 
-                                                # I build colors[]
-                                                for curLayer in brothers:
-                                                    # If this is the current layer and it is transparent, I skip this layer, because I only want to pick from layers below it.  Why? Because you typically use the mix shortcut when the stroke you just made is wrong, and it needs to be more similar to the background layer. But then, you want to be able to click on the stroke you just did and pick the color BELOW it. 
-                                                    # the exception is if I've switched to single-layer mode, aka temp_switched_to_100_previous_opac
-                                                    if curLayer.uniqueId() != document.activeNode().uniqueId() or curLayer.opacity() == 255 or g_temp_switched_to_100_previous_opac is not None: 
+                                                
+                                                       
+                                        
+                                        
+                                                pixBytes= document.pixelData(int(doc_pos.x()), int(doc_pos.y()), 1,1)  # 3 or 6 bytes depending on the image format
+                                                
+                                                
+                                                # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
+                                                # concatenated_string = '-'.join(byte_values)
+                                                
+                                                # print(f'Dati letti: {concatenated_string}')
+                                                
+                                                
+                                                
+                                                # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
+                                                if len(pixBytes) == 4:
+                                                    imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA8888)  
+                                                elif len(pixBytes) == 8:
+                                                    imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA64)  
+                                                else:
+                                                    raise f"unsupported len {len(pixBytes)}"
                                                     
-                                                        pixelBytes = curLayer.pixelData( int(round(doc_pos.x())), int(round(doc_pos.y())), 1, 1)
+                                                pixelC = imageData.pixelColor(0,0)
+                                                
+                                                #e ora da colore qt a colore mio 
+                                                mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255)
+                                                
+                                                #print(f'pixel risulta: {mergedColor.r}  {mergedColor.g} {mergedColor.b}')
+                                                
+                                                
+                                                
+                                                
+                                                # # I build colors[]
+                                                # for curLayer in brothers:
+                                                    # # If this is the current layer and it is transparent, I skip this layer, because I only want to pick from layers below it.  Why? Because you typically use the mix shortcut when the stroke you just made is wrong, and it needs to be more similar to the background layer. But then, you want to be able to click on the stroke you just did and pick the color BELOW it. 
+                                                    # # the exception is if I've switched to single-layer mode, aka temp_switched_to_100_previous_opac
+                                                    # if curLayer.uniqueId() != document.activeNode().uniqueId() or curLayer.opacity() == 255 or g_temp_switched_to_100_previous_opac is not None: 
+                                                    
+                                                        # pixelBytes = curLayer.pixelData( int(round(doc_pos.x())), int(round(doc_pos.y())), 1, 1)
                                                         
-                                                        imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA8888)
-                                                        pixelC = imageData.pixelColor(0,0)
+                                                        # imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA8888)
+                                                        # pixelC = imageData.pixelColor(0,0)
                                                         
-                                                        # if this is the current layer and it is trasparent, this means you are mixing from a stroke you just did. Then consider it not transparent. So the next stroke will be almost identical to the previous stroke
-                                                        if curLayer.uniqueId() == document.activeNode().uniqueId():
-                                                            correzMul = 1.0
-                                                        else:
-                                                            layerOpac = curLayer.opacity() # between 0 and 255
-                                                            correzMul = float(layerOpac) /  255.0
+                                                        # # if this is the current layer and it is trasparent, this means you are mixing from a stroke you just did. Then consider it not transparent. So the next stroke will be almost identical to the previous stroke
+                                                        # if curLayer.uniqueId() == document.activeNode().uniqueId():
+                                                            # correzMul = 1.0
+                                                        # else:
+                                                            # layerOpac = curLayer.opacity() # between 0 and 255
+                                                            # correzMul = float(layerOpac) /  255.0
                                                     
 
-                                                        #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
+                                                        # #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
                                                         
-                                                        colors.append(  rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(),  pixelC.alpha() * correzMul ))
+                                                        # colors.append(  rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(),  pixelC.alpha() * correzMul ))
                                                 
                                                 
-                                                if len(colors) == 0: # there was only the fg layer
+                                                if False: # len(colors) == 0: # there was only the fg layer
                                                     quickMessage(f"Cannot mix: could not find background layers to pick from. ")
                                                 else:
                                                     #creo il colore composito dei layer. questo è il bgcolor                                                
-                                                    bgColor = calcolaCompositeColor(colors)
+                                                    bgColor =  mergedColor # calcolaCompositeColor(colors)
                                                     bgColor.print("bgColor")
                                                                     
                                                     
@@ -1760,6 +1956,12 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                         update_label_from_virtual_color()
                                                         
                                                         
+                                                        if g_diminishing_opacity:
+                                                            g_auto_mix__how_much_canvas_to_pick = 1.0
+                                                            
+                                                            val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+                                                            g_dial_auto_mix_level.setValue(val099)
+                                                        
                                                         quickMessage(f"Picked {round(canv * 100)}%  color from the canvas.")
                                                         
                                                         # 1) if I mixed because the color is wrong, i.e. I made a mistake, then erase the mistake                                                        
@@ -1783,7 +1985,7 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                                 # if active layer opacity < 70, set to 70
                                                                 global g_auto_reset_opacity_on_pick
                                                                 if g_auto_reset_opacity_on_pick == 1 and  document is not None :
-                                                                    newLa.setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) 
+                                                                    newLa.setOpacity(int(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) 
                                                                     
                                                                     document.refreshProjection()
                                                             
@@ -1974,6 +2176,17 @@ g_opacity_decided_for_layer = False
             
             
         #print(f"dump json = {js}")
+        
+        
+
+# class EventFilter(QObject):
+    # def eventFilter(self, obj, event):
+        # print("event filter called on docker")
+        # if event.type() == QEvent.Leave : #and obj.objectName() == "KisAdvancedColorSelector":
+            # # Mouse left the Advanced Color Selector docker
+            # print("Mouse left the Advanced Color Selector docker")
+        # return super().eventFilter(obj, event)
+        
 
 class MyExtension(Extension):
 
@@ -2255,6 +2468,7 @@ class MyExtension(Extension):
                 
                 # start listening to color changes via color selector
                 colorSelectorNg = next((d for d  in app.dockers() if d.objectName() == 'ColorSelectorNg'), None)
+                print(f"type of color selector = {type(colorSelectorNg)}")
                 for child in colorSelectorNg.findChildren(QObject):
                     meta = child.metaObject()
                     if meta.className() in {
@@ -2263,7 +2477,10 @@ class MyExtension(Extension):
                         sig = getattr(child, 'update')
                         sig.connect(self.onFgColorChanged)
                     
-                
+                    
+                # non si riesce a mettere un event filter sul color selector. gli eventi non arrivano...
+                # event_filter = EventFilter(colorSelectorNg)
+                # colorSelectorNg.installEventFilter(event_filter)
                 
                 
                 self.inited = True;
@@ -2590,7 +2807,7 @@ class MyExtension(Extension):
                                             
                                                                     
                                             if g_auto_reset_opacity_on_pick == 1 :
-                                                newLa.setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) 
+                                                newLa.setOpacity(int(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) 
                                                 
                                                 document.refreshProjection()
                                                 
@@ -2677,7 +2894,7 @@ class MyExtension(Extension):
                     else:
                         g_temp_switched_to_25_previous_opac = activeLayer.opacity()
                     
-                    activeLayer.setOpacity(25.0 * 255.0 / 100.0)
+                    activeLayer.setOpacity(int(25.0 * 255.0 / 100.0))
                     
                     
                     quickMessage(f"Temporarily set 25% opacity. Press again to restore.")
@@ -2699,8 +2916,6 @@ class MyExtension(Extension):
                     # print (f"user painted. counter = {self.counter}. col = {col.toString()}")
                 
                                 
-                global g_top_layer_is_dirty
-                g_top_layer_is_dirty = True
                 
                 
                 
@@ -2992,6 +3207,7 @@ class MyExtension(Extension):
                 # print("timer 1")
                 global g_virtual_fg_color_rgb
                 global g_auto_mix_paused
+                global g_auto_mix_ignore_current_layer
                 
                 if g_virtual_fg_color_rgb is None or not g_auto_mix_enabled  or g_auto_mix_paused or (g_auto_mixing_just_once_logic and not g_auto_mixing_just_once_now_on):
                         return
@@ -3012,25 +3228,25 @@ class MyExtension(Extension):
                                                 
                                         doc_pos = p + center
                                         
-                                        doc_pos = xyOfQpoint(doc_pos)
+                                        #doc_pos = xyOfQpoint(doc_pos)
                                         # print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
                                         
                                         
-                                        parentNode = document.activeNode().parentNode()
+                                        #parentNode = document.activeNode().parentNode()
                                         
                                         
-                                        if parentNode is not None:
+                                        if True: #parentNode is not None:
                                         
-                                                brothers = parentNode.childNodes()
+                                                # brothers = parentNode.childNodes()
                                                 
                                                 
-                                                positions = [ xy( doc_pos.x, doc_pos.y)
+                                                # positions = [ xy( doc_pos.x, doc_pos.y)
                                                                                         
-                                                                                                # , xy(doc_pos.x() + self.mix_radius, doc_pos.y() + self.mix_radius),
-                                                                                                # xy(doc_pos.x() - self.mix_radius, doc_pos.y() + self.mix_radius),
-                                                                                                # xy(doc_pos.x() + self.mix_radius, doc_pos.y() - self.mix_radius),
-                                                                                                # xy(doc_pos.x() - self.mix_radius, doc_pos.y() - self.mix_radius) 
-                                                                                                   ]
+                                                                                                # # , xy(doc_pos.x() + self.mix_radius, doc_pos.y() + self.mix_radius),
+                                                                                                # # xy(doc_pos.x() - self.mix_radius, doc_pos.y() + self.mix_radius),
+                                                                                                # # xy(doc_pos.x() + self.mix_radius, doc_pos.y() - self.mix_radius),
+                                                                                                # # xy(doc_pos.x() - self.mix_radius, doc_pos.y() - self.mix_radius) 
+                                                                                                   # ]
                                                                         
 
 
@@ -3038,55 +3254,77 @@ class MyExtension(Extension):
 
 
                                                                         
-                                                merged_colors = [] # lista di rgb, uno per posizione. ognuno è il risultato di un merge di ogni layer, in quella data posizione
+                                                # merged_colors = [] # lista di rgb, uno per posizione. ognuno è il risultato di un merge di ogni layer, in quella data posizione
                                                 
                                                                                          
                                                 
                                                 
                                                 # pos =  xy(doc_pos.x(), doc_pos.y())
                                                 
+                                                pixBytes= document.pixelData(int(doc_pos.x()), int(doc_pos.y()), 1,1)  # 3 or 6 bytes depending on the image format
                                                 
                                                 
-                                                for pos in positions:
+                                                # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
+                                                # concatenated_string = '-'.join(byte_values)
                                                 
-                                                    #costruisco colors  , uno per layer                                              
-                                                    colors = []
-                                                    for curLayer in brothers:
+                                                # print(f'Dati letti: {concatenated_string}')
+                                                
+                                                
+                                                
+                                                # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
+                                                if len(pixBytes) == 4:
+                                                    imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA8888)  
+                                                elif len(pixBytes) == 8:
+                                                    imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA64)  
+                                                else:
+                                                    raise f"unsupported len {len(pixBytes)}"
+                                                    
+                                                pixelC = imageData.pixelColor(0,0)
+                                                
+                                                #e ora da colore qt a colore mio 
+                                                mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255)
+                                                
+                                                
+                                                # for pos in positions:
+                                                
+                                                    # #costruisco colors  , uno per layer                                              
+                                                    # colors = []
+                                                    # for curLayer in brothers:
                                                         
                                                         
-                                                        # important choice: skip the fg layer or not? I f you don't skip the curent layer, if you click on the previous stroke it adds to it. The problem is that you can drag the color along.
-                                                        #if curLayer.uniqueId() != document.activeNode().uniqueId() : 
+                                                        # # important choice: skip the fg layer or not? I f you don't skip the curent layer, if you click on the previous stroke it adds to it. The problem is that you can drag the color along.
+                                                        # if curLayer.uniqueId() != document.activeNode().uniqueId()  or  not g_auto_mix_ignore_current_layer: 
                                                             
-                                                            self.pixelBytes = curLayer.pixelData(pos.x, pos.y, 1, 1)
+                                                            # self.pixelBytes = curLayer.pixelData(pos.x, pos.y, 1, 1)
                                                             
-                                                            self.imageData = QImage(self.pixelBytes, 1, 1, QImage.Format_RGBA8888)
-                                                            self.pixelC = self.imageData.pixelColor(0,0)
+                                                            # self.imageData = QImage(self.pixelBytes, 1, 1, QImage.Format_RGBA8888)
+                                                            # self.pixelC = self.imageData.pixelColor(0,0)
                                                         
-                                                            #devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
-                                                            # if curLayer.uniqueId() == document.activeNode().uniqueId():
-                                                                # correzMul = 1.0
-                                                            # else:
-                                                            layerOpac = curLayer.opacity() # tra  0 e 255
-                                                            correzMul = float(layerOpac) /  255.0
+                                                            # #devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
+                                                            # # if curLayer.uniqueId() == document.activeNode().uniqueId():
+                                                                # # correzMul = 1.0
+                                                            # # else:
+                                                            # layerOpac = curLayer.opacity() # tra  0 e 255
+                                                            # correzMul = float(layerOpac) /  255.0
                                                                                                                     
                                                             
-                                                            #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha()}")
+                                                            # #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha()}")
                                                             
-                                                            colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha()  * correzMul))
+                                                            # colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha()  * correzMul))
                                                     
-                                                    mergedColorOfAllLayers = calcolaCompositeColor(colors); # tipo rgb
-                                                    merged_colors.append(mergedColorOfAllLayers)
+                                                    # mergedColorOfAllLayers = calcolaCompositeColor(colors); # tipo rgb
+                                                    # merged_colors.append(mergedColorOfAllLayers)
 
 
 
-                                                #creo il colore composito tra tutte le posizioni
-                                                # faccio la media di tutti i merged colors
+                                                # #creo il colore composito tra tutte le posizioni
+                                                # # faccio la media di tutti i merged colors
                                             
-                                                media  = merged_colors[0]
-                                                for  m in merged_colors:
-                                                        media = m.average(media)
+                                                # media  = merged_colors[0]
+                                                # for  m in merged_colors:
+                                                        # media = m.average(media)
                                                         
-                                                mergedColor = media
+                                                # mergedColor = media
                                                                 
                                                                 
                                                                 
@@ -3214,6 +3452,7 @@ class MyExtension(Extension):
                                                     
                                                     canv = g_auto_mix__how_much_canvas_to_pick
                                                     
+                                               
                                                     fgMul = 1.0 - canv
                                                     
                                                     
@@ -3283,42 +3522,73 @@ class MyExtension(Extension):
                                         center = QPointF(0.5 * document.width(), 0.5 * document.height())
                                         p = get_cursor_in_document_coords()
                                         doc_pos = p + center
-                                        # print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
-                                        
-                                        parentNode = document.activeNode().parentNode()
                                         
                                         
-                                        if parentNode is not None:
+                                        
+                                        pixBytes= document.pixelData(int(doc_pos.x()), int(doc_pos.y()), 1,1)  # 3 or 6 bytes depending on the image format
+                                        
+                                        
+                                        # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
+                                        # concatenated_string = '-'.join(byte_values)
+                                        
+                                        # print(f'Dati letti: {concatenated_string}')
+                                        
+                                        
+                                        
+                                        # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
+                                        if len(pixBytes) == 4:
+                                            imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA8888)  
+                                        elif len(pixBytes) == 8:
+                                            imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA64)  
+                                        else:
+                                            raise f"unsupported len {len(pixBytes)}"
+                                            
+                                        pixelC = imageData.pixelColor(0,0)
+                                        
+                                        #e ora da colore qt a colore mio 
+                                        mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255)
+                                        
+                                        #print(f'pixel risulta: {mergedColor.r}  {mergedColor.g} {mergedColor.b}')
+                                        
+                                        
+                                        #parentNode = document.activeNode().parentNode()
+                                        
+                                        
+                                        if True: #parentNode is not None:
                                                 # print("pick called 4")
-                                                brothers = parentNode.childNodes()
-                                                colors = []
+                                                # brothers = parentNode.childNodes()
+                                                # colors = []
                                                 
-                                                #costruisco colors
-                                                for curLayer in brothers:
-                                                
-                                                        self.pixelBytes = curLayer.pixelData(int (round(doc_pos.x())), int(round(doc_pos.y())), 1, 1)
+                                                # #costruisco colors
+                                                # for curLayer in brothers:
+                                                        # #print(f"pixel bytes = {self.pixelBytes}")
+                                                        # self.pixelBytes = curLayer.pixelData(int (round(doc_pos.x())), int(round(doc_pos.y())), 1, 1)
                                                         
-                                                        self.imageData = QImage(self.pixelBytes, 1, 1, QImage.Format_RGBA8888)
-                                                        self.pixelC = self.imageData.pixelColor(0,0) # valori tra 0 e 255
+                                                        # self.imageData = QImage(self.pixelBytes, 1, 1, QImage.Format_RGBA8888)
+                                                        # self.pixelC = self.imageData.pixelColor(0,0) # valori tra 0 e 255
+                                                        # #print(f"pixel color  = {self.pixelC.name()}")  # .name() lo stampa in modo leggibile
 
-                                                        # devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
-                                                        # if curLayer.uniqueId() == document.activeNode().uniqueId():
-                                                            # correzMul = 1.0
-                                                        # else:
-                                                        layerOpac = curLayer.opacity() # tra  0 e 255
-                                                        correzMul = float(layerOpac) /  255.0
+
+                                                        # # devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
+                                                        # # if curLayer.uniqueId() == document.activeNode().uniqueId():
+                                                            # # correzMul = 1.0
+                                                        # # else:
+                                                        # layerOpac = curLayer.opacity() # tra  0 e 255
+                                                        # correzMul = float(layerOpac) /  255.0
                                                         
                                                         
 
-                                                        #print(f"pick: color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
+                                                        # #print(f"pick: color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
                                                         
-                                                        colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha() * correzMul ))
+                                                        # colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha() * correzMul ))
                                                 
-                                                #creo il colore composito
+                                                # #creo il colore composito
                                                 
-                                                mergedColor = calcolaCompositeColor(colors);
-                                                print (f"picked color: {mergedColor.toString()}")
-                                                                
+                                                # mergedColor = calcolaCompositeColor(colors);
+                                                # print (f"picked color: {mergedColor.toString()}")
+                                                     
+
+                                                     
                                                 # if self.correct_color_for_transparency:
                                                     # #risaturiamo in modo tale che la somma resti uguale
                                                     # sommaOld = mergedColor.r + mergedColor.g + mergedColor.b
@@ -3375,7 +3645,17 @@ class MyExtension(Extension):
                             
                                                     if g_auto_mixing_just_once_logic:
                                                         g_auto_mixing_just_once_now_on = True
+                         
+                                                    global g_diminishing_opacity
+                                                    global g_auto_mix__how_much_canvas_to_pick
+                                                    global g_dial_auto_mix_level
+                                                    if g_diminishing_opacity:
+                                                        g_auto_mix__how_much_canvas_to_pick = 1.0
                                                         
+                                                        val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+                                                        g_dial_auto_mix_level.setValue(val099)
+        
+                        
                                                     # messaggio
                                                     if showMessage:
                                                         view.showFloatingMessage("Pick color", QIcon(), timeMessage, 1)
@@ -3525,7 +3805,7 @@ class MyExtension(Extension):
                 
                 if newOpac > 255:
                         newOpac = 255
-                activeLayer.setOpacity(newOpac)
+                activeLayer.setOpacity(int(newOpac))
                 
                 
                 currentDoc.refreshProjection()           #altrimenti non si aggiorna
@@ -3608,7 +3888,7 @@ class MyExtension(Extension):
                 
                 if newOpac < 0 :
                         newOpac = 0 
-                activeLayer.setOpacity(newOpac)
+                activeLayer.setOpacity(int(newOpac))
            
 
                 currentDoc.refreshProjection()           #altrimenti non si aggiorna
@@ -3681,7 +3961,7 @@ class MyExtension(Extension):
             
         def dryPaperOldWithMerge(self, showMessage = True):
                 global g_opacity_decided_for_layer
-                print(f"dry paper called showMessage = {showMessage}")
+                #print(f"dry paper called showMessage = {showMessage}")
                 application = Krita.instance()
                 currentDoc = application.activeDocument()
                 activeLayer = currentDoc.activeNode()
@@ -3693,7 +3973,7 @@ class MyExtension(Extension):
                 parentNode = activeLayer.parentNode()
                 newLa = None
                 if parentNode is not None:  
-                        print("dry paper called1")
+                        #print("dry paper called1")
                         oldOpacity = activeLayer.opacity()
                         activeLayer.mergeDown()
                         currentDoc.waitForDone()
@@ -3798,7 +4078,7 @@ class MyExtension(Extension):
                 parentNode = activeLayer.parentNode()
                 newLa = None
                 if parentNode is not None:  
-                        print("dry paper called1")
+                        #print("dry paper called1")
                         oldOpacity = activeLayer.opacity()
                         
                         
@@ -3821,6 +4101,11 @@ class MyExtension(Extension):
                             # root = currentDoc.rootNode()
                             newLa = currentDoc.createNode("Wet_area", "paintLayer")
                             newLa.setOpacity(oldOpacity)
+                            
+                            global g_set_spectral_blend_mode_when_creating_layer
+                            if g_set_spectral_blend_mode_when_creating_layer:
+                                #print("setting over spectral")
+                                newLa.setBlendingMode("over spectral");
                             
                             # backgroundLayer = parentNode.childNodes()[0]
                             
@@ -3855,7 +4140,7 @@ class MyExtension(Extension):
                 
                                         
                 if document is not None :
-                    document.activeNode().setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) # bm_djiwejdie
+                    document.activeNode().setOpacity(int(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) # bm_djiwejdie
                     
                     document.refreshProjection()
                     
@@ -3907,7 +4192,7 @@ class MyExtension(Extension):
                 # if active layer opacity < 70, set to 70
                                         
                 if g_auto_reset_opacity_on_pick == 1 and  document is not None and g_temp_switched_to_25_previous_opac is None :
-                    newLa.setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) # bm_djiwejdie
+                    newLa.setOpacity(int(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) # bm_djiwejdie
                     
                     document.refreshProjection()
                     
@@ -3916,7 +4201,7 @@ class MyExtension(Extension):
                 # non faccio dry, ma devo cmq resettare l'opacità del layer attuale
                 
                 if g_auto_reset_opacity_on_pick == 1 and  document is not None :
-                    document.activeNode().setOpacity(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0) # bm_djiwejdie
+                    document.activeNode().setOpacity(int(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) # bm_djiwejdie
                     
                     document.refreshProjection()
                 
@@ -4404,8 +4689,8 @@ class MyExtension(Extension):
                 custom_menu.addAction(actionToggle25)
                 
                 
-
-
+                
+                
 
             
                 
