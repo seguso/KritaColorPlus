@@ -485,7 +485,7 @@ class HelloDocker(DockWidget):
         # self.label = label
  
     def autoMixLevelValueChanged(self, level):
-        print(f"autoMixLevelValueChanged {level}")
+        #print(f"autoMixLevelValueChanged {level}")
         
         global g_auto_mix__how_much_canvas_to_pick
         
