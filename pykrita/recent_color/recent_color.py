@@ -1,7 +1,11 @@
+#TODO TODO pick color stops creating layers
 # TODO when changing color via the selector, then press mix, it didn't start new layer, because it erases all
 #TODO when using C on reference, add layer to real image.
 #TODO when chanign opacity of reference, do it on real image
 #todo pick color via button does not reset opacity of layer
+
+import pprint
+
 
 from krita import *
 
@@ -316,6 +320,155 @@ def toggleAutoMixing():
                 g_actionAutoMix.setChecked(True)
         
 
+
+event_lookup = {"0": "QEvent::None",
+                "114": "QEvent::ActionAdded",
+                "113": "QEvent::ActionChanged",
+                "115": "QEvent::ActionRemoved",
+                "99": "QEvent::ActivationChange",
+                "121": "QEvent::ApplicationActivate",
+                "122": "QEvent::ApplicationDeactivate",
+                "36": "QEvent::ApplicationFontChange",
+                "37": "QEvent::ApplicationLayoutDirectionChange",
+                "38": "QEvent::ApplicationPaletteChange",
+                "214": "QEvent::ApplicationStateChange",
+                "35": "QEvent::ApplicationWindowIconChange",
+                "68": "QEvent::ChildAdded",
+                "69": "QEvent::ChildPolished",
+                "71": "QEvent::ChildRemoved",
+                "40": "QEvent::Clipboard",
+                "19": "QEvent::Close",
+                "200": "QEvent::CloseSoftwareInputPanel",
+                "178": "QEvent::ContentsRectChange",
+                "82": "QEvent::ContextMenu",
+                "183": "QEvent::CursorChange",
+                "52": "QEvent::DeferredDelete",
+                "60": "QEvent::DragEnter",
+                "62": "QEvent::DragLeave",
+                "61": "QEvent::DragMove",
+                "63": "QEvent::Drop",
+                "170": "QEvent::DynamicPropertyChange",
+                "98": "QEvent::EnabledChange",
+                "10": "QEvent::Enter",
+                "150": "QEvent::EnterEditFocus",
+                "124": "QEvent::EnterWhatsThisMode",
+                "206": "QEvent::Expose",
+                "116": "QEvent::FileOpen",
+                "8": "QEvent::FocusIn",
+                "9": "QEvent::FocusOut",
+                "23": "QEvent::FocusAboutToChange",
+                "97": "QEvent::FontChange",
+                "198": "QEvent::Gesture",
+                "202": "QEvent::GestureOverride",
+                "188": "QEvent::GrabKeyboard",
+                "186": "QEvent::GrabMouse",
+                "159": "QEvent::GraphicsSceneContextMenu",
+                "164": "QEvent::GraphicsSceneDragEnter",
+                "166": "QEvent::GraphicsSceneDragLeave",
+                "165": "QEvent::GraphicsSceneDragMove",
+                "167": "QEvent::GraphicsSceneDrop",
+                "163": "QEvent::GraphicsSceneHelp",
+                "160": "QEvent::GraphicsSceneHoverEnter",
+                "162": "QEvent::GraphicsSceneHoverLeave",
+                "161": "QEvent::GraphicsSceneHoverMove",
+                "158": "QEvent::GraphicsSceneMouseDoubleClick",
+                "155": "QEvent::GraphicsSceneMouseMove",
+                "156": "QEvent::GraphicsSceneMousePress",
+                "157": "QEvent::GraphicsSceneMouseRelease",
+                "182": "QEvent::GraphicsSceneMove",
+                "181": "QEvent::GraphicsSceneResize",
+                "168": "QEvent::GraphicsSceneWheel",
+                "18": "QEvent::Hide",
+                "27": "QEvent::HideToParent",
+                "127": "QEvent::HoverEnter",
+                "128": "QEvent::HoverLeave",
+                "129": "QEvent::HoverMove",
+                "96": "QEvent::IconDrag",
+                "101": "QEvent::IconTextChange",
+                "83": "QEvent::InputMethod",
+                "207": "QEvent::InputMethodQuery",
+                "169": "QEvent::KeyboardLayoutChange",
+                "6": "QEvent::KeyPress",
+                "7": "QEvent::KeyRelease",
+                "89": "QEvent::LanguageChange",
+                "90": "QEvent::LayoutDirectionChange",
+                "76": "QEvent::LayoutRequest",
+                "11": "QEvent::Leave",
+                "151": "QEvent::LeaveEditFocus",
+                "125": "QEvent::LeaveWhatsThisMode",
+                "88": "QEvent::LocaleChange",
+                "176": "QEvent::NonClientAreaMouseButtonDblClick",
+                "174": "QEvent::NonClientAreaMouseButtonPress",
+                "175": "QEvent::NonClientAreaMouseButtonRelease",
+                "173": "QEvent::NonClientAreaMouseMove",
+                "177": "QEvent::MacSizeChange",
+                "43": "QEvent::MetaCall",
+                "102": "QEvent::ModifiedChange",
+                "4": "QEvent::MouseButtonDblClick",
+                "2": "QEvent::MouseButtonPress",
+                "3": "QEvent::MouseButtonRelease",
+                "5": "QEvent::MouseMove",
+                "109": "QEvent::MouseTrackingChange",
+                "13": "QEvent::Move",
+                "197": "QEvent::NativeGesture",
+                "208": "QEvent::OrientationChange",
+                "12": "QEvent::Paint",
+                "39": "QEvent::PaletteChange",
+                "131": "QEvent::ParentAboutToChange",
+                "21": "QEvent::ParentChange",
+                "212": "QEvent::PlatformPanel",
+                "217": "QEvent::PlatformSurface",
+                "75": "QEvent::Polish",
+                "74": "QEvent::PolishRequest",
+                "123": "QEvent::QueryWhatsThis",
+                "106": "QEvent::ReadOnlyChange",
+                "199": "QEvent::RequestSoftwareInputPanel",
+                "14": "QEvent::Resize",
+                "204": "QEvent::ScrollPrepare",
+                "205": "QEvent::Scroll",
+                "117": "QEvent::Shortcut",
+                "51": "QEvent::ShortcutOverride",
+                "17": "QEvent::Show",
+                "26": "QEvent::ShowToParent",
+                "50": "QEvent::SockAct",
+                "192": "QEvent::StateMachineSignal",
+                "193": "QEvent::StateMachineWrapped",
+                "112": "QEvent::StatusTip",
+                "100": "QEvent::StyleChange",
+                "87": "QEvent::TabletMove",
+                "92": "QEvent::TabletPress",
+                "93": "QEvent::TabletRelease",
+                "171": "QEvent::TabletEnterProximity",
+                "172": "QEvent::TabletLeaveProximity",
+                "219": "QEvent::TabletTrackingChange",
+                "22": "QEvent::ThreadChange",
+                "1": "QEvent::Timer",
+                "120": "QEvent::ToolBarChange",
+                "110": "QEvent::ToolTip",
+                "184": "QEvent::ToolTipChange",
+                "194": "QEvent::TouchBegin",
+                "209": "QEvent::TouchCancel",
+                "196": "QEvent::TouchEnd",
+                "195": "QEvent::TouchUpdate",
+                "189": "QEvent::UngrabKeyboard",
+                "187": "QEvent::UngrabMouse",
+                "78": "QEvent::UpdateLater",
+                "77": "QEvent::UpdateRequest",
+                "111": "QEvent::WhatsThis",
+                "118": "QEvent::WhatsThisClicked",
+                "31": "QEvent::Wheel",
+                "132": "QEvent::WinEventAct",
+                "24": "QEvent::WindowActivate",
+                "103": "QEvent::WindowBlocked",
+                "25": "QEvent::WindowDeactivate",
+                "34": "QEvent::WindowIconChange",
+                "105": "QEvent::WindowStateChange",
+                "33": "QEvent::WindowTitleChange",
+                "104": "QEvent::WindowUnblocked",
+                "203": "QEvent::WinIdChange",
+                "126": "QEvent::ZOrderChange", }
+                
+                
 class HelloDocker(DockWidget):
     def __init__(self):
         super().__init__()
@@ -892,10 +1045,14 @@ class AutoFocusSetter(QObject):
         global g_dial_auto_mix_level
         global g_layer_is_dirty
         
-        # if event.type() == QEvent.HoverEnter:
-            # print(f"hover ")
+        global event_lookup
+        
+        # print(f"event {event_lookup.get(str(event.type()), 'sconosciuto')}")
+        
+        
+        
         if event.type() == QEvent.Enter:
-            #print(f"enter")
+            # print(f"enter")
             # if obj.objectName() == "KisAdvancedColorSelector":
                 # print(f"enter color selector ")
             
@@ -904,7 +1061,7 @@ class AutoFocusSetter(QObject):
                         
             #if obj.type() == QMdiSubWindow:
             if isinstance(obj, QMdiSubWindow):
-                #print(f"enter subwindow")
+                # print(f"debug - enter subwindow")
                 
                 wi = Krita.instance().activeWindow()
                 q_win = wi.qwindow()
@@ -930,10 +1087,12 @@ class AutoFocusSetter(QObject):
                 global g_layer_is_dirty
                 
                 if g_color_changed_from_selector_probably:
-                    #print ("color changed probably")
-
+                
+                    curLayerId = Krita.instance().activeDocument().activeNode().uniqueId()
+                    # print (f"debug - color changed probably. curnode =  {curLayerId}")
+                    # pprint.pprint(g_layer_is_dirty)
                     
-                    if(Krita.instance().activeDocument().activeNode().uniqueId() in g_layer_is_dirty ):  # if cur layer is dirty
+                    if(curLayerId in g_layer_is_dirty ):  # if cur layer is dirty
                         l_color_changed_from_selector = True
                     else:
                         l_color_changed_from_selector = False
@@ -951,7 +1110,7 @@ class AutoFocusSetter(QObject):
                 #print ("debug 1")
                 if not isAlwaysOnTop and  l_color_changed_from_selector and (not g_auto_mix_enabled or g_auto_mix_paused) and g_multi_layer_mode:
                 
-                        #print ("debug 2 creating layer")
+                        # print ("debug 2 creating layer")
                         newLa = dryPaper(False)
                         
                         
@@ -1063,8 +1222,9 @@ class AutoFocusSetter(QObject):
             
         
         
-        if event.type() == QEvent.MouseButtonRelease:
+        if event.type() == QEvent.Paint: # QEvent.MouseButtonRelease non è affidabile, a volte smette di scattare:
             
+            # print(f"debug mouse buttonreleased. cur layer ={ Krita.instance().activeDocument().activeNode().uniqueId()}")
             
             global g_picking_color
             global g_mixing_color
@@ -1150,12 +1310,12 @@ class AutoFocusSetter(QObject):
             
             g_last_coord_mouse_up = get_cursor_in_document_coords()
             
-            # print(f"mouse buttonreleased. {g_last_coord_mouse_up}")
+            
             
             # remember layer is dirty
             
             g_layer_is_dirty[ Krita.instance().activeDocument().activeNode().uniqueId()] = True
-            
+            #print(f"setting layer dirty {Krita.instance().activeDocument().activeNode().uniqueId()}")
             
             
             if g_auto_dry_each_stroke and g_multi_layer_mode:
@@ -1969,10 +2129,11 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                         
                                                             if g_multi_layer_mode:
                                                             
-                                                                    app.action('clear').trigger()
+                                                                    app.action('selectopaque').trigger()
                                                                     document.waitForDone () # action needs to finish before continuing
-                                                            
-                                                            
+                                                                    app.action('fill_selection_foreground_color').trigger()
+                                                                    app.action('deselect').trigger()
+                                                                    
                                                         if deleteCurLayer:
                                                                 document.activeNode().remove()
                                                                     
@@ -4246,27 +4407,56 @@ class MyExtension(Extension):
                 
                 
                 
-                # cerca di capire in che stato siamo. se c'è una window on top non minimizzata, siamo in stato normale. altrimenti siamo in stato view full screen
-                siamoInStatoNormale = False
+                
+                # vedi se c'è una finestra always on top
+                thereIsOnTop = False
                 for su in subwins:
-                    flags = su.windowFlags()
-                    
-                    stayOnTop = False
+                    #flags = su.windowFlags()
                     if su.windowFlags() & Qt.WindowStaysOnTopHint:
-                        stayOnTop = True
-                    else:
-                        stayOnTop = False
+                        thereIsOnTop = True
+
+                # vedi se c'è una finestra massimizzata
+                thereIsMaximized = False
+                for su in subwins:
+                    #flags = su.windowFlags()
+                    if su.windowState() & Qt.WindowMaximized:
+                        print (f"trovata finestra massimiz {su.windowTitle()}")
+                        thereIsMaximized = True
+
+
+                # cerca di capire in che stato siamo. 
+                
+                act = app.action('view_show_canvas_only')
+                siamoInStatoNormale = not act.isChecked()
+                
+                #old logic: se c'è una window on top non minimizzata, siamo in stato normale. altrimenti siamo in stato view full screen
+                # siamoInStatoNormale = False
+                # if thereIsOnTop :
+                    # for su in subwins:
+                        # #flags = su.windowFlags()
+                        
+                        # stayOnTop = False
+                        # if su.windowFlags() & Qt.WindowStaysOnTopHint:
+                            # stayOnTop = True
+                            
+                        # else:
+                            # stayOnTop = False
+                        
+
+                        # isMinimized = False
+                        # if su.windowState() & Qt.WindowMinimized:
+                            # isMinimized = True
+                        # else:
+                            # isMinimized = False
+
+
+                        # if stayOnTop and not isMinimized:
+                            # siamoInStatoNormale = True
+                # else:
+                    # # non ci sono finestre on top. come faccio a capire se siamo in stato normale? vediamo se non esiste una finestra massimizzata
+                    # print ( "non ci sono finestre on top")
                     
-
-                    isMinimized = False
-                    if su.windowState() & Qt.WindowMinimized:
-                        isMinimized = True
-                    else:
-                        isMinimized = False
-
-
-                    if stayOnTop and not isMinimized:
-                        siamoInStatoNormale = True
+                    
                 
                 print(f"siamo in stato normale: {siamoInStatoNormale}")
                 
