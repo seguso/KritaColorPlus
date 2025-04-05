@@ -3059,10 +3059,10 @@ class MyExtension(Extension):
                     g_dirty_brush_currently_on = False
                 
                 
-                # reset previous color, because the dirty brush has already changed items
-                if g_dirty_brush_overall_enabled:
-                    setFgColor(g_virtual_fg_color_rgb_previous_when_dirty_brush_on)
-                
+                # Set the foreground color to the accepted 'dirty' color stored in virtual_fg
+                # This ensures the UI matches the color we are keeping.
+                if g_dirty_brush_overall_enabled and g_virtual_fg_color_rgb is not None:
+                     setFgColor(g_virtual_fg_color_rgb) # Use the current virtual color
                 
                 
                 if clearCurLayer and  g_temp_switched_to_100_previous_opac is None:
