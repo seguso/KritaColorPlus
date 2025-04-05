@@ -4,6 +4,11 @@
 #TODO when chanign opacity of reference, do it on real image
 #todo pick color via button does not reset opacity of layer
 
+# --- Version Marker ---
+PLUGIN_VERSION = "DEBUG_AUTO_MIX_TIMER_CHECK_V2" # Incremented version
+print(f"--- Loading KritaColorPlus Plugin Version: {PLUGIN_VERSION} ---")
+# --- End Version Marker ---
+
 import pprint
 
 
@@ -36,8 +41,9 @@ from PyQt5.QtWidgets import (
                 QMdiArea,
                 QTextEdit,
                 QAbstractScrollArea,
-                QAction, QMenu
-                
+                QAction, QMenu,
+                QApplication, # Needed for widgetAt
+                QDockWidget # Needed for type checking
                 )
 
 
@@ -1026,496 +1032,178 @@ class AutoFocusSetter(QObject):
     # eventFilter = bool(QObject obj, QEvent event)
 
     def eventFilter(self, obj, event):
-        global g_auto_mix_paused
-        global g_color_changed_from_selector_probably
-        global g_auto_mix_paused
-        global g_auto_mix_enabled
-        
-        global g_virtual_fg_color_rgb
-        global g_color_changed_from_selector_probably
-        global g_virtual_color_used_last_rgb
-        global g_dirty_brush_currently_on
-        global g_dirty_brush_overall_enabled
-        global g_color_on_down_dirty_brush
-        global g_auto_mixing_just_once_now_on
-        global g_auto_mixing_just_once_logic
-        global g_auto_dry_each_stroke
-        global g_last_coord_mouse_up
-        global g_last_coord_mouse_down
-        global g_diminishing_opacity
-        global g_auto_mix__how_much_canvas_to_pick
-        global g_dial_auto_mix_level
-        global g_layer_is_dirty
-        
-        global event_lookup
-        
-        # print(f"event {event_lookup.get(str(event.type()), 'sconosciuto')}")
-        
-        
-        
-        if event.type() == QEvent.Enter:
-            # print(f"enter")
-            # if obj.objectName() == "KisAdvancedColorSelector":
-                # print(f"enter color selector ")
-            
-            # if isinstance(obj, QDockWidget):
-                # print(f"enter dock widget {obj.objectName()} ")
-                        
-            #if obj.type() == QMdiSubWindow:
-            if isinstance(obj, QMdiSubWindow):
-                # print(f"debug - enter subwindow")
-                
-                wi = Krita.instance().activeWindow()
-                q_win = wi.qwindow()
-                mdi_area = q_win.findChild(QMdiArea)
-                mdi_area.setActiveSubWindow(obj)
-                
-                
-                subwin = obj
-                isAlwaysOnTop = True if subwin.windowFlags() & Qt.WindowStaysOnTopHint else False
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                # if the color has just been changed manually, create a new layer
-            
-                global g_layer_is_dirty
-                
-                if g_color_changed_from_selector_probably:
-                
-                    curLayerId = Krita.instance().activeDocument().activeNode().uniqueId()
-                    # print (f"debug - color changed probably. curnode =  {curLayerId}")
-                    # pprint.pprint(g_layer_is_dirty)
-                    
-                    if(curLayerId in g_layer_is_dirty ):  # if cur layer is dirty
-                        l_color_changed_from_selector = True
-                    else:
-                        l_color_changed_from_selector = False
-                        
-                    # questo era bacato! a volte era uguale. lo commento. così crea layer anche se esco e rientro dal canvas, ma può essere comodo invece che premere D per rafforzare.
-                    # TODO aggiungi controllo "se il layer attuale è dirty"
-                    # if g_virtual_fg_color_rgb.equals(g_virtual_color_used_last_rgb):
-                        # l_color_changed_from_selector = False
-                    # else:
-                        # l_color_changed_from_selector = True
-                else:
-                    l_color_changed_from_selector = False
-                    
-                    
-                #print ("debug 1")
-                if not isAlwaysOnTop and  l_color_changed_from_selector and (not g_auto_mix_enabled or g_auto_mix_paused) and g_multi_layer_mode:
-                
-                        # print ("debug 2 creating layer")
-                        newLa = dryPaper(False)
-                        
-                        
-                        # reenable dirty brush
-                        global g_dirty_brush_currently_on
-                        global g_dirty_brush_overall_enabled
-                        
-                        if g_dirty_brush_overall_enabled:
-                            g_dirty_brush_currently_on = True
-                        
-                        
-                        
-                        
-                        #devo anche resettare opacità di default
-                       
-                        global g_auto_reset_opacity_on_pick_level
-                        global g_auto_reset_opacity_on_pick
-            
-                        
-                
-                
-                
-                        document = Krita.instance().activeDocument()
-                        if g_auto_reset_opacity_on_pick == 1 and  document is not None :
-                            newLa.setOpacity(int (g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) 
-                    
-                            document.refreshProjection()
-            
-            
-            
-                        g_color_changed_from_selector_probably = False
-                
-                
-                        
-                        if g_diminishing_opacity:
-                            g_auto_mix__how_much_canvas_to_pick = 1.0
-                            
-                            val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                            g_dial_auto_mix_level.setValue(val099)
-        
-                        
-                
-                if g_auto_mix_paused and not isAlwaysOnTop: #if I am entering a window that is not always on top (the part "and not isalwaysontop" is there to attemp to fix a bug: auto-mix sometimes stops pausing when you hover the color picker)
-                    g_auto_mix_paused = False
-                    
-                
-                #obj.activateWindow()
-                
-        
-        
-        if event.type() == QEvent.Leave:
-            #print(f"leave")
-            
-            # logic: if the mouse leaver an always-on-top window, focus the first window that's not always on top. 
-            # print(f"leave event ")
-            if isinstance(obj, QMdiSubWindow):
-                #print(f"leave {obj} ")
-                
-                wi = Krita.instance().activeWindow()
-                
-                
-                subwin = obj
-                isAlwaysOnTop = True if subwin.windowFlags() & Qt.WindowStaysOnTopHint else False
-                
-                
-                
-                if isAlwaysOnTop: #if mouse left an always-on-top window:
-                    #print ("is always-on-top")
-                
-                    subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
-                    for su in subwins:
-                        curIsAlw =  False if su.windowFlags() & Qt.WindowStaysOnTopHint else True
-                        if curIsAlw:
-                            
-                            # focus this one
+        # Declare ALL globals used within this filter's scope ONCE at the top
+        global g_auto_mix_paused, g_color_changed_from_selector_probably, g_auto_mix_enabled
+        global g_virtual_fg_color_rgb, g_layer_is_dirty, g_diminishing_opacity
+        global g_dial_auto_mix_level, g_multi_layer_mode, g_auto_reset_opacity_on_pick
+        global g_auto_reset_opacity_on_pick_level, g_dirty_brush_currently_on
+        global g_dirty_brush_overall_enabled, g_picking_color, g_mixing_color
+        global g_last_coord_mouse_down, g_last_coord_mouse_up, g_btn_mix, g_btn_pick_color
+        global g_auto_dry_each_stroke, g_virtual_fg_color_rgb_previous_when_dirty_brush_on
+        global g_color_on_down_dirty_brush, g_auto_mixing_just_once_logic
+        global g_auto_mixing_just_once_now_on, g_virtual_color_used_last_rgb
+        global g_color_history_index
+
+        try: # Wrap main logic in try/except for safety
+            # --- Debug Widget Identification ---
+            if event.type() in [QEvent.Enter, QEvent.Leave]:
+                 try: # Add try-except as some objects might not have these attributes
+                     widget_name = obj.objectName() if hasattr(obj, 'objectName') else 'N/A'
+                     widget_title = obj.windowTitle() if hasattr(obj, 'windowTitle') else 'N/A'
+                     widget_class = obj.__class__.__name__
+                     event_name = "Enter" if event.type() == QEvent.Enter else "Leave"
+                     print(f"EventFilter DEBUG: {event_name} - Class: {widget_class}, Name: {widget_name}, Title: {widget_title}")
+                 except Exception as e:
+                     print(f"EventFilter DEBUG: Error getting widget info - {e}")
+            # --- End Debug ---
+
+            # --- Event Handling ---
+            event_type = event.type()
+
+            if event_type == QEvent.Enter:
+                # RESUME auto-mix ONLY when entering the main canvas view
+                if isinstance(obj, QMdiSubWindow):
+                    subwin = obj
+                    isAlwaysOnTop = bool(subwin.windowFlags() & Qt.WindowStaysOnTopHint)
+                    if not isAlwaysOnTop: # Entering a normal canvas view
+                        # Resume mixing if it was paused (timer handles pausing now)
+                        if g_auto_mix_enabled and g_auto_mix_paused:
+                             print("  RESUMING auto-mix (entering canvas via event filter)")
+                             g_auto_mix_paused = False
+
+                        # --- (Keep original layer creation logic here if needed) ---
+                        if g_color_changed_from_selector_probably:
+                            active_node = Krita.instance().activeDocument().activeNode()
+                            if active_node:
+                                curLayerId = active_node.uniqueId()
+                                l_color_changed_from_selector = curLayerId in g_layer_is_dirty
+                                if l_color_changed_from_selector and (not g_auto_mix_enabled or g_auto_mix_paused) and g_multi_layer_mode:
+                                    print ("  Creating new layer (color changed from selector)")
+                                    newLa = dryPaper(False)
+                                    if g_dirty_brush_overall_enabled: g_dirty_brush_currently_on = True
+                                    document = Krita.instance().activeDocument()
+                                    if g_auto_reset_opacity_on_pick == 1 and document is not None and newLa is not None:
+                                        newLa.setOpacity(int (g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
+                                        document.refreshProjection()
+                                    if g_diminishing_opacity:
+                                        g_auto_mix__how_much_canvas_to_pick = 1.0
+                                        val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+                                        if g_dial_auto_mix_level: g_dial_auto_mix_level.setValue(val099)
+                            g_color_changed_from_selector_probably = False
+                        # --- End layer creation logic ---
+                        # Activate the entered subwindow
+                        wi = Krita.instance().activeWindow()
+                        if wi:
                             q_win = wi.qwindow()
-                            mdi_area = q_win.findChild(QMdiArea)
-                            mdi_area.setActiveSubWindow(su)
-                            
-                            break
-                            
-                            print ("focusing first window that's not always on top")
-                else:
-                    # mouse left a normal window. possibly it entered the color picker. So pause automixing, so you can use the picker
-                    
-                    if g_auto_mix_enabled:
-                        g_auto_mix_paused = True
-                        #print("pausing automix")
-                        resetForegroundColorToLastColorPicked()
-                    else:
-                        pass
-                        #print("leave, doing nothing, auto mix disabled")
-                
-        # if event.type() == QEvent.MouseMove:
-            # print (f"mousemove")
-            # #col = getColorUnderCursorOrAtPos()
-            
-        # if event.type() == QEvent.HoverMove:
-            # print (f"hover mousemove")
-            # #col = getColorUnderCursorOrAtPos()
-                
-        # if event.type() == QEvent.GraphicsSceneMouseMove:
-            # print (f"GraphicsSceneMouseMove")
-            # #col = getColorUnderCursorOrAtPos()
-        
-        # if event.type() == QEvent.GraphicsSceneHoverMove:
-            # print (f"GraphicsSceneHoverMove")
-            # #col = getColorUnderCursorOrAtPos()
-            
-        
-        
-        if event.type() == QEvent.Paint: # QEvent.MouseButtonRelease non è affidabile, a volte smette di scattare:
-            
-            # print(f"debug mouse buttonreleased. cur layer ={ Krita.instance().activeDocument().activeNode().uniqueId()}")
-            
-            global g_picking_color
-            global g_mixing_color
-            global g_last_coord_mouse_down
-            
-            
-            if g_mixing_color:
-            
-                app = Krita.instance()
-            
-                # hide current layer, because I need to pick the color excluding the stroke just made
-                app.activeDocument().activeNode().setVisible(False)
-                app.activeDocument().refreshProjection()
-                
-                
-                
-                if g_multi_layer_mode:
-                    # TODO dovrei cancellare il precedente layer, non il corrente. perché è un errore
-                    mixFgColorWithBgColor_normalLogic( createLayer = False, deleteCurLayer = True, clearCurLayer = False)
-                    
-                else:
-                    mixFgColorWithBgColor_normalLogic( createLayer = False, deleteCurLayer = True, clearCurLayer = False)
+                            if q_win:
+                                mdi_area = q_win.findChild(QMdiArea)
+                                if mdi_area: mdi_area.setActiveSubWindow(obj)
 
+            # Remove Activation/Focus/Leave logic - Timer now handles pausing
+            # elif event_type in [QEvent.ActivationChange, QEvent.WindowActivate, QEvent.FocusIn]:
+            #    pass
+            # elif event_type == QEvent.Leave:
+            #    pass
 
-                app.activeDocument().activeNode().setVisible(True)
-                
-                
-                g_mixing_color = False
-                global g_btn_mix
-                g_btn_mix.setChecked(False)
-                
-                return True # annulla l'evento, ma non funziona
-            elif g_picking_color:
-                # clear layer first, otherwise I pick the color just painted
-                app = Krita.instance()
-                
-                # hide current layer, because I need to pick the color excluding the stroke just made
-                app.activeDocument().activeNode().setVisible(False)
-                app.activeDocument().refreshProjection()
-                
-                # now,  pick color ignoring stroke just made (which is on its own layer) 
-                col = getColorUnderCursorOrAtPos(forcedPos = xyOfQpoint(g_last_coord_mouse_down )) 
-                setFgColor(col)
-                g_virtual_fg_color_rgb  = col
-                g_picking_color = False
-                
-                app.activeDocument().activeNode().setVisible(True)
-                
-                
-                # now I have to delete the stroke just made. normally I would just clear the layer. But if I'm in single layer mode I need to DELETE the layer
-                if g_multi_layer_mode:  # altrimenti non ho creato un nuovo layer
-                    app.action('clear').trigger()
-                    app.activeDocument().waitForDone () # action needs to finish before continuing  
-                else:
-                    app.activeDocument().activeNode().remove()
-                    
-                    
-                
-                global g_btn_pick_color
-                g_btn_pick_color.setChecked(False)
-                
-                
-                # todo update layer opacity
-                
-                
-                
-                # set color label
-                update_label_from_virtual_color()
-                
-                #lblActiveColor.setStyleSheet("background-color: blue")
-                
-                
+            elif event.type() == QEvent.Paint:
+                # Handle Paint event (stroke finished)
+                if g_mixing_color:
+                    app = Krita.instance()
+                    doc = app.activeDocument()
+                    if doc:
+                        active_node = doc.activeNode()
+                        if active_node: active_node.setVisible(False)
+                        doc.refreshProjection()
+                        mix_mode = g_multi_layer_mode # Assuming mix logic depends on this
+                        mixFgColorWithBgColor_normalLogic( createLayer = False, deleteCurLayer = True, clearCurLayer = False) # Pass necessary args
+                        if active_node: active_node.setVisible(True)
+                    g_mixing_color = False
+                    if g_btn_mix: g_btn_mix.setChecked(False)
+                    return True # Event handled
+
+                elif g_picking_color:
+                    app = Krita.instance()
+                    doc = app.activeDocument()
+                    if doc:
+                        active_node = doc.activeNode()
+                        if active_node: active_node.setVisible(False)
+                        doc.refreshProjection()
+                        col = getColorUnderCursorOrAtPos(forcedPos = xyOfQpoint(g_last_coord_mouse_down ))
+                        setFgColor(col)
+                        g_virtual_fg_color_rgb  = col
+                        g_picking_color = False
+                        if active_node: active_node.setVisible(True)
+                        if g_multi_layer_mode:
+                            app.action('clear').trigger()
+                            doc.waitForDone ()
+                        else:
+                           if active_node: active_node.remove()
+                    if g_btn_pick_color: g_btn_pick_color.setChecked(False)
+                    update_label_from_virtual_color()
+                    if g_diminishing_opacity:
+                        g_auto_mix__how_much_canvas_to_pick = 1.0
+                        val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+                        if g_dial_auto_mix_level: g_dial_auto_mix_level.setValue(val099)
+                    return True # Event handled
+
+                # Standard paint finish logic
+                g_last_coord_mouse_up = get_cursor_in_document_coords()
+                doc = Krita.instance().activeDocument()
+                if doc:
+                    active_node = doc.activeNode()
+                    if active_node: g_layer_is_dirty[active_node.uniqueId()] = True
+
+                self._on_history_was_made() # Update color history
+
+                if g_auto_dry_each_stroke and g_multi_layer_mode:
+                    newLa = dryPaper(showMessage = False)
 
                 if g_diminishing_opacity:
-                    g_auto_mix__how_much_canvas_to_pick = 1.0
-                    
+                    g_auto_mix__how_much_canvas_to_pick = g_auto_mix__how_much_canvas_to_pick * 0.9
                     val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                    g_dial_auto_mix_level.setValue(val099)
+                    if g_dial_auto_mix_level: g_dial_auto_mix_level.setValue(val099)
 
-                return True # annulla l'evento, ma non funziona
-                
-                
-            
-            g_last_coord_mouse_up = get_cursor_in_document_coords()
-            
-            
-            
-            # remember layer is dirty
-            
-            g_layer_is_dirty[ Krita.instance().activeDocument().activeNode().uniqueId()] = True
-            #print(f"setting layer dirty {Krita.instance().activeDocument().activeNode().uniqueId()}")
-            
-            
-            if g_auto_dry_each_stroke and g_multi_layer_mode:
-                newLa = dryPaper(showMessage = False)
-            
-            
-            
-                
-            # uncomment this to have dirty brush =============== mouse released
-            
-            
-            if g_diminishing_opacity:
-                g_auto_mix__how_much_canvas_to_pick = g_auto_mix__how_much_canvas_to_pick * 0.9
-                
-                val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                g_dial_auto_mix_level.setValue(val099)
-        
-                
-                # if g_auto_mix__how_much_canvas_to_pick > 1.0:
-                    # g_auto_mix__how_much_canvas_to_pick = 1.0
-            
-                                                    
-            
-            # if g_diminishing_opacity:
-            
-                # doc = Krita.instance().activeDocument()
+                if g_dirty_brush_currently_on and g_dirty_brush_overall_enabled:
+                    application = Krita.instance()
+                    win = application.activeWindow()
+                    if win:
+                        view = win.activeView()
+                        if view:
+                            if g_virtual_fg_color_rgb: g_virtual_fg_color_rgb_previous_when_dirty_brush_on = g_virtual_fg_color_rgb.clone()
+                            fg = view.foregroundColor()
+                            bgColorAverage = g_color_on_down_dirty_brush
+                            if fg and bgColorAverage:
+                                comp = fg.components()
+                                canv = 0.12
+                                fgMul = 1.0 - canv
+                                comp[0] = comp[0] * fgMul + (bgColorAverage.r / 255.0)  * canv
+                                comp[1] = comp[1] * fgMul + (bgColorAverage.g / 255.0)  * canv
+                                comp[2] = comp[2] * fgMul + (bgColorAverage.b  / 255.0)  * canv
+                                fg.setComponents(comp)
+                                view.setForeGroundColor(fg)
+                                g_virtual_fg_color_rgb = rgb( int(comp[0] * 255.0), int(comp[1] * 255.0), int(comp[2] * 255.0), 1)
+                                update_label_from_virtual_color()
+                                print (f"dirty brush: adding a bit of {bgColorAverage.toString()} setting {g_virtual_fg_color_rgb.toString()}")
 
-                # # # Get the current brush
-                # brush = doc.activeNode()
-                # current_opacity = brush.opacity()
-                # if current_opacity > 20:
-                    # newLa = dryPaper(False)
-            
-                    # newLa.setOpacity(current_opacity * 0.82) 
-            
+            elif event.type() == QEvent.MouseButtonPress:
+                # Handle MouseButtonPress event
+                g_last_coord_mouse_down = get_cursor_in_document_coords()
+                if g_auto_mixing_just_once_logic:
+                    g_auto_mixing_just_once_now_on = False
 
-                # # Get the current opacity of the brush
-                # current_opacity = brush.opacity()
+                if g_dirty_brush_currently_on and g_dirty_brush_overall_enabled:
+                     g_color_on_down_dirty_brush = getColorUnderCursorOrAtPos( skipCurrentLayer = False)
 
-                # # Calculate the new opacity
-                # new_opacity = current_opacity * 0.9
+        except Exception as e:
+            print(f"Error in eventFilter: {e}")
+            import traceback
+            traceback.print_exc()
 
-                # # Set the new opacity of the brush
-                # brush.setOpacity(new_opacity)
-                
-                
-                # # Get the active document
-                # doc = Krita.instance().activeDocument()
-
-                # # Get the current brush
-                # brush = doc.activeBrush()
-
-                # # Get the current opacity of the brush
-                # current_opacity = brush.opacity()
-
-                # # Calculate the new opacity
-                # new_opacity = current_opacity * 0.5
-                
-                # brush.setOpacity(new_opacity)
-
-                # # Create a new brush preset with the modified opacity
-                # new_preset = brush.duplicatePreset()
-                # new_preset.setOpacity(new_opacity)
-
-                # # Select the new brush preset
-                # doc.setActiveBrushPreset(new_preset)
-                                
-            
-            if g_dirty_brush_currently_on and g_dirty_brush_overall_enabled:
-                application = Krita.instance()
-                win = application.activeWindow()
-                if win is not None:
-                    view = win.activeView()
-                    if  view is not None:
-                    
-                    
-                        global g_virtual_fg_color_rgb_previous_when_dirty_brush_on
-                        g_virtual_fg_color_rgb_previous_when_dirty_brush_on = g_virtual_fg_color_rgb.clone()
+        # Default handling for other events if not handled above
+        return super(AutoFocusSetter, self).eventFilter(obj, event)
+        # Removed duplicated code block that started below this line
                         
-                        
-                        
-                        
-                        fg = view.foregroundColor() #tipo ManagedColor, valori da 0 a 1
-                            # print(f"fg  = {fg}")
-                            
-                        # fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
-                        
-                        # global g_virtual_fg_color_rgb
-                        # g_virtual_fg_color_rgb = fg2
-                        
-                        # non riesco aprendere il colore precedente
-                        #bgColor = getColorUnderCursorOrAtPos(True) # skippo current layer altrimenti prende il fg attuale
-                        
-                        # average between color when mouse down and color when mouse up
-                        
-                        bgColorAverage =  g_color_on_down_dirty_brush # bgColor.average( g_color_on_down_dirty_brush)
-                        
-                        
-                        
-                        comp = fg.components() 
-                        
-                        canv = 0.12 # 0.18 troppo difficile fare contorni scuri
-                    
-                        fgMul = 1.0 - canv
-                        comp[0] = comp[0] * fgMul + (bgColorAverage.r / 255.0)  * canv
-                        comp[1] = comp[1] * fgMul + (bgColorAverage.g / 255.0)  * canv
-                        comp[2] = comp[2] * fgMul + (bgColorAverage.b  / 255.0)  * canv
-                        
-                    
-                        
-                        fg.setComponents(comp)
-                        
-                        view.setForeGroundColor(fg)
-                        
-               
-                        
-                        g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
-                        update_label_from_virtual_color()
-                            
-                            
-                            
-                        print (f"dirty brush: adding a bit of {bgColorAverage.toString()} setting {g_virtual_fg_color_rgb.toString()}")
-        
-        
-        if event.type() == QEvent.MouseButtonPress:
-            # print("mouse buttonpress")
-            
-                
-                # col = getColorUnderCursorOrAtPos()
-                # setFgColor(col)
-                # g_picking_color = False
-                # return True # annulla l'evento
-            
-            
-            g_last_coord_mouse_down = get_cursor_in_document_coords()
-            
-            
-            if g_auto_mixing_just_once_logic:
-                g_auto_mixing_just_once_now_on = False
-            
-            
-            if g_dirty_brush_currently_on and g_dirty_brush_overall_enabled:
-                application = Krita.instance()
-                win = application.activeWindow()
-                if win is not None:
-                    view = win.activeView()
-                    if  view is not None:
-                        fg = view.foregroundColor() #tipo ManagedColor, valori da 0 a 1
-                            # print(f"fg  = {fg}")
-                            
-                        # fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
-                        
-                        # global g_virtual_fg_color_rgb
-                        # g_virtual_fg_color_rgb = fg2
-                        
-                        
-                        
-                
-                        # if g_dirty_brush_currently_on :
-                                                            
-                                # currentDoc = application.activeDocument()
-                                # if currentDoc is not None:
-                                    # application.action('clear').trigger()
-                                    # currentDoc.waitForDone () # action needs to finish before continuing
-                                
-                
-                        
-                        # in theory I should skip current layer because  I am deciding the correct color, so the color on the current layer is incorrect. but I can also try the other logic because then you can drag around color without getting dirty. 
-                        # kind of like auto-mixing with 100 background pick.
-                        g_color_on_down_dirty_brush = getColorUnderCursorOrAtPos( skipCurrentLayer = False)
-                        
-                        
-            # uncomment this to have dirty brush ===============
-                
-            
-            pass
-            
-            # global g_opacity_decided_for_layer
-            # if not g_opacity_decided_for_layer:
-                # bgColor = getColorUnderCursorOrAtPosExceptCurrentLayer()
-                # application = Krita.instance()
-                # win = application.activeWindow()
-                # if win is not None:
-                    # view = win.activeView()
-                    # if bgColor  is not None and view is not None:
-                        # # print (f"MouseButtonPress. col = {bgColor.toString()}")
-                        
-                        # # I need to set current layer opacity so that the distance between fg and color under cursor is small
-                        
-                        
-
-                                        
-                        # # setto il fg color uguale a merged color mischiato con il fg
-                        # fg = view.foregroundColor() #tipo ManagedColor, valori da 0 a 1
-                        # # print(f"fg  = {fg}")
-                        
-                        # fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
-                        # # fg2.print("MouseButtonPress fg2 = ")
+# Removed duplicated code block that started below this line
                         
                         
                         
@@ -2471,7 +2159,13 @@ class MyExtension(Extension):
                 
                     os.mkdir(self.plugin_state_dir)
                     
-                
+                # Krita.instance().notifier().windowCreated.connect(self.onWindowCreated) # Use timer instead
+                QTimer.singleShot(1500, self.onWindowCreated) # Ensure call matches definition name
+                print("Scheduled UI connections setup.")
+
+                # Install the event filter on the application instance to capture canvas events etc.
+                Krita.instance().installEventFilter(self.ef_autofocus)
+                print("Installed global event filter.")
                 Krita.instance().notifier().windowCreated.connect(self.onWindowCreated)
                 Krita.instance().notifier().viewCreated.connect(self.onViewOpenedEvent)
                 Krita.instance().notifier().imageCreated.connect(self.onDocCreated)
@@ -2611,49 +2305,93 @@ class MyExtension(Extension):
             
             
             
-            
-
-        def onWindowCreated(self): #called by framework
-                print("on window created  ")
-                
-
-                # self.currentColor = [255,255,255,0]
-                # self.previousColor = [255,255,20,0]
-                # self.inited = False
-                                
+        # Unindent the entire function block below by one level (4 spaces)
+        def onWindowCreated(self): # Renamed back from setupUiConnections
+                """Set up signal connections and install direct event filters after UI is likely ready."""
+                print("setupUiConnections called")
                 app = Krita.instance()
-                history_docker = next((d for d in app.dockers() if d.objectName() == 'History'), None)
-                kis_undo_view = next((v for v in history_docker.findChildren(QListView) if v.metaObject().className() == 'KisUndoView'), None)
-                s_model = kis_undo_view.selectionModel()
-                s_model.currentChanged.connect(self._on_history_was_made)
-                
-                
-                
-                
-                # start listening to color changes via color selector
-                colorSelectorNg = next((d for d  in app.dockers() if d.objectName() == 'ColorSelectorNg'), None)
-                print(f"type of color selector = {type(colorSelectorNg)}")
-                for child in colorSelectorNg.findChildren(QObject):
-                    meta = child.metaObject()
-                    if meta.className() in {
-                                'KisColorSelectorRing', 'KisColorSelectorTriangle',
-                                'KisColorSelectorSimple', 'KisColorSelectorWheel'}:
-                        sig = getattr(child, 'update')
-                        sig.connect(self.onFgColorChanged)
+
+                # --- History Docker Connection ---
+                try:
+                    history_docker = next((d for d in app.dockers() if d.objectName() == 'History'), None)
+                    if history_docker:
+                        kis_undo_view = next((v for v in history_docker.findChildren(QListView) if v.metaObject().className() == 'KisUndoView'), None)
+                        if kis_undo_view:
+                            s_model = kis_undo_view.selectionModel()
+                            if s_model:
+                                s_model.currentChanged.connect(self._on_history_was_made)
+                                print("Connected to history changes.")
+                            else: print("Warning: Could not get selection model for KisUndoView.")
+                        else: print("Warning: Could not find KisUndoView in History docker.")
+                    else: print("Warning: History docker not found.")
+                except Exception as e:
+                    print(f"Error setting up history connection: {e}")
+
+                # --- Color Selector Signal Connection & Direct Event Filter Installation ---
+                try:
+                    # Find docker first, then specific widgets inside
+                    # Use broader search terms
+                    advColorSelectorDocker = next((d for d in app.dockers() if "advanced color selector" in d.windowTitle().lower() or d.objectName().lower() == "kisadvancedcolorselector"), None)
+
+                    if advColorSelectorDocker:
+                        print(f"Found Advanced Color Selector Docker: {advColorSelectorDocker.objectName()}")
+                        # Install event filter directly on the docker
+                        advColorSelectorDocker.installEventFilter(self.ef_autofocus)
+                        print(f"Installed event filter directly on {advColorSelectorDocker.objectName()}")
+
+                        # Also install on the main widget inside the docker
+                        mainWidget = advColorSelectorDocker.widget()
+                        if mainWidget:
+                           mainWidget.installEventFilter(self.ef_autofocus)
+                           print(f"Installed event filter directly on main widget of {advColorSelectorDocker.objectName()}")
+                        else:
+                            print(f"Warning: Could not get main widget for {advColorSelectorDocker.objectName()}")
+
+
+                        # Connect to internal color change signals (original logic)
+                        for child in advColorSelectorDocker.findChildren(QObject):
+                            meta = child.metaObject()
+                            class_name = meta.className()
+                            if class_name in {'KisColorSelectorRing', 'KisColorSelectorTriangle', 'KisColorSelectorSimple', 'KisColorSelectorWheel'}:
+                                # Check if 'update' signal exists before connecting
+                                if hasattr(child, 'update') and hasattr(getattr(child, 'update'), 'connect'):
+                                     sig = getattr(child, 'update')
+                                     sig.connect(self.onFgColorChanged)
+                                     print(f"Connected update signal for {class_name}")
+                                else:
+                                     print(f"Warning: 'update' signal not found or not connectable for {class_name}")
+                    else:
+                        print("Warning: Advanced Color Selector docker not found for signal connection/filter installation.")
+
+                except Exception as e:
+                    print(f"Error setting up color selector connections/filter: {e}")
+
+                # Attempt to find and filter other potential color selectors too
+                # Example: Palette Docker
+                try:
+                    paletteDocker = next((d for d in app.dockers() if "palette" in d.windowTitle().lower()), None)
+                    if paletteDocker and paletteDocker != advColorSelectorDocker: # Avoid double-installing
+                         print(f"Found Palette Docker: {paletteDocker.objectName()}")
+                         paletteDocker.installEventFilter(self.ef_autofocus)
+                         print(f"Installed event filter directly on {paletteDocker.objectName()}")
+                         mainPaletteWidget = paletteDocker.widget()
+                         if mainPaletteWidget:
+                              mainPaletteWidget.installEventFilter(self.ef_autofocus)
+                              print(f"Installed event filter directly on main widget of {paletteDocker.objectName()}")
+                except Exception as e:
+                     print(f"Error setting up palette docker filter: {e}")
+
+
+                self.inited = True # Mark as initialized after setup
+                print("Setup finished.")
                     
                     
                 # non si riesce a mettere un event filter sul color selector. gli eventi non arrivano...
                 # event_filter = EventFilter(colorSelectorNg)
                 # colorSelectorNg.installEventFilter(event_filter)
                 
-                
-                self.inited = True;
-                print ("swap: initialized")
-                
-                
-
-
-                print("on window created : ok")
+                # Removed stray lines from previous edits below
+                # Cleaned up stray lines
                 
         def setup(self): #called by framework
             print("setup called")
@@ -2880,18 +2618,17 @@ class MyExtension(Extension):
                 global g_last_virtual_colors_used
                 global g_color_history_index
 
-                print("\n--- switchToLastColor ---")
-                print(f"Before Switch: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
 
                 try:
                         acView = Krita.instance().activeWindow().activeView()
                         if acView is None:
+                            # print("  Abort: No active view.") # Removed debug print
+                            # print("  Abort: No active view.") # Removed debug print
                             print("  Abort: No active view.")
                             return
 
                         num_colors = len(g_last_virtual_colors_used)
                         if num_colors < 2:
-                            print("  Abort: Not enough colors in history.")
                             quickMessage("Not enough colors in history to switch.")
                             return
 
@@ -2902,6 +2639,8 @@ class MyExtension(Extension):
                         if original_index == -1: # First switch since last paint
                             target_index = -2
                             g_color_history_index = -2
+                            # print(f"  First switch detected. Target index: {target_index}. New index: {g_color_history_index}") # Removed debug print
+                            # print(f"  First switch detected. Target index: {target_index}. New index: {g_color_history_index}") # Removed debug print
                             print(f"  First switch detected. Target index: {target_index}. New index: {g_color_history_index}")
                         else: # Consecutive switch without painting
                             target_index = original_index - 1
@@ -2909,9 +2648,13 @@ class MyExtension(Extension):
                             if target_index < -num_colors:
                                 target_index = -1 # Wrap back to the most recent color (List[-1])
                             g_color_history_index = target_index # Update the global index
+                            # print(f"  Consecutive switch detected. Decremented index: {g_color_history_index}. Target index: {target_index}") # Removed debug print
+                            # print(f"  Consecutive switch detected. Decremented index: {g_color_history_index}. Target index: {target_index}") # Removed debug print
                             print(f"  Consecutive switch detected. Decremented index: {g_color_history_index}. Target index: {target_index}")
 
                         target_color = g_last_virtual_colors_used[target_index]
+                        # print(f"  Target Color: {target_color.toString()} at index {target_index}") # Removed debug print
+                        # print(f"  Target Color: {target_color.toString()} at index {target_index}") # Removed debug print
                         print(f"  Target Color: {target_color.toString()} at index {target_index}")
 
                         # Update virtual color and Krita's foreground color
@@ -2925,10 +2668,12 @@ class MyExtension(Extension):
                         comp[2] = (g_virtual_fg_color_rgb.b / 255.0)
                         col.setComponents(comp)
                         acView.setForeGroundColor(col)
+                        # print(f"  Set FG Color to: {g_virtual_fg_color_rgb.toString()}") # Removed debug print
                         print(f"  Set FG Color to: {g_virtual_fg_color_rgb.toString()}")
 
                         # DO NOT reorder the list.
                         acView.showFloatingMessage(f"Switched color (History pos {g_color_history_index})", QIcon(), timeMessage, 1)
+                        # print(f"After Switch: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}") # Removed debug print
                         print(f"After Switch: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
 
 
@@ -2953,6 +2698,7 @@ class MyExtension(Extension):
                 except IndexError:
                      quickMessage("Error accessing color history (Index out of bounds).")
                      g_color_history_index = -1 # Reset index on error
+                     # print(f"IndexError in switchToLastColor (Index was {g_color_history_index}), resetting index to -1.") # Removed debug print
                      print(f"IndexError in switchToLastColor (Index was {g_color_history_index}), resetting index to -1.")
                      import traceback
                      traceback.print_exc()
@@ -2963,6 +2709,7 @@ class MyExtension(Extension):
                         import traceback
                         traceback.print_exc()
                         g_color_history_index = -1 # Reset index on other errors too
+                        # print("Resetting index to -1 due to exception.") # Removed debug print
                         print("Resetting index to -1 due to exception.")
                 except Exception as e:
                                 acView.showFloatingMessage(f"error {e}.", QIcon(), timeMessage * 2, 1)
@@ -3041,6 +2788,7 @@ class MyExtension(Extension):
                         g_temp_switched_to_25_previous_opac = g_temp_switched_to_100_previous_opac
                         g_temp_switched_to_100_previous_opac = None
                     else:
+                        # print(f"  Adding new/different color {stroke_color_clone.toString()} to history.") # Removed debug print
                         g_temp_switched_to_25_previous_opac = activeLayer.opacity()
                     
                     activeLayer.setOpacity(int(25.0 * 255.0 / 100.0))
@@ -3048,6 +2796,8 @@ class MyExtension(Extension):
                     
                     quickMessage(f"Temporarily set 25% opacity. Press again to restore.")
                 else:
+                    # print(f"  Adding first color {stroke_color_clone.toString()} to history.") # Removed debug print
+                    # print(f"  Adding new/different color {stroke_color_clone.toString()} to history.") # Removed debug print
                     activeLayer = dryPaper(False)
                     activeLayer.setOpacity(g_temp_switched_to_25_previous_opac)
                     
@@ -3060,6 +2810,7 @@ class MyExtension(Extension):
             
         def _on_history_was_made(self):   # User painted, probably
                 """Adds the color of the last stroke to the history list and resets the history index, handling A->B->Paint A case."""
+                # print(f"\n--- _on_history_was_made (Stroke {self.counter}) ---") # Removed debug print
                 self.counter += 1
                 print(f"\n--- _on_history_was_made (Stroke {self.counter}) ---")
                 try:
@@ -3070,6 +2821,8 @@ class MyExtension(Extension):
                     global g_color_history_index # Need to reset this
 
                     stroke_color = g_virtual_fg_color_rgb
+                    # print(f"  Stroke Color (g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}") # Removed debug print
+                    # print(f"  Before Update: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}") # Removed debug print
                     print(f"  Stroke Color (g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
                     print(f"  Before Update: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
 
@@ -3078,41 +2831,44 @@ class MyExtension(Extension):
                         num_colors = len(g_last_virtual_colors_used)
                         reset_index_needed = True # Assume we need to reset unless color is same as last
 
+                        # Rewrite this block with consistent 4-space indentation
                         if num_colors > 0:
                             last_in_history = g_last_virtual_colors_used[-1]
                             print(f"  Comparing stroke color {stroke_color_clone.toString()} with last in history {last_in_history.toString()}")
 
                             if last_in_history.equals(stroke_color_clone):
-                                print("  Color is same as last in history. No list change needed.")
-                                # No need to add, but still reset index
+                                # Color is same as last in history. No list change needed.
+                                pass # Explicitly do nothing for the list
                             elif num_colors > 1 and g_last_virtual_colors_used[-2].equals(stroke_color_clone):
-                                # Painted with the second-to-last color (e.g., switched A->B, painted A)
-                                # Swap last two to make A the most recent: [..., C, B, A] -> [..., C, A, B]
+                                # Painted with the second-to-last color. Swap last two.
                                 print(f"  Color matches second-to-last. Swapping last two elements.")
                                 temp = g_last_virtual_colors_used[-1]
                                 g_last_virtual_colors_used[-1] = g_last_virtual_colors_used[-2]
                                 g_last_virtual_colors_used[-2] = temp
                             else:
-                                # Genuinely new color or reusing one further back
+                                # Genuinely new color or reusing one further back. Append and trim.
                                 print(f"  Adding new/different color {stroke_color_clone.toString()} to history.")
                                 g_last_virtual_colors_used.append(stroke_color_clone)
-                                # Trim list
                                 max_history = 5
                                 if len(g_last_virtual_colors_used) > max_history:
                                     g_last_virtual_colors_used = g_last_virtual_colors_used[-max_history:]
                                     print(f"  History trimmed to {max_history} items.")
                         else:
-                             # First color ever added
-                             print(f"  Adding first color {stroke_color_clone.toString()} to history.")
-                             g_last_virtual_colors_used.append(stroke_color_clone)
+                            # First color ever added to the history.
+                            print(f"  Adding first color {stroke_color_clone.toString()} to history.")
+                            # Correct indentation for the line below and remove duplicate print
+                            g_last_virtual_colors_used.append(stroke_color_clone)
 
                         # Reset index if a stroke occurred (even if color wasn't added/swapped)
                         if reset_index_needed:
-                             g_color_history_index = -1
-                             print("  Reset color history index to -1.")
+                            # print("  Reset color history index to -1.") # Removed debug print
+                            # Correct indentation for the lines below
+                            g_color_history_index = -1
+                            print("  Reset color history index to -1.")
 
 
                     # Update the absolute last color tracker (always, inside try)
+                    # print(f"  After Update: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}") # Removed debug print
                     g_virtual_color_used_last_rgb = stroke_color
                     print(f"  After Update: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
 
@@ -3349,13 +3105,65 @@ class MyExtension(Extension):
                 
                 
         def mixOnTimer(self):
-                global g_auto_mix_enabled
-                # print("timer 1")
-                global g_virtual_fg_color_rgb
-                global g_auto_mix_paused
-                global g_auto_mix_ignore_current_layer
-                
-                if g_virtual_fg_color_rgb is None or not g_auto_mix_enabled  or g_auto_mix_paused or (g_auto_mixing_just_once_logic and not g_auto_mixing_just_once_now_on):
+                """Timer function for auto-mixing, now includes check for cursor over color selector."""
+                global g_auto_mix_enabled, g_auto_mix_paused, g_virtual_fg_color_rgb
+                global g_auto_mix_ignore_current_layer, g_auto_mixing_just_once_logic
+                global g_auto_mixing_just_once_now_on # Declare all needed globals
+
+                # --- Check if cursor is over a color selector ---
+                is_over_selector = False
+                try:
+                    cursor_pos = QCursor.pos()
+                    widget_under_cursor = QApplication.widgetAt(cursor_pos)
+                    current_widget = widget_under_cursor
+                    # Traverse up parent hierarchy (max 10 levels)
+                    for _ in range(10):
+                        if current_widget is None:
+                            break
+
+                        widget_class_name = current_widget.__class__.__name__
+                        widget_name = current_widget.objectName().lower() if hasattr(current_widget, 'objectName') else ''
+                        widget_title = current_widget.windowTitle().lower() if hasattr(current_widget, 'windowTitle') else ''
+
+                        # print(f"DEBUG mixOnTimer Check: Class={widget_class_name}, Name={widget_name}, Title={widget_title}") # Verbose Debug
+
+                        color_selector_identifiers = [
+                            "advanced color selector", "artistic color selector", "digital color mixer",
+                            "specific color selector", "kisadvancedcolorselector", "small color selector",
+                            "palette docker"
+                        ]
+
+                        if any(identifier in widget_title or identifier in widget_name for identifier in color_selector_identifiers):
+                            is_over_selector = True
+                            # print(f"DEBUG mixOnTimer: Cursor detected over selector: {widget_title or widget_name}") # Debug
+                            break # Found selector, stop traversing
+
+                        current_widget = current_widget.parentWidget()
+
+                except Exception as e:
+                    print(f"Error checking widget under cursor in mixOnTimer: {e}")
+                    # Proceed cautiously, maybe default to not paused?
+
+                # --- Pause/Resume based on cursor position ---
+                if is_over_selector:
+                    if g_auto_mix_enabled and not g_auto_mix_paused:
+                        print("  PAUSING auto-mix (cursor over selector)")
+                        g_auto_mix_paused = True
+                        resetForegroundColorToLastColorPicked() # Reset FG color
+                    # If over selector, always return early, regardless of g_auto_mix_enabled
+                    return
+                else:
+                    # Cursor is not over selector, ensure we are not paused *by this timer check*
+                    # We might be paused for other reasons, so only unpause if appropriate
+                    if g_auto_mix_paused: # Check if currently paused
+                         print("  RESUMING auto-mix (cursor not over selector - timer check)")
+                         g_auto_mix_paused = False
+
+
+                # --- Original Auto-Mix Logic ---
+                # Check conditions for skipping the mix (including pause state)
+                if g_virtual_fg_color_rgb is None or not g_auto_mix_enabled or g_auto_mix_paused or (g_auto_mixing_just_once_logic and not g_auto_mixing_just_once_now_on):
+                        # print("mixOnTimer: Skipping mix (disabled or paused or conditions not met)") # Debug
                         return
                         
                 # print("timer 2")        
