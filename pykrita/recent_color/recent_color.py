@@ -241,6 +241,7 @@ g_virtual_color_used_last_rgb  = None
 g_virtual_fg_color_rgb = None
 
 g_last_virtual_colors_used: List['rgb'] = [] # Add type hint using forward reference
+g_color_history_index = -1 # Index pointing to the 'active' color in g_last_virtual_colors_used for switching
 
 timeMessage = 300
 g_normal_step_layer_opacity = 20
@@ -2401,7 +2402,8 @@ class MyExtension(Extension):
                 global g_virtual_fg_color_rgb
                 g_virtual_fg_color_rgb = None # di tipo rgb
                 
-                
+                global g_color_history_index # New
+                g_color_history_index = -1 # New
                 
                 
                 self.g_auto_focus = Krita.instance().readSetting("colorPlus", "g_auto_focus", "true")
@@ -2872,22 +2874,45 @@ class MyExtension(Extension):
                 
         
         def switchToLastColor(self):
-                """Switches to the second-to-last used stroke color and updates history for A/B switching."""
+                """Switches color based on history, handling consecutive presses vs. first press after paint."""
                 global g_temp_switched_to_100_previous_opac
                 global g_virtual_fg_color_rgb
                 global g_last_virtual_colors_used
+                global g_color_history_index
+
+                print("\n--- switchToLastColor ---")
+                print(f"Before Switch: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
 
                 try:
                         acView = Krita.instance().activeWindow().activeView()
                         if acView is None:
+                            print("  Abort: No active view.")
                             return
 
-                        if len(g_last_virtual_colors_used) < 2:
+                        num_colors = len(g_last_virtual_colors_used)
+                        if num_colors < 2:
+                            print("  Abort: Not enough colors in history.")
                             quickMessage("Not enough colors in history to switch.")
                             return
 
-                        # Target color is the second-to-last one
-                        target_color = g_last_virtual_colors_used[-2]
+                        original_index = g_color_history_index
+                        target_index = -1 # Default invalid index
+
+                        # Determine target color based on whether this is the first switch or consecutive
+                        if original_index == -1: # First switch since last paint
+                            target_index = -2
+                            g_color_history_index = -2
+                            print(f"  First switch detected. Target index: {target_index}. New index: {g_color_history_index}")
+                        else: # Consecutive switch without painting
+                            target_index = original_index - 1
+                            # Handle wrap-around
+                            if target_index < -num_colors:
+                                target_index = -1 # Wrap back to the most recent color (List[-1])
+                            g_color_history_index = target_index # Update the global index
+                            print(f"  Consecutive switch detected. Decremented index: {g_color_history_index}. Target index: {target_index}")
+
+                        target_color = g_last_virtual_colors_used[target_index]
+                        print(f"  Target Color: {target_color.toString()} at index {target_index}")
 
                         # Update virtual color and Krita's foreground color
                         g_virtual_fg_color_rgb = target_color.clone()
@@ -2900,18 +2925,12 @@ class MyExtension(Extension):
                         comp[2] = (g_virtual_fg_color_rgb.b / 255.0)
                         col.setComponents(comp)
                         acView.setForeGroundColor(col)
+                        print(f"  Set FG Color to: {g_virtual_fg_color_rgb.toString()}")
 
-                        # Swap the last two elements in the list to prepare for the next switch back
-                        temp = g_last_virtual_colors_used[-1]
-                        g_last_virtual_colors_used[-1] = g_last_virtual_colors_used[-2]
-                        g_last_virtual_colors_used[-2] = temp
-                        # print("Swapped last two colors in history.")
-                        # print("Current color history after swap:")
-                        # for i, c in enumerate(g_last_virtual_colors_used):
-                        #     print(f"  {i}: {c.toString()}")
+                        # DO NOT reorder the list.
+                        acView.showFloatingMessage(f"Switched color (History pos {g_color_history_index})", QIcon(), timeMessage, 1)
+                        print(f"After Switch: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
 
-
-                        acView.showFloatingMessage("Switched color", QIcon(), timeMessage, 1)
 
                         # --- Optional: Layer creation logic (kept from original) ---
                         global g_auto_reset_opacity_on_pick
@@ -2931,12 +2950,20 @@ class MyExtension(Extension):
                                             document.refreshProjection()
                         # --- End Optional Layer Logic ---
 
+                except IndexError:
+                     quickMessage("Error accessing color history (Index out of bounds).")
+                     g_color_history_index = -1 # Reset index on error
+                     print(f"IndexError in switchToLastColor (Index was {g_color_history_index}), resetting index to -1.")
+                     import traceback
+                     traceback.print_exc()
                 except Exception as e:
                         if 'acView' in locals() and acView is not None:
                             acView.showFloatingMessage(f"Error switching color: {e}.", QIcon(), timeMessage * 2, 1)
                         print(f"Error in switchToLastColor: {e}")
                         import traceback
                         traceback.print_exc()
+                        g_color_history_index = -1 # Reset index on other errors too
+                        print("Resetting index to -1 due to exception.")
                 except Exception as e:
                                 acView.showFloatingMessage(f"error {e}.", QIcon(), timeMessage * 2, 1)
                                 print("errore trovato in swap:")
@@ -3032,53 +3059,68 @@ class MyExtension(Extension):
                 
             
         def _on_history_was_made(self):   # User painted, probably
-                """Adds the color of the last stroke to the history list."""
+                """Adds the color of the last stroke to the history list and resets the history index, handling A->B->Paint A case."""
                 self.counter += 1
+                print(f"\n--- _on_history_was_made (Stroke {self.counter}) ---")
                 try:
-                    global g_virtual_fg_color_rgb # This should represent the color intended for the stroke
+                    # Get globals
+                    global g_virtual_fg_color_rgb
                     global g_last_virtual_colors_used
-                    global g_virtual_color_used_last_rgb # Keep track of the absolute last color used
+                    global g_virtual_color_used_last_rgb
+                    global g_color_history_index # Need to reset this
 
                     stroke_color = g_virtual_fg_color_rgb
+                    print(f"  Stroke Color (g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
+                    print(f"  Before Update: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
 
                     if stroke_color is not None:
-                        # Clone to store an independent copy in the history
                         stroke_color_clone = stroke_color.clone()
+                        num_colors = len(g_last_virtual_colors_used)
+                        reset_index_needed = True # Assume we need to reset unless color is same as last
 
-                        # Add to history list only if it's different from the last recorded color
-                        should_add = True
-                        if len(g_last_virtual_colors_used) > 0:
-                            if g_last_virtual_colors_used[-1].equals(stroke_color_clone):
-                                should_add = False
+                        if num_colors > 0:
+                            last_in_history = g_last_virtual_colors_used[-1]
+                            print(f"  Comparing stroke color {stroke_color_clone.toString()} with last in history {last_in_history.toString()}")
 
-                        if should_add:
-                            g_last_virtual_colors_used.append(stroke_color_clone)
-                            # print(f"Stroke {self.counter}: Added color {stroke_color_clone.toString()} to history.")
+                            if last_in_history.equals(stroke_color_clone):
+                                print("  Color is same as last in history. No list change needed.")
+                                # No need to add, but still reset index
+                            elif num_colors > 1 and g_last_virtual_colors_used[-2].equals(stroke_color_clone):
+                                # Painted with the second-to-last color (e.g., switched A->B, painted A)
+                                # Swap last two to make A the most recent: [..., C, B, A] -> [..., C, A, B]
+                                print(f"  Color matches second-to-last. Swapping last two elements.")
+                                temp = g_last_virtual_colors_used[-1]
+                                g_last_virtual_colors_used[-1] = g_last_virtual_colors_used[-2]
+                                g_last_virtual_colors_used[-2] = temp
+                            else:
+                                # Genuinely new color or reusing one further back
+                                print(f"  Adding new/different color {stroke_color_clone.toString()} to history.")
+                                g_last_virtual_colors_used.append(stroke_color_clone)
+                                # Trim list
+                                max_history = 5
+                                if len(g_last_virtual_colors_used) > max_history:
+                                    g_last_virtual_colors_used = g_last_virtual_colors_used[-max_history:]
+                                    print(f"  History trimmed to {max_history} items.")
+                        else:
+                             # First color ever added
+                             print(f"  Adding first color {stroke_color_clone.toString()} to history.")
+                             g_last_virtual_colors_used.append(stroke_color_clone)
 
-                            # Trim the list to maintain history size (e.g., 5)
-                            max_history = 5 # Keep the last 5 colors
-                            if len(g_last_virtual_colors_used) > max_history:
-                                g_last_virtual_colors_used = g_last_virtual_colors_used[-max_history:]
-                                # print(f"History trimmed to {max_history} items.")
-
-                        # else:
-                            # print(f"Stroke {self.counter}: Color {stroke_color_clone.toString()} is same as last in history, not added.")
+                        # Reset index if a stroke occurred (even if color wasn't added/swapped)
+                        if reset_index_needed:
+                             g_color_history_index = -1
+                             print("  Reset color history index to -1.")
 
 
-                    # Update the variable tracking the absolute last color used (might be useful elsewhere)
-                    g_virtual_color_used_last_rgb = stroke_color # Use the reference, might be None
+                    # Update the absolute last color tracker (always, inside try)
+                    g_virtual_color_used_last_rgb = stroke_color
+                    print(f"  After Update: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
 
-                    # Debug print history
-                    # print("Current color history after stroke:")
-                    # for i, c in enumerate(g_last_virtual_colors_used):
-                    #     print(f"  {i}: {c.toString()}")
-
-                except Exception as e: # Corrected indentation (12 spaces)
-                    # Ensure correct indentation for the except block contents (16 spaces)
+                except Exception as e:
+                    # Correctly indented except block
                     print(f"Error in _on_history_was_made: {e}")
                     import traceback
                     traceback.print_exc()
-                    # Removed duplicated/over-indented lines below
 
         # def mixOldSingleLayer(self):
                 # app = Krita.instance()
