@@ -50,6 +50,7 @@ import xml
 import math
 import json
 import queue
+from typing import List, Any, Optional # Add List, Any, Optional
 
 ### BEGIN imported from Ronald van Wijnen https://github.com/rvanwijnen/spectral.js/blob/main/python/spectral.py
 ##  MIT License
@@ -239,7 +240,7 @@ g_btn_pick_color = None
 g_virtual_color_used_last_rgb  = None
 g_virtual_fg_color_rgb = None
 
-g_last_virtual_colors_used = []
+g_last_virtual_colors_used: List['rgb'] = [] # Add type hint using forward reference
 
 timeMessage = 300
 g_normal_step_layer_opacity = 20
@@ -2279,7 +2280,7 @@ class Window:
     fullPath = ""
     
 class PluginState:
-    windows = []
+    windows: List[Any] = [] # Add type hint
     
     
     
@@ -2871,111 +2872,71 @@ class MyExtension(Extension):
                 
         
         def switchToLastColor(self):
+                """Switches to the second-to-last used stroke color and updates history for A/B switching."""
                 global g_temp_switched_to_100_previous_opac
+                global g_virtual_fg_color_rgb
+                global g_last_virtual_colors_used
+
                 try:
-                        # doc  = Krita.instance().activeWindow().activeView().document()
-                        # print(doc)
-                        
-                        # sel  = doc.selection()
-                        # print(sel )
-                        
-                        # x = sel.x()
-                        # print(x)
-        
-                        pos = QtGui.QCursor.pos()
-                        # print("cursor absolute = ", pos)
-
-                        win = Krita.instance().activeWindow().qwindow().mapFromGlobal(pos);
-
-                        # print("cursor mapped = ", win)
-        
                         acView = Krita.instance().activeWindow().activeView()
-                        if not self.inited:
-                                quickMessage ("LastColor not yet initialized")
-                                
-                                # print ("swap: initializing...")
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                # app = Krita.instance()
-                                # history_docker = next((d for d in app.dockers() if d.objectName() == 'History'), None)
-                                # kis_undo_view = next((v for v in history_docker.findChildren(QListView) if v.metaObject().className() == 'KisUndoView'), None)
-                                # s_model = kis_undo_view.selectionModel()
-                                # s_model.currentChanged.connect(self._on_history_was_made)
-                                
-                                # self.inited = True;
-                                # print ("swap: initialized")
-                                
-                                # acView.showFloatingMessage("Last color initialized. Press again to use.", QIcon(), timeMessage * 2, 1)
-                        else:
-                                global g_virtual_fg_color_rgb
-                                global g_last_virtual_colors_used
-                                
-                                
-                                # scambio gli ultimi due delle'elenco
-                                if len(g_last_virtual_colors_used) > 1:
-                                    temp = g_last_virtual_colors_used[-1].clone()
-                                    g_last_virtual_colors_used[-1] = g_last_virtual_colors_used[-2] .clone()
-                                    g_last_virtual_colors_used[-2] = temp.clone()
-                                
-                                
-                                # il virtuale diventa l'ultimo
-                                g_virtual_fg_color_rgb = g_last_virtual_colors_used[-1].clone()
-                                update_label_from_virtual_color()
-                                
-                                # il fisico diventa il virtuale
+                        if acView is None:
+                            return
 
-                                col = acView.foregroundColor()
-                                comp = col.components()
-                                
-                                comp[0] =  (g_virtual_fg_color_rgb.r / 255.0)  
-                                comp[1] =  (g_virtual_fg_color_rgb.g / 255.0)
-                                comp[2] = (g_virtual_fg_color_rgb.b  / 255.0)
-                          
-                                col.setComponents(comp)
-                                acView.setForeGroundColor(col)
-                                
-                             
-                                
-                                
-                             
-                                    
-                                    
-                                acView.showFloatingMessage("Last color", QIcon(), timeMessage , 1)
-                                
-                                
-                                
-                                # I also want to create a new layer, to have the overlay effect
-                                global g_auto_reset_opacity_on_pick
-                                
-                                document = acView.document()
-                                if document is not None:
-                                
-                                    parentNode = document.activeNode().parentNode() # could be root node, so I need to do parent again
-                                        
-                                        
-                                    if parentNode is not None:
-                                        
-                                        if  g_temp_switched_to_100_previous_opac is None and g_multi_layer_mode: # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
-                                            newLa = dryPaper(showMessage = False)
-                                            
-                                            
-                                                                    
-                                            if g_auto_reset_opacity_on_pick == 1 :
-                                                newLa.setOpacity(int(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) 
-                                                
-                                                document.refreshProjection()
-                                                
-                                            
+                        if len(g_last_virtual_colors_used) < 2:
+                            quickMessage("Not enough colors in history to switch.")
+                            return
 
-                                        
-                                        
+                        # Target color is the second-to-last one
+                        target_color = g_last_virtual_colors_used[-2]
+
+                        # Update virtual color and Krita's foreground color
+                        g_virtual_fg_color_rgb = target_color.clone()
+                        update_label_from_virtual_color()
+
+                        col = acView.foregroundColor()
+                        comp = col.components()
+                        comp[0] = (g_virtual_fg_color_rgb.r / 255.0)
+                        comp[1] = (g_virtual_fg_color_rgb.g / 255.0)
+                        comp[2] = (g_virtual_fg_color_rgb.b / 255.0)
+                        col.setComponents(comp)
+                        acView.setForeGroundColor(col)
+
+                        # Swap the last two elements in the list to prepare for the next switch back
+                        temp = g_last_virtual_colors_used[-1]
+                        g_last_virtual_colors_used[-1] = g_last_virtual_colors_used[-2]
+                        g_last_virtual_colors_used[-2] = temp
+                        # print("Swapped last two colors in history.")
+                        # print("Current color history after swap:")
+                        # for i, c in enumerate(g_last_virtual_colors_used):
+                        #     print(f"  {i}: {c.toString()}")
+
+
+                        acView.showFloatingMessage("Switched color", QIcon(), timeMessage, 1)
+
+                        # --- Optional: Layer creation logic (kept from original) ---
+                        global g_auto_reset_opacity_on_pick
+                        global g_multi_layer_mode
+
+                        document = acView.document()
+                        if document is not None:
+                            activeNode = document.activeNode()
+                            if activeNode is not None:
+                                parentNode = activeNode.parentNode()
+                                if parentNode is not None:
+                                    if g_temp_switched_to_100_previous_opac is None and g_multi_layer_mode:
+                                        newLa = dryPaper(showMessage=False)
+                                        if newLa is not None and g_auto_reset_opacity_on_pick == 1:
+                                            global g_auto_reset_opacity_on_pick_level
+                                            newLa.setOpacity(int(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
+                                            document.refreshProjection()
+                        # --- End Optional Layer Logic ---
+
+                except Exception as e:
+                        if 'acView' in locals() and acView is not None:
+                            acView.showFloatingMessage(f"Error switching color: {e}.", QIcon(), timeMessage * 2, 1)
+                        print(f"Error in switchToLastColor: {e}")
+                        import traceback
+                        traceback.print_exc()
                 except Exception as e:
                                 acView.showFloatingMessage(f"error {e}.", QIcon(), timeMessage * 2, 1)
                                 print("errore trovato in swap:")
@@ -3070,72 +3031,54 @@ class MyExtension(Extension):
                 
                 
             
-        def _on_history_was_made(self):   #user painted,  _probably_
-                
-                # col = getColorUnderCursorOrAtPos()
-                # if col is not None:
-                    # print (f"user painted. counter = {self.counter}. col = {col.toString()}")
-                
-                                
-                
-                
-                
-                self.counter +=  1
-                
+        def _on_history_was_made(self):   # User painted, probably
+                """Adds the color of the last stroke to the history list."""
+                self.counter += 1
                 try:
-                        
-                        acView = Krita.instance().activeWindow().activeView()
-                        if acView is not None: 
-                                col = acView.foregroundColor()
-                                if col is not None:   
-                                        comp = col.components()
-                                        
-                                        # ricorda con che colore ha scritto. ha appena scritto col virtuale
-                                        global g_virtual_fg_color_rgb
-                                        global g_last_virtual_colors_used
-                                        
-                                        # aggiungo alla lista solo se non è già in coda
-                                        if g_virtual_fg_color_rgb is None:
-                                            pass
-                                        if len(g_last_virtual_colors_used) > 0:
-                                            if g_last_virtual_colors_used[-1].equals(g_virtual_fg_color_rgb):
-                                                pass
-                                            else:
-                                                g_last_virtual_colors_used.append(g_virtual_fg_color_rgb)
-                                        else:
-                                            g_last_virtual_colors_used.append(g_virtual_fg_color_rgb)
-                                        
-                                        
-                                        
-                                        # trim della lista
-                                        if len(g_last_virtual_colors_used) > 5:
-                                            g_last_virtual_colors_used = g_last_virtual_colors_used[-5:]
-                                        
-                                        global g_virtual_color_used_last_rgb
-                                        
+                    global g_virtual_fg_color_rgb # This should represent the color intended for the stroke
+                    global g_last_virtual_colors_used
+                    global g_virtual_color_used_last_rgb # Keep track of the absolute last color used
 
-                                        # se ho auto mixing, is colore che davvero sto usando è quello virtuale, non quello reale nel fg color di krita, che è frutto di mixing.
-                                        g_virtual_color_used_last_rgb = g_virtual_fg_color_rgb # rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
-                                        
-                                        # if listEqual( comp, self.currentColor ):   # user did not change color. doesn't work with auto-mixing because colro is actually another
-                                                 # pass
-                                        # else:  # user changed color
-                                                # # print("color changed")
-                                                # self.previousColor = list.copy(self.currentColor) 
-                                                # self.currentColor = list.copy(comp)
-                                
+                    stroke_color = g_virtual_fg_color_rgb
 
-                                        # print("user painted. lista attuale colori:------")
-                                        # for x in g_last_virtual_colors_used:
-                                            # print (x.toString())
-                                        
-                                        
-                                        # print("------\n")
-                                
-                except Exception as e:
-                                print(f"found error: {e}")
-                                #self.timer_hm.stop()
-                                raise
+                    if stroke_color is not None:
+                        # Clone to store an independent copy in the history
+                        stroke_color_clone = stroke_color.clone()
+
+                        # Add to history list only if it's different from the last recorded color
+                        should_add = True
+                        if len(g_last_virtual_colors_used) > 0:
+                            if g_last_virtual_colors_used[-1].equals(stroke_color_clone):
+                                should_add = False
+
+                        if should_add:
+                            g_last_virtual_colors_used.append(stroke_color_clone)
+                            # print(f"Stroke {self.counter}: Added color {stroke_color_clone.toString()} to history.")
+
+                            # Trim the list to maintain history size (e.g., 5)
+                            max_history = 5 # Keep the last 5 colors
+                            if len(g_last_virtual_colors_used) > max_history:
+                                g_last_virtual_colors_used = g_last_virtual_colors_used[-max_history:]
+                                # print(f"History trimmed to {max_history} items.")
+
+                        # else:
+                            # print(f"Stroke {self.counter}: Color {stroke_color_clone.toString()} is same as last in history, not added.")
+
+
+                    # Update the variable tracking the absolute last color used (might be useful elsewhere)
+                    g_virtual_color_used_last_rgb = stroke_color # Use the reference, might be None
+
+                    # Debug print history
+                    # print("Current color history after stroke:")
+                    # for i, c in enumerate(g_last_virtual_colors_used):
+                    #     print(f"  {i}: {c.toString()}")
+
+                except Exception as e: # Corrected indentation (12 spaces)
+                    # Ensure correct indentation for the except block contents (16 spaces)
+                    print(f"Error in _on_history_was_made: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    # Removed duplicated/over-indented lines below
 
         # def mixOldSingleLayer(self):
                 # app = Krita.instance()
