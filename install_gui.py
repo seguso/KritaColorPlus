@@ -54,19 +54,12 @@ def install_plugin():
     except SystemExit:
         return # Error already shown by get_files_to_install
 
-    # Build confirmation message
-    confirmation_message = "This will copy the following files:\n\n"
+    # Confirmation message box removed as requested.
+    # The preview in the text area serves as confirmation.
+
     dest_dirs = set()
-    for src, dest in files_to_copy:
-         confirmation_message += f"FROM: {src}\n  TO: {dest}\n\n"
+    for _, dest in files_to_copy:
          dest_dirs.add(os.path.dirname(dest)) # Collect unique destination directories
-    confirmation_message += "Existing files will be overwritten. Continue?"
-
-    confirm = messagebox.askyesno("Confirm Installation", confirmation_message)
-
-    if not confirm:
-        messagebox.showinfo("Cancelled", "Installation cancelled.")
-        return
 
     try:
         # Create all destination directories first
