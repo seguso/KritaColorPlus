@@ -287,8 +287,10 @@ g_auto_mix_paused = False
 g_auto_mix_enabled = False
 
 
-g_dirty_brush_overall_enabled = False
+g_dirty_brush_overall_enabled = False # Default, will be loaded
 g_dirty_brush_currently_on = True
+g_action_toggle_dirty_brush = None # Global reference for menu action
+g_btn_toggle_dirty_brush = None # Global reference for docker button
 
 from PyQt5.QtCore import Qt, QModelIndex, QItemSelectionModel
 from PyQt5.QtWidgets import QTreeView
@@ -304,30 +306,41 @@ g_mixing_color = False
 g_temp_switched_to_100_previous_opac = None
 
 def toggleAutoMixing():
-            global g_actionAutoMix
-            global g_btn_auto_mix 
-            global g_auto_mix_enabled
-            global g_auto_mixing_just_once_logic
-            global g_auto_mixing_just_once_now_on
-            
-            if g_auto_mix_enabled:
-                
-                g_auto_mix_enabled = False
-                g_actionAutoMix.setChecked(False)
-                
-                # you probably disabled auto-mixing in order to manually change the fg color (= target color). but the color selector has probably changed. so reset it to the current target
-                resetForegroundColorToLastColorPicked()
-                                
-                quickMessage("Disabled auto-mixing")                                        
-                
-                g_btn_auto_mix.setChecked(False)
-            else:
-                quickMessage("Enabled auto-mixing")
-                g_auto_mix_enabled = True
-                g_btn_auto_mix.setChecked(True)
-                g_actionAutoMix.setChecked(True)
-        
+            global g_actionAutoMix, g_btn_auto_mix, g_auto_mix_enabled
+            global g_auto_mixing_just_once_logic, g_auto_mixing_just_once_now_on
 
+            if g_auto_mix_enabled:
+                g_auto_mix_enabled = False
+                if g_actionAutoMix: g_actionAutoMix.setChecked(False)
+                if g_btn_auto_mix: g_btn_auto_mix.setChecked(False)
+                resetForegroundColorToLastColorPicked()
+                quickMessage("Disabled auto-mixing")
+            else:
+                g_auto_mix_enabled = True
+                if g_actionAutoMix: g_actionAutoMix.setChecked(True)
+                if g_btn_auto_mix: g_btn_auto_mix.setChecked(True)
+                quickMessage("Enabled auto-mixing")
+
+def toggleDirtyBrush(checked):
+    """Toggles the overall dirty brush feature enabled state."""
+    global g_dirty_brush_overall_enabled, g_dirty_brush_currently_on
+    global g_action_toggle_dirty_brush, g_btn_toggle_dirty_brush
+
+    g_dirty_brush_overall_enabled = checked
+    Krita.instance().writeSetting("colorPlus", "g_dirty_brush_overall_enabled", "1" if checked else "0")
+
+    if checked:
+        g_dirty_brush_currently_on = True # Reset current state when enabling overall
+        quickMessage("Dirty Brush Enabled")
+    else:
+        g_dirty_brush_currently_on = False # Ensure it's off when disabled overall
+        quickMessage("Dirty Brush Disabled")
+
+    # Update UI elements if they exist
+    if g_action_toggle_dirty_brush:
+        g_action_toggle_dirty_brush.setChecked(checked)
+    if g_btn_toggle_dirty_brush:
+        g_btn_toggle_dirty_brush.setChecked(checked)
 
 event_lookup = {"0": "QEvent::None",
                 "114": "QEvent::ActionAdded",
@@ -477,7 +490,7 @@ event_lookup = {"0": "QEvent::None",
                 "126": "QEvent::ZOrderChange", }
                 
                 
-class HelloDocker(DockWidget):
+class HelloDocker(DockWidget): # Mypy Error: Name "DockWidget" is not defined
     def __init__(self):
         super().__init__()
         self.setWindowTitle("ColorPlus")
@@ -590,6 +603,15 @@ class HelloDocker(DockWidget):
         g_btn_auto_mix.setCheckable(True)
         layoutHorizAutoMix.addWidget(g_btn_auto_mix)
         g_btn_auto_mix.clicked.connect(toggleAutoMixing)
+
+        # --- Dirty Brush Toggle Button ---
+        btnToggleDirty = QPushButton("Toggle Dirty Brush", mainWidget)
+        btnToggleDirty.setCheckable(True)
+        btnToggleDirty.setChecked(g_dirty_brush_overall_enabled) # Set initial state
+        btnToggleDirty.toggled.connect(toggleDirtyBrush) # Connect to toggle function
+        mainLayout.addWidget(btnToggleDirty) # Add button to main layout
+        global g_btn_toggle_dirty_brush
+        g_btn_toggle_dirty_brush = btnToggleDirty # Store global reference
         g_btn_auto_mix.setMinimumHeight(60)
         
         font = g_btn_auto_mix.font()
@@ -1164,6 +1186,7 @@ class AutoFocusSetter(QObject):
                     if g_dial_auto_mix_level: g_dial_auto_mix_level.setValue(val099)
 
                 if g_dirty_brush_currently_on and g_dirty_brush_overall_enabled:
+                    print("dirty brush logic called")
                     application = Krita.instance()
                     win = application.activeWindow()
                     if win:
@@ -2039,7 +2062,7 @@ g_opacity_decided_for_layer = False
         # return super().eventFilter(obj, event)
         
 
-class MyExtension(Extension):
+class MyExtension(Extension): # Mypy Error: Name "Extension" is not defined
 
         def __init__(self, parent):  # bm_init
                 # This is initialising the parent, always important when subclassing.
@@ -2142,6 +2165,10 @@ class MyExtension(Extension):
                 # self.timer.timeout.connect(self.mergeOnTimer)
                 # self.timer.start(4000)
                 
+                global g_dirty_brush_overall_enabled # Need to load this setting
+                g_dirty_brush_overall_enabled = Krita.instance().readSetting("colorPlus", "g_dirty_brush_overall_enabled", "0") == "1"
+                print(f"Loaded Dirty Brush Enabled: {g_dirty_brush_overall_enabled}")
+
             
                 
                 home = str(Path.home())
@@ -2812,7 +2839,7 @@ class MyExtension(Extension):
                 """Adds the color of the last stroke to the history list and resets the history index, handling A->B->Paint A case."""
                 # print(f"\n--- _on_history_was_made (Stroke {self.counter}) ---") # Removed debug print
                 self.counter += 1
-                print(f"\n--- _on_history_was_made (Stroke {self.counter}) ---")
+                # print(f"\n--- _on_history_was_made (Stroke {self.counter}) ---")
                 try:
                     # Get globals
                     global g_virtual_fg_color_rgb
@@ -2821,10 +2848,9 @@ class MyExtension(Extension):
                     global g_color_history_index # Need to reset this
 
                     stroke_color = g_virtual_fg_color_rgb
-                    # print(f"  Stroke Color (g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}") # Removed debug print
-                    # print(f"  Before Update: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}") # Removed debug print
-                    print(f"  Stroke Color (g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
-                    print(f"  Before Update: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
+                    
+                    # print(f"  Stroke Color (g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
+                    # print(f"  Before Update: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
 
                     if stroke_color is not None:
                         stroke_color_clone = stroke_color.clone()
@@ -2834,43 +2860,41 @@ class MyExtension(Extension):
                         # Rewrite this block with consistent 4-space indentation
                         if num_colors > 0:
                             last_in_history = g_last_virtual_colors_used[-1]
-                            print(f"  Comparing stroke color {stroke_color_clone.toString()} with last in history {last_in_history.toString()}")
+                            # print(f"  Comparing stroke color {stroke_color_clone.toString()} with last in history {last_in_history.toString()}")
 
                             if last_in_history.equals(stroke_color_clone):
                                 # Color is same as last in history. No list change needed.
                                 pass # Explicitly do nothing for the list
                             elif num_colors > 1 and g_last_virtual_colors_used[-2].equals(stroke_color_clone):
                                 # Painted with the second-to-last color. Swap last two.
-                                print(f"  Color matches second-to-last. Swapping last two elements.")
+                                # print(f"  Color matches second-to-last. Swapping last two elements.")
                                 temp = g_last_virtual_colors_used[-1]
                                 g_last_virtual_colors_used[-1] = g_last_virtual_colors_used[-2]
                                 g_last_virtual_colors_used[-2] = temp
                             else:
                                 # Genuinely new color or reusing one further back. Append and trim.
-                                print(f"  Adding new/different color {stroke_color_clone.toString()} to history.")
+                                # print(f"  Adding new/different color {stroke_color_clone.toString()} to history.")
                                 g_last_virtual_colors_used.append(stroke_color_clone)
                                 max_history = 5
                                 if len(g_last_virtual_colors_used) > max_history:
                                     g_last_virtual_colors_used = g_last_virtual_colors_used[-max_history:]
-                                    print(f"  History trimmed to {max_history} items.")
+                                    # print(f"  History trimmed to {max_history} items.")
                         else:
                             # First color ever added to the history.
-                            print(f"  Adding first color {stroke_color_clone.toString()} to history.")
+                            # print(f"  Adding first color {stroke_color_clone.toString()} to history.")
                             # Correct indentation for the line below and remove duplicate print
                             g_last_virtual_colors_used.append(stroke_color_clone)
 
                         # Reset index if a stroke occurred (even if color wasn't added/swapped)
                         if reset_index_needed:
-                            # print("  Reset color history index to -1.") # Removed debug print
-                            # Correct indentation for the lines below
                             g_color_history_index = -1
-                            print("  Reset color history index to -1.")
+                            # print("  Reset color history index to -1.")
 
 
                     # Update the absolute last color tracker (always, inside try)
                     # print(f"  After Update: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}") # Removed debug print
                     g_virtual_color_used_last_rgb = stroke_color
-                    print(f"  After Update: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
+                    # print(f"  After Update: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
 
                 except Exception as e:
                     # Correctly indented except block
@@ -4670,10 +4694,15 @@ class MyExtension(Extension):
                 
                 custom_menu.addAction(actionToggle100)
                 custom_menu.addAction(actionToggle25)
-                
-                
-                
-                
+
+                custom_menu.addSeparator() # Separator before Dirty Brush toggle
+
+                # --- Toggle Dirty Brush Action ---
+                g_action_toggle_dirty_brush = window.createAction("toggleDirtyBrush", "Toggle Dirty Brush", "tools/scripts/colorplus")
+                g_action_toggle_dirty_brush.setCheckable(True)
+                g_action_toggle_dirty_brush.setChecked(g_dirty_brush_overall_enabled) # Set initial state
+                g_action_toggle_dirty_brush.triggered.connect(toggleDirtyBrush) # Connect to toggle function
+                custom_menu.addAction(g_action_toggle_dirty_brush)
 
             
                 

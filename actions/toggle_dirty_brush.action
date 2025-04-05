@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ActionCollection version="2" name="Scripts">
+    <Actions category="Scripts">
+        <text>Toggle Dirty Brush</text>
+
+        <Action name="toggleDirtyBrush">
+        <icon></icon>
+        <text>Enable/Disable Dirty Brush</text>
+        <whatsThis>Toggles the dirty brush feature on or off. When enabled, the brush color will mix slightly with the background after each stroke.</whatsThis>
+        <toolTip>Toggle Dirty Brush Feature</toolTip>
+        <iconText></iconText>
+        <activationFlags>0</activationFlags>
+        <activationConditions>0</activationConditions>
+        <shortcut></shortcut>
+        <isCheckable>true</isCheckable> <!-- Make it checkable -->
+        <statusTip></statusTip>
+        </Action>
+    </Actions>
+</ActionCollection>
