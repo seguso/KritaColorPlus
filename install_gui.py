@@ -1,8 +1,15 @@
 import os
+import os
 import shutil
 import sys
 import tkinter as tk
 from tkinter import messagebox, font, scrolledtext
+import subprocess # Added to launch Krita
+try:
+    import psutil # Added to check for running processes
+except ImportError:
+    messagebox.showwarning("Missing Dependency", "The 'psutil' library is required to check if Krita is running. Please install it (`pip install psutil`) for this check to work.")
+    psutil = None # Set to None if import fails
 
 def get_files_to_install():
     """Gets a list of (source_path, destination_path) tuples for all files."""
@@ -47,8 +54,29 @@ def get_files_to_install():
         messagebox.showerror("Error Getting Paths", f"Could not determine file paths:\n{e}")
         sys.exit(1)
 
+def is_krita_running():
+    """Check if Krita process is running."""
+    if not psutil:
+        print("psutil not available, skipping Krita process check.")
+        return False # Cannot check if psutil is not installed
+
+    for proc in psutil.process_iter(['name']):
+        try:
+            # Use lower case for case-insensitive comparison
+            if proc.info['name'].lower() == 'krita.exe':
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return False
+
 def install_plugin():
     """Handles the installation process for all files."""
+    # --- Check if Krita is running ---
+    if is_krita_running():
+        messagebox.showerror("Installation Blocked", "Krita is currently running.\nPlease close Krita completely before installing the plugin to avoid file conflicts.")
+        return
+    # --- End Krita Check ---
+
     try:
         files_to_copy = get_files_to_install()
     except SystemExit:
@@ -80,15 +108,35 @@ def install_plugin():
 
         if errors:
              messagebox.showwarning("Installation Issues", "Some files failed to copy:\n\n" + "\n".join(errors))
+             # Ask to launch even if there were some errors, as core files might be okay
+             ask_launch_krita()
         elif copied_files:
-             messagebox.showinfo("Success", f"Plugin files installed successfully.\n({len(copied_files)} files copied)\n\nPlease restart Krita.")
-             root.destroy() # Close the window after successful installation
+             messagebox.showinfo("Success", f"Plugin files installed successfully.\n({len(copied_files)} files copied)")
+             ask_launch_krita()
         else:
              messagebox.showinfo("No Files Copied", "No files were copied (perhaps source files are missing?).")
+             root.destroy() # Close if nothing was copied
 
 
     except Exception as e:
-        messagebox.showerror("Installation Failed", f"An error occurred during installation:\n{e}\n\nPlease check permissions or if Krita is running.")
+        messagebox.showerror("Installation Failed", f"An error occurred during installation:\n{e}\n\nPlease check permissions.")
+        root.destroy() # Close on major failure
+
+def ask_launch_krita():
+   """Ask the user if they want to launch Krita and attempt to do so."""
+   launch = messagebox.askyesno("Launch Krita?", "Installation complete. Would you like to launch Krita now?")
+   if launch:
+       krita_path = r"C:\Program Files\Krita (x64)\bin\krita.exe" # Default path
+       try:
+           print(f"Attempting to launch Krita at: {krita_path}")
+           subprocess.Popen([krita_path])
+           print("Krita launch command issued.")
+       except FileNotFoundError:
+           messagebox.showwarning("Launch Failed", f"Could not find Krita at the default location:\n{krita_path}\n\nPlease start Krita manually.")
+       except Exception as launch_e:
+           messagebox.showerror("Launch Failed", f"An error occurred while trying to launch Krita:\n{launch_e}")
+
+   root.destroy() # Close installer window regardless of launch choice/success
 
 # --- GUI Setup ---
 root = tk.Tk()
