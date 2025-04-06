@@ -235,11 +235,12 @@ global g_virtual_fg_color_rgb
 
 global g_virtual_fg_color_rgb_previous_when_dirty_brush_on
 
+g_color_on_down_dirty_brush = None
+
 g_layer_is_dirty = {}
 
 g_diminishing_opacity = False #True to have auto-mixing with amount that auto-decreases
 
-g_btn_pick_color = None
 
 
 
@@ -256,7 +257,7 @@ g_mixing_step = 0.05
 
 g_auto_mixing_distance_step = 5
 
-g_set_spectral_blend_mode_when_creating_layer = True
+g_set_spectral_blend_mode_when_creating_layer = False
 
 g_multi_layer_mode = False
 
@@ -300,8 +301,6 @@ from PyQt5.QtWidgets import QTreeView
 g_last_coord_mouse_down = None
 g_last_coord_mouse_up = None
 
-g_picking_color = False
-g_mixing_color = False
 
 g_temp_switched_to_100_previous_opac = None
 
@@ -557,15 +556,6 @@ class HelloDocker(DockWidget): # Mypy Error: Name "DockWidget" is not defined
         mainLayout.addLayout(layoutHorizMix)
         
         
-        global g_btn_mix;
-        g_btn_mix = QPushButton("Mix color", mainWidget)
-        g_btn_mix.setCheckable(True)
-        layoutHorizMix.addWidget(g_btn_mix)
-        g_btn_mix.clicked.connect(self.manualMixColorButtonClicked)
-        g_btn_mix.setMinimumHeight(60)
-        font = g_btn_mix.font()
-        font.setPixelSize(15)
-        g_btn_mix.setFont(font)
         
         
         
@@ -641,20 +631,6 @@ class HelloDocker(DockWidget): # Mypy Error: Name "DockWidget" is not defined
         
         
         
-        # pick color button
-        self.buttonPickColor = QPushButton("Pick color", mainWidget)
-        self.buttonPickColor.setMinimumHeight(50)
-        self.buttonPickColor.setCheckable(True)
-        font = self.buttonPickColor.font()
-        font.setPixelSize(20)
-        self.buttonPickColor.setFont(font)
-        
-        mainLayout.addWidget(self.buttonPickColor)
-        
-        
-        self.buttonPickColor.clicked.connect(self.pickColorClicked)
-        global g_btn_pick_color
-        g_btn_pick_color = self.buttonPickColor
         
         
         
@@ -1047,6 +1023,9 @@ def index_to_node(index, document):
     return node
 
 class AutoFocusSetter(QObject):
+    def __init__(self, extension_instance):
+        super().__init__()
+        self.extension_instance = extension_instance
 
     # Q_OBJECT
     # ...
@@ -1059,8 +1038,8 @@ class AutoFocusSetter(QObject):
         global g_virtual_fg_color_rgb, g_layer_is_dirty, g_diminishing_opacity
         global g_dial_auto_mix_level, g_multi_layer_mode, g_auto_reset_opacity_on_pick
         global g_auto_reset_opacity_on_pick_level, g_dirty_brush_currently_on
-        global g_dirty_brush_overall_enabled, g_picking_color, g_mixing_color
-        global g_last_coord_mouse_down, g_last_coord_mouse_up, g_btn_mix, g_btn_pick_color
+        global g_dirty_brush_overall_enabled
+        global g_last_coord_mouse_down, g_last_coord_mouse_up
         global g_auto_dry_each_stroke, g_virtual_fg_color_rgb_previous_when_dirty_brush_on
         global g_color_on_down_dirty_brush, g_auto_mixing_just_once_logic
         global g_auto_mixing_just_once_now_on, g_virtual_color_used_last_rgb
@@ -1129,44 +1108,7 @@ class AutoFocusSetter(QObject):
 
             elif event.type() == QEvent.Paint:
                 # Handle Paint event (stroke finished)
-                if g_mixing_color:
-                    app = Krita.instance()
-                    doc = app.activeDocument()
-                    if doc:
-                        active_node = doc.activeNode()
-                        if active_node: active_node.setVisible(False)
-                        doc.refreshProjection()
-                        mix_mode = g_multi_layer_mode # Assuming mix logic depends on this
-                        mixFgColorWithBgColor_normalLogic( createLayer = False, deleteCurLayer = True, clearCurLayer = False) # Pass necessary args
-                        if active_node: active_node.setVisible(True)
-                    g_mixing_color = False
-                    if g_btn_mix: g_btn_mix.setChecked(False)
-                    return True # Event handled
 
-                elif g_picking_color:
-                    app = Krita.instance()
-                    doc = app.activeDocument()
-                    if doc:
-                        active_node = doc.activeNode()
-                        if active_node: active_node.setVisible(False)
-                        doc.refreshProjection()
-                        col = getColorUnderCursorOrAtPos(forcedPos = xyOfQpoint(g_last_coord_mouse_down ))
-                        setFgColor(col)
-                        g_virtual_fg_color_rgb  = col
-                        g_picking_color = False
-                        if active_node: active_node.setVisible(True)
-                        if g_multi_layer_mode:
-                            app.action('clear').trigger()
-                            doc.waitForDone ()
-                        else:
-                           if active_node: active_node.remove()
-                    if g_btn_pick_color: g_btn_pick_color.setChecked(False)
-                    update_label_from_virtual_color()
-                    if g_diminishing_opacity:
-                        g_auto_mix__how_much_canvas_to_pick = 1.0
-                        val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                        if g_dial_auto_mix_level: g_dial_auto_mix_level.setValue(val099)
-                    return True # Event handled
 
                 # Standard paint finish logic
                 g_last_coord_mouse_up = get_cursor_in_document_coords()
@@ -1175,7 +1117,7 @@ class AutoFocusSetter(QObject):
                     active_node = doc.activeNode()
                     if active_node: g_layer_is_dirty[active_node.uniqueId()] = True
 
-                self._on_history_was_made() # Update color history
+                self.extension_instance._on_history_was_made() # Update color history
 
                 if g_auto_dry_each_stroke and g_multi_layer_mode:
                     newLa = dryPaper(showMessage = False)
@@ -1194,22 +1136,26 @@ class AutoFocusSetter(QObject):
                         if view:
                             if g_virtual_fg_color_rgb: g_virtual_fg_color_rgb_previous_when_dirty_brush_on = g_virtual_fg_color_rgb.clone()
                             fg = view.foregroundColor()
-                            bgColorAverage = g_color_on_down_dirty_brush
-                            if fg and bgColorAverage:
-                                comp = fg.components()
-                                canv = 0.12
-                                fgMul = 1.0 - canv
-                                comp[0] = comp[0] * fgMul + (bgColorAverage.r / 255.0)  * canv
-                                comp[1] = comp[1] * fgMul + (bgColorAverage.g / 255.0)  * canv
-                                comp[2] = comp[2] * fgMul + (bgColorAverage.b  / 255.0)  * canv
-                                fg.setComponents(comp)
-                                view.setForeGroundColor(fg)
-                                g_virtual_fg_color_rgb = rgb( int(comp[0] * 255.0), int(comp[1] * 255.0), int(comp[2] * 255.0), 1)
-                                update_label_from_virtual_color()
-                                print (f"dirty brush: adding a bit of {bgColorAverage.toString()} setting {g_virtual_fg_color_rgb.toString()}")
+                            # Check if the color was captured on mouse down (might not happen if MouseButtonPress fails)
+                            if g_color_on_down_dirty_brush is not None:
+                                bgColorAverage = g_color_on_down_dirty_brush
+                                if fg and bgColorAverage:
+                                    comp = fg.components()
+                                    canv = 0.12
+                                    fgMul = 1.0 - canv
+                                    comp[0] = comp[0] * fgMul + (bgColorAverage.r / 255.0)  * canv
+                                    comp[1] = comp[1] * fgMul + (bgColorAverage.g / 255.0)  * canv
+                                    comp[2] = comp[2] * fgMul + (bgColorAverage.b  / 255.0)  * canv
+                                    fg.setComponents(comp)
+                                    view.setForeGroundColor(fg)
+                                    g_virtual_fg_color_rgb = rgb( int(comp[0] * 255.0), int(comp[1] * 255.0), int(comp[2] * 255.0), 1)
+                                    update_label_from_virtual_color()
+                                    print (f"dirty brush: adding a bit of {bgColorAverage.toString()} setting {g_virtual_fg_color_rgb.toString()}")
+                            else:
+                                print("Skipping dirty brush logic: g_color_on_down_dirty_brush is None")
 
             elif event.type() == QEvent.MouseButtonPress:
-                # Handle MouseButtonPress event
+                # Purtroppo non scatta mai
                 g_last_coord_mouse_down = get_cursor_in_document_coords()
                 if g_auto_mixing_just_once_logic:
                     g_auto_mixing_just_once_now_on = False
