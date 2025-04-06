@@ -43,7 +43,13 @@ from PyQt5.QtWidgets import (
                 QAbstractScrollArea,
                 QAction, QMenu,
                 QApplication, # Needed for widgetAt
-                QDockWidget # Needed for type checking
+                QDockWidget, # Needed for type checking
+                QVBoxLayout, # Added
+                QHBoxLayout, # Added
+                QPushButton, # Added
+                QLabel,      # Added
+                QDial,       # Added
+                QSizePolicy  # Added for history squares
                 )
 
 
@@ -57,6 +63,7 @@ import math
 import json
 import queue
 from typing import List, Any, Optional # Add List, Any, Optional
+import functools # Added for partial
 
 ### BEGIN imported from Ronald van Wijnen https://github.com/rvanwijnen/spectral.js/blob/main/python/spectral.py
 ##  MIT License
@@ -622,6 +629,17 @@ class HelloDocker(DockWidget): # Mypy Error: Name "DockWidget" is not defined
         
         val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
         g_dial_auto_mix_level.setValue(val099)
+
+        # --- Color History Layout ---
+        self.history_layout = QHBoxLayout()
+        self.history_layout.setSpacing(2) # Small spacing between squares
+        history_container_widget = QWidget() # Use a container widget for the layout
+        history_container_widget.setLayout(self.history_layout)
+        mainLayout.addWidget(history_container_widget)
+        mainLayout.addStretch(1) # Push everything up
+
+        # Initial update
+        self.update_color_history_display()
         
         g_dial_auto_mix_level.valueChanged.connect(self.autoMixLevelValueChanged)
         
@@ -733,6 +751,45 @@ class HelloDocker(DockWidget): # Mypy Error: Name "DockWidget" is not defined
     def canvasChanged(self, canvas):
         #self.label.setText("Hellodocker: canvas changed");
         pass
+
+    def on_history_color_clicked(self, color_rgb):
+        """Sets the foreground color when a history square is clicked."""
+        print(f"History color clicked: {color_rgb.toString()}")
+        setFgColor(color_rgb)
+        # Optionally update the main active color label in the docker
+        update_label_from_virtual_color()
+
+
+    def update_color_history_display(self):
+        """Clears and rebuilds the color history display."""
+        # Clear existing widgets from layout
+        while self.history_layout.count():
+            child = self.history_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        # Limit history display (e.g., last 10 colors)
+        max_history = 10
+        history_to_display = g_last_virtual_colors_used[-max_history:]
+
+        # Add new color squares
+        for color_rgb in reversed(history_to_display): # Show newest first
+            if color_rgb is None: continue # Skip if None somehow got in history
+
+            color_square = QPushButton()
+            color_square.setFixedSize(32, 32)
+            color_square.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+            # Ensure alpha is handled correctly for display (set to opaque)
+            qcolor = QColor(color_rgb.r, color_rgb.g, color_rgb.b)
+            color_square.setStyleSheet(f"background-color: {qcolor.name()}; border: 1px solid grey;")
+            color_square.setToolTip(f"RGB: ({color_rgb.r}, {color_rgb.g}, {color_rgb.b})")
+
+            # Connect click event, passing the specific color
+            color_square.clicked.connect(functools.partial(self.on_history_color_clicked, color_rgb))
+
+            self.history_layout.addWidget(color_square)
+
+        self.history_layout.addStretch(1) # Push squares to the left
  
 
 
@@ -755,116 +812,116 @@ def getColorUnderCursorOrAtPos( forcedPos = None):
     document = application.activeDocument()
     
     if document:
-            win = application.activeWindow()
+        win = application.activeWindow()
+        
+        center = QPointF(0.5 * document.width(), 0.5 * document.height())
+        
+        if forcedPos is None:
+            p = get_cursor_in_document_coords()  # questo dà la posizione da (-docwt/2, -docht/2) a (docwt/2, docht/2)
+            doc_pos = p + center  # per cui aggiungo metà della larghezza documento e metà altezza. così è nel range (0, 0) -- (docwt, docht)
+            doc_posxy = xyOfQpoint(doc_pos) # passo a intero
+        else:
+            doc_posxy = xy(forcedPos.x + int(round(center.x())), forcedPos.y + int(round(center.y())))
+        
+        
+        #print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
+        
+        
+        
+        #parentNode = document.activeNode().parentNode()
+        
+        # fgCol = None
+        # if pretendLastLayerIsFgColor:
             
-            center = QPointF(0.5 * document.width(), 0.5 * document.height())
-            
-            if forcedPos is None:
-                p = get_cursor_in_document_coords()  # questo dà la posizione da (-docwt/2, -docht/2) a (docwt/2, docht/2)
-                doc_pos = p + center  # per cui aggiungo metà della larghezza documento e metà altezza. così è nel range (0, 0) -- (docwt, docht)
-                doc_posxy = xyOfQpoint(doc_pos) # passo a intero
-            else:
-                doc_posxy = xy(forcedPos.x + int(round(center.x())), forcedPos.y + int(round(center.y())))
-            
-            
-            #print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
-            
-            
-            
-            #parentNode = document.activeNode().parentNode()
-            
-            # fgCol = None
-            # if pretendLastLayerIsFgColor:
-                
-                # if win is not None:
-                        # view = win.activeView()
-                        # if view is not None:
-                            # fg = view.foregroundColor() 
-                            # comp = fg.components() 
-                            
-                            # fgCol = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
-                # else:
-                    # return None
-                    
-                    
-            
-            if True: #parentNode is not None:
-            
-                    # brothers = parentNode.childNodes()
-                    # colors = []
-                    
-                    # #costruisco colors
-                    # for curLayer in brothers:
-                    
-                            
-                            # if curLayer.uniqueId() == document.activeNode().uniqueId() and skipCurrentLayer:
-                                # #print ("salto cur layer")
-                                # continue
-                                
-                            # if curLayer.uniqueId() == document.activeNode().uniqueId() and pretendLastLayerIsFgColor :
-                                
-                                    # layerOpac = curLayer.opacity() # tra  0 e 255
-                                    
-                                    # paintingOp01 = win.activeView().paintingOpacity()  
-                                    # # print(f"opacity = {paintingOp}")
-                                    # colors.append( rgb(fgCol.r, fgCol.g, fgCol.b, int(layerOpac * paintingOp01)))
-                                    
-                                
-                            # else:
-                                    
-                                # pixelBytes = curLayer.pixelData(doc_posxy.x, doc_posxy.y, 1, 1)
-                                
-                                # imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA8888)
-                                # pixelC = imageData.pixelColor(0,0)
-                                
-                                # # devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
-                                # # if curLayer.uniqueId() == document.activeNode().uniqueId():
-                                    # # correzMul = 1.0
-                                # # else:
-                                # layerOpac = curLayer.opacity() # tra  0 e 255
-                                # correzMul = float(layerOpac) /  255.0
-                            
-
-                                # #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
-                                
-                                # colors.append(  rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(),  pixelC.alpha() * correzMul ))
-                    
-                    # #creo il colore composito dei layer. questo è il bgcolor                                                
-                    # bgColor = calcolaCompositeColor(colors)
-                    
-                    doc_pos = doc_posxy
-                    
-                    
-                    pixBytes= document.pixelData(int(doc_pos.x), int(doc_pos.y), 1,1)  # 3 or 6 bytes depending on the image format
-                                                
-                                                
-                    # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
-                    # concatenated_string = '-'.join(byte_values)
-                    
-                    # print(f'Dati letti: {concatenated_string}')
-                    
-                    
-                    
-                    # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
-                    if len(pixBytes) == 4:
-                        imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA8888)  
-                    elif len(pixBytes) == 8:
-                        imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA64)  
-                    else:
-                        raise f"unsupported len {len(pixBytes)}"
+            # if win is not None:
+                    # view = win.activeView()
+                    # if view is not None:
+                        # fg = view.foregroundColor() 
+                        # comp = fg.components() 
                         
-                    pixelC = imageData.pixelColor(0,0)
+                        # fgCol = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
+            # else:
+                # return None
+                
+                
+        
+        if True: #parentNode is not None:
+        
+                # brothers = parentNode.childNodes()
+                # colors = []
+                
+                # #costruisco colors
+                # for curLayer in brothers:
+                
+                        
+                        # if curLayer.uniqueId() == document.activeNode().uniqueId() and skipCurrentLayer:
+                            # #print ("salto cur layer")
+                            # continue
+                            
+                        # if curLayer.uniqueId() == document.activeNode().uniqueId() and pretendLastLayerIsFgColor :
+                            
+                                # layerOpac = curLayer.opacity() # tra  0 e 255
+                                
+                                # paintingOp01 = win.activeView().paintingOpacity()  
+                                # # print(f"opacity = {paintingOp}")
+                                # colors.append( rgb(fgCol.r, fgCol.g, fgCol.b, int(layerOpac * paintingOp01)))
+                                
+                            
+                        # else:
+                                
+                            # pixelBytes = curLayer.pixelData(doc_posxy.x, doc_posxy.y, 1, 1)
+                            
+                            # imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA8888)
+                            # pixelC = imageData.pixelColor(0,0)
+                            
+                            # # devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
+                            # # if curLayer.uniqueId() == document.activeNode().uniqueId():
+                                # # correzMul = 1.0
+                            # # else:
+                            # layerOpac = curLayer.opacity() # tra  0 e 255
+                            # correzMul = float(layerOpac) /  255.0
+                        
+
+                            # #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
+                            
+                            # colors.append(  rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(),  pixelC.alpha() * correzMul ))
+                
+                # #creo il colore composito dei layer. questo è il bgcolor                                                
+                # bgColor = calcolaCompositeColor(colors)
+                
+                doc_pos = doc_posxy
+                
+                
+                pixBytes= document.pixelData(int(doc_pos.x), int(doc_pos.y), 1,1)  # 3 or 6 bytes depending on the image format
+                                            
+                                            
+                # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
+                # concatenated_string = '-'.join(byte_values)
+                
+                # print(f'Dati letti: {concatenated_string}')
+                
+                
+                
+                # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
+                if len(pixBytes) == 4:
+                    imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA8888)  
+                elif len(pixBytes) == 8:
+                    imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA64)  
+                else:
+                    raise f"unsupported len {len(pixBytes)}"
                     
-                    #e ora da colore qt a colore mio 
-                    mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255)
-                    
-                    bgColor = mergedColor
-                    
-                    
-                    #print(f"color under cursor  = {bgColor.toString()}")
-                    return bgColor
-            else:
-                return None
+                pixelC = imageData.pixelColor(0,0)
+                
+                #e ora da colore qt a colore mio 
+                mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255)
+                
+                bgColor = mergedColor
+                
+                
+                #print(f"color under cursor  = {bgColor.toString()}")
+                return bgColor
+        else:
+            return None
     else:
         return None
 
