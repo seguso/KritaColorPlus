@@ -928,119 +928,119 @@ def getColorUnderCursorOrAtPos( forcedPos = None):
 
 def dryPaper( showMessage = True):
                 
-                global g_blur_on_dry
+    global g_blur_on_dry
+    
+    
+    
+    #print(f"dry paper called showMessage = {showMessage}")
+    application = Krita.instance()
+    currentDoc = application.activeDocument()
+    if currentDoc is  None:
+    
+        return None
+    else:
+        activeLayer = currentDoc.activeNode()
+        
+        if g_blur_on_dry:
+            application.action('selectopaque').trigger()
+            currentDoc.waitForDone () # action needs to finish before continuing
+            selectionStroke = currentDoc.selection()
+            blurFilter = application.filter('gaussian blur')
+            blurFilter.setProperty('level', 50)
+            blurFilter.setProperty('radius', 50)
+        
+        
+        parentNode = activeLayer.parentNode()
+        newLa = None
+        if parentNode is not None:  
+        
+        
+                
+        
+                print("dry paper called1")
+                oldOpacity = activeLayer.opacity()
+                
+                #activeLayer.mergeDown()
+                #currentDoc.waitForDone()
+                
+                root = currentDoc.rootNode()
+                newLa = currentDoc.createNode("Wet_area", "paintLayer")
+                newLa.setOpacity(oldOpacity)
                 
                 
+                backgroundLayer = parentNode.childNodes()[0]
                 
-                #print(f"dry paper called showMessage = {showMessage}")
-                application = Krita.instance()
-                currentDoc = application.activeDocument()
-                if currentDoc is  None:
                 
-                    return None
-                else:
-                    activeLayer = currentDoc.activeNode()
-                    
-                    if g_blur_on_dry:
-                        application.action('selectopaque').trigger()
+                parentNode.addChildNode(newLa, None)
+                
+                global g_set_spectral_blend_mode_when_creating_layer
+                if g_set_spectral_blend_mode_when_creating_layer:
+                    #print("setting over spectral")
+                    newLa.setBlendingMode("over spectral");
+                
+                if g_blur_on_dry:
+                    # al layer precedente ad activeLayer, applica il blur
+                    for layerPrima in parentNode.childNodes()[ : -2]:
+                        
+                        print(f"applicando blur a  {layerPrima.name()}:{selectionStroke.x()}, {selectionStroke.y()}, {selectionStroke.width()},{selectionStroke.height()}")
+                        
+                        selFuori = Selection()
+                        selFuori.select(selectionStroke.x(), selectionStroke.y(), selectionStroke.width(), selectionStroke.height(), 255)
+                        selFuori.subtract(selectionStroke)
+                        
+                        currentDoc.setSelection(selFuori)
+                        selFuori.copy(layerPrima)
+                        
+                        blurFilter.apply(layerPrima, selectionStroke.x(), selectionStroke.y(), selectionStroke.width(), selectionStroke.height()) 
+                        
+                        currentDoc.setSelection(None)
+                        #paste è bacata, non posso usarlo                               
+                        #selFuori.paste(layerPrima, selectionStroke.x() + 20  , selectionStroke.y() + 20 ) # copia il pezzo che non doveva essere blurred
+                        
+                        currentDoc.setActiveNode(layerPrima)
+                        Krita.instance().action('edit_paste').trigger()
+                        
+                        
                         currentDoc.waitForDone () # action needs to finish before continuing
-                        selectionStroke = currentDoc.selection()
-                        blurFilter = application.filter('gaussian blur')
-                        blurFilter.setProperty('level', 50)
-                        blurFilter.setProperty('radius', 50)
-                    
-                    
-                    parentNode = activeLayer.parentNode()
-                    newLa = None
-                    if parentNode is not None:  
-                    
-                    
-                            
-                    
-                            print("dry paper called1")
-                            oldOpacity = activeLayer.opacity()
-                            
-                            #activeLayer.mergeDown()
-                            #currentDoc.waitForDone()
-                            
-                            root = currentDoc.rootNode()
-                            newLa = currentDoc.createNode("Wet_area", "paintLayer")
-                            newLa.setOpacity(oldOpacity)
-                            
-                            
-                            backgroundLayer = parentNode.childNodes()[0]
-                            
-                            
-                            parentNode.addChildNode(newLa, None)
-                            
-                            global g_set_spectral_blend_mode_when_creating_layer
-                            if g_set_spectral_blend_mode_when_creating_layer:
-                                #print("setting over spectral")
-                                newLa.setBlendingMode("over spectral");
-                            
-                            if g_blur_on_dry:
-                                # al layer precedente ad activeLayer, applica il blur
-                                for layerPrima in parentNode.childNodes()[ : -2]:
-                                    
-                                    print(f"applicando blur a  {layerPrima.name()}:{selectionStroke.x()}, {selectionStroke.y()}, {selectionStroke.width()},{selectionStroke.height()}")
-                                    
-                                    selFuori = Selection()
-                                    selFuori.select(selectionStroke.x(), selectionStroke.y(), selectionStroke.width(), selectionStroke.height(), 255)
-                                    selFuori.subtract(selectionStroke)
-                                    
-                                    currentDoc.setSelection(selFuori)
-                                    selFuori.copy(layerPrima)
-                                    
-                                    blurFilter.apply(layerPrima, selectionStroke.x(), selectionStroke.y(), selectionStroke.width(), selectionStroke.height()) 
-                                    
-                                    currentDoc.setSelection(None)
-                                    #paste è bacata, non posso usarlo                               
-                                    #selFuori.paste(layerPrima, selectionStroke.x() + 20  , selectionStroke.y() + 20 ) # copia il pezzo che non doveva essere blurred
-                                    
-                                    currentDoc.setActiveNode(layerPrima)
-                                    Krita.instance().action('edit_paste').trigger()
-                                    
-                                    
-                                    currentDoc.waitForDone () # action needs to finish before continuing
-                                    
-                                    
-                                    
-                                    # ora ci devo 
-                                    
-                                    
-                                currentDoc.refreshProjection()
-                                currentDoc.setSelection(None)
-                                #currentDoc.setSelection(None)
-                            
-                            global g_opacity_decided_for_layer
-                            g_opacity_decided_for_layer = False
-                            
-                            
-                            
-                            # currentDoc.setActiveNode(newLa)
-                            
-                            
-                            
-                            # currentDoc.refreshProjection() # tenta di agggirare il bug di quickmessage a tutto schermo
-                            # currentDoc.waitForDone()
-                    else:
-                            messageBox("In order to call \"Dry paper\", the current layer needs to have a parent group")
-                            showMessage = False
-                            # newLa = currentDoc.createNode("Wet_area", "paintLayer")
-                            # newLa.setOpacity(50.0 * 255.0 / 100.0)
-                            # root.addChildNode(newLa, None)
-                            
-                    #test blur        
-                    
-                    if showMessage:
-                        print("dry paper called message")
-                        quickMessage("Dry paper")
-                        #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
-                            
-                            
-                    
-                    return newLa
-            
+                        
+                        
+                        
+                        # ora ci devo 
+                        
+                        
+                    currentDoc.refreshProjection()
+                    currentDoc.setSelection(None)
+                    #currentDoc.setSelection(None)
+                
+                global g_opacity_decided_for_layer
+                g_opacity_decided_for_layer = False
+                
+                
+                
+                # currentDoc.setActiveNode(newLa)
+                
+                
+                
+                # currentDoc.refreshProjection() # tenta di agggirare il bug di quickmessage a tutto schermo
+                # currentDoc.waitForDone()
+        else:
+                messageBox("In order to call \"Dry paper\", the current layer needs to have a parent group")
+                showMessage = False
+                # newLa = currentDoc.createNode("Wet_area", "paintLayer")
+                # newLa.setOpacity(50.0 * 255.0 / 100.0)
+                # root.addChildNode(newLa, None)
+                
+        #test blur        
+        
+        if showMessage:
+            print("dry paper called message")
+            quickMessage("Dry paper")
+            #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
+                
+                
+        
+        return newLa
+
 
 def node_to_index(node, model):
     path = list()
