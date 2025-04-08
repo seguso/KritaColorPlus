@@ -2594,32 +2594,34 @@ class MyExtension(Extension):
                             return
 
                         num_colors = len(g.g_last_virtual_colors_used)
-                        if num_colors < 2:
-                            print("  Abort: Not enough colors in history.")
-                            quickMessage("Not enough colors in history to switch.")
+                        if num_colors == 0: # Need at least one color to select from
+                            print("  Abort: No colors in history.")
+                            quickMessage("No colors in history.")
                             return
 
-                        original_index = g.g_color_history_index
-                        target_index = -1 # Default invalid index
+                        # Calculate the next index by incrementing (moving towards older colors: 0 -> 1 -> 2...)
+                        # g_color_history_index = 0 represents the most recent color.
+                        next_index = g.g_color_history_index + 1
 
-                        # Determine target color based on whether this is the first switch or consecutive
-                        if original_index == -1: # First switch since last paint
-                            target_index = -2
-                            g.g_color_history_index = -2
-                            print(f"  First switch detected. Target index: {target_index}. New index: {g.g_color_history_index}")
-                        else: # Consecutive switch without painting
-                            target_index = original_index - 1
-                            # Handle wrap-around
-                            if target_index < -num_colors:
-                                target_index = -1 # Wrap back to the most recent color (List[-1])
-                            g.g_color_history_index = target_index # Update the global index
-                            print(f"  Consecutive switch detected. Decremented index: {g.g_color_history_index}. Target index: {target_index}")
+                        print(f"  Current index: {g.g_color_history_index}. Trying next index: {next_index}")
 
-                        target_color = g.g_last_virtual_colors_used[target_index]
-                        print(f"  Target Color: {target_color.toString()} at index {target_index}")
+                        # Check if the next index is within the list bounds
+                        if next_index < num_colors:
+                            g.g_color_history_index = next_index # Update the global index
+                            target_color = g.g_last_virtual_colors_used[g.g_color_history_index]
+                            g.g_virtual_fg_color_rgb = target_color.clone() # Set the virtual foreground color
+                            print(f"  Switched to color at index {g.g_color_history_index}: {target_color.toString()}")
+                            # Update Krita's actual foreground color (if needed, depends on plugin logic)
+                            # Krita.instance().activeWindow().activeView().setForegroundColor(target_color)
+                            # TODO: Ensure g.g_virtual_fg_color_rgb is used correctly elsewhere
+                        else:
+                            # Index is out of bounds (tried to go past the oldest color)
+                            print(f"  Reached end of history. No change. Index remains {g.g_color_history_index}")
+                            quickMessage("Reached oldest color in history.")
+                            # Do not wrap around, do not change color
 
                         # Update virtual color and Krita's foreground color
-                        g.g_virtual_fg_color_rgb = target_color.clone()
+                        
                         update_label_from_virtual_color()
 
                         col = acView.foregroundColor()
@@ -2769,43 +2771,30 @@ class MyExtension(Extension):
 
                     if stroke_color is not None:
                         stroke_color_clone = stroke_color.clone()
-                        num_colors = len(g.g_last_virtual_colors_used)
-                        reset_index_needed = True # Assume we need to reset unless color is same as last
+                        print(f"  Processing stroke color {stroke_color_clone.toString()}")
 
-                        if num_colors > 0:
-                            last_in_history = g.g_last_virtual_colors_used[-1]
-                            print(f"  Comparing stroke color {stroke_color_clone.toString()} with last in history {last_in_history.toString()}")
+                        # Use a temporary list to avoid modifying while iterating if needed, though list comprehension handles this.
+                        original_count = len(g.g_last_virtual_colors_used)
+                        # Remove all existing instances of the color using list comprehension
+                        g.g_last_virtual_colors_used = [c for c in g.g_last_virtual_colors_used if not c.equals(stroke_color_clone)]
+                        removed_count = original_count - len(g.g_last_virtual_colors_used)
+                        if removed_count > 0:
+                            print(f"  Removed {removed_count} existing instance(s) of {stroke_color_clone.toString()}.")
 
-                            if last_in_history.equals(stroke_color_clone):
-                                print("  Color is same as last in history. No list change needed.")
-                                # No need to add, but still reset index
-                            elif num_colors > 1 and g.g_last_virtual_colors_used[-2].equals(stroke_color_clone):
-                                # Painted with the second-to-last color (e.g., switched A->B, painted A)
-                                # Swap last two to make A the most recent: [..., C, B, A] -> [..., C, A, B]
-                                print(f"  Color matches second-to-last. Swapping last two elements.")
-                                temp = g.g_last_virtual_colors_used[-1]
-                                g.g_last_virtual_colors_used[-1] = g.g_last_virtual_colors_used[-2]
-                                g.g_last_virtual_colors_used[-2] = temp
-                            else:
-                                # Genuinely new color or reusing one further back
-                                print(f"  Adding new/different color {stroke_color_clone.toString()} to history.")
-                                g.g_last_virtual_colors_used.append(stroke_color_clone)
-                                # Trim list
-                                max_history = 5
-                                if len(g.g_last_virtual_colors_used) > max_history:
-                                    g.g_last_virtual_colors_used = g.g_last_virtual_colors_used[-max_history:]
-                                    print(f"  History trimmed to {max_history} items.")
-                        else:
-                             # First color ever added
-                             print(f"  Adding first color {stroke_color_clone.toString()} to history.")
-                             g.g_last_virtual_colors_used.append(stroke_color_clone)
+                        # Add the new/current color to the beginning (most recent)
+                        g.g_last_virtual_colors_used.insert(0, stroke_color_clone)
+                        print(f"  Added color {stroke_color_clone.toString()} to beginning. History size: {len(g.g_last_virtual_colors_used)}")
 
-                        # Reset index if a stroke occurred (even if color wasn't added/swapped)
-                        if reset_index_needed:
-                             g.g_color_history_index = -1
-                             print("  Reset color history index to -1.")
+                        # Trim list to max_history, keeping the newest items (at the start)
+                        max_history = 40 # TODO: Consider making this configurable
+                        if len(g.g_last_virtual_colors_used) > max_history:
+                            g.g_last_virtual_colors_used = g.g_last_virtual_colors_used[:max_history]
+                            print(f"  History trimmed to {max_history} items.")
 
-
+                        # Always reset the history index after a stroke adds/moves a color
+                        g.g_color_history_index = 0
+                        print(f"  Reset g_color_history_index to 0.")
+                    
                     # Update the absolute last color tracker (always, inside try)
                     g.g_virtual_color_used_last_rgb = stroke_color
                     print(f"  After Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
