@@ -1685,6 +1685,8 @@ def rgbOfManagedColor( c):
 
 class rgb:
         def __init__(self, r, g, b, a):
+                if not isinstance(r, float) or not isinstance(g, float) or not isinstance(b, float) or not isinstance(a, float):
+                    raise TypeError("r, g, and b and a must be float values (doubles)")
                 self.a = a
                 self.r = r
                 self.g = g
@@ -1695,13 +1697,13 @@ class rgb:
                 
         def toString(self):
             # inverto r e b perche' in realta' siamo bgr
-            return f" b:{round(self.r)}, g:{round(self.g)}, r:{round(self.b)} ,a:{self.a}"
+            return f" b:{self.r}, g:{self.g}, r:{self.b} ,a:{self.a}"
 
         def average(self, c):
-                return rgb((self.r + c.r) / 2,
-                                                        (self.g + c.g) / 2,
-                                                        (self.b + c.b) / 2,
-                                                        255)
+                return rgb((self.r + c.r) / 2.0,
+                                                        (self.g + c.g) / 2.0,
+                                                        (self.b + c.b) / 2.0,
+                                                        255.0)
 
         def distance(self, c):
             return math.sqrt((self.r - c.r)*(self.r - c.r) + (self.g - c.g)*(self.g - c.g) + (self.b - c.b)*(self.b - c.b) )
@@ -1753,7 +1755,7 @@ def calcolaCompositeColor(colors):
                                 mergedColor = rgb( mergedColor.r * invA + col.r * a,
                                                                                 mergedColor.g * invA + col.g * a,
                                                                                 mergedColor.b* invA + col.b * a,
-                                                                                255)
+                                                                                255.0)
                                 #mergedColor.print("merged color")
         return mergedColor
         
@@ -1817,7 +1819,7 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                 pixelC = imageData.pixelColor(0,0)
                                                 
                                                 #e ora da colore qt a colore mio 
-                                                mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255)
+                                                mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255.0)
                                                 
                                                 #print(f'pixel risulta: {mergedColor.r}  {mergedColor.g} {mergedColor.b}')
                                                 
@@ -1923,7 +1925,7 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                         # setto anche il virtual fg color al result del mix
                                                         
                                                         print("g_virtual_fg_color_rgb = mix 2")
-                                                        g.g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
+                                                        g.g_virtual_fg_color_rgb = rgb( comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
                                                         update_label_from_virtual_color()
                                                         
                                                         
@@ -2375,10 +2377,10 @@ class MyExtension(Extension):
                         
                         if len(comp) == 4:
                             
-                            mergedColor = rgb(comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255)
+                            mergedColor = rgb(comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
                                 
 
-                            print(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}")
+                            print(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}, orig = {comp[0]}, {comp[1]}, {comp[2]}")
                             g.g_virtual_fg_color_rgb = mergedColor #lo memorizzo
                             
                             update_label_from_virtual_color()
@@ -2848,7 +2850,19 @@ class MyExtension(Extension):
                 try:
                     # Get globals
                     
-                    stroke_color = g.g_virtual_fg_color_rgb
+                    # Get the actual foreground color from Krita
+                    q_color = Krita.instance().activeWindow().activeView().foregroundColor()
+                    # Convert QColor (0-1 float) to our rgb class format (0-255 float, BGR order)
+                    # Note: The rgb class stores B in self.r and R in self.b internally
+                    actual_color_rgb = rgb(r=float(q_color.blue()),  # Blue component for rgb.r
+                                           g=float(q_color.green()), # Green component for rgb.g
+                                           b=float(q_color.red()),   # Red component for rgb.b
+                                           a=float(q_color.alpha())) # Alpha component for rgb.a
+                    
+                    # Use the actual color for the stroke
+                    stroke_color = actual_color_rgb.clone()
+                    # Update the virtual color to match the actual color
+                    g.g_virtual_fg_color_rgb = actual_color_rgb.clone()
                     print(f"  Stroke Color (g.g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
                     print(f"  Before Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
