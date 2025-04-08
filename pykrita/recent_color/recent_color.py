@@ -709,116 +709,116 @@ def dryPaper( showMessage = True):
                 
                 
                 
-                
-                #print(f"dry paper called showMessage = {showMessage}")
-                application = Krita.instance()
-                currentDoc = application.activeDocument()
-                if currentDoc is  None:
-                
-                    return None
-                else:
-                    activeLayer = currentDoc.activeNode()
-                    
-                    if g.g_blur_on_dry:
-                        application.action('selectopaque').trigger()
-                        currentDoc.waitForDone () # action needs to finish before continuing
-                        selectionStroke = currentDoc.selection()
-                        blurFilter = application.filter('gaussian blur')
-                        blurFilter.setProperty('level', 50)
-                        blurFilter.setProperty('radius', 50)
-                    
-                    
-                    parentNode = activeLayer.parentNode()
-                    newLa = None
-                    if parentNode is not None:  
-                    
-                    
-                            
-                    
-                            print("dry paper called1")
-                            oldOpacity = activeLayer.opacity()
-                            
-                            #activeLayer.mergeDown()
-                            #currentDoc.waitForDone()
-                            
-                            root = currentDoc.rootNode()
-                            newLa = currentDoc.createNode("Wet_area", "paintLayer")
-                            newLa.setOpacity(oldOpacity)
-                            
-                            
-                            backgroundLayer = parentNode.childNodes()[0]
-                            
-                            
-                            parentNode.addChildNode(newLa, None)
-                            
-
-                            if g.g_set_spectral_blend_mode_when_creating_layer:
-                                #print("setting over spectral")
-                                newLa.setBlendingMode("over spectral");
-                            
-                            if g.g_blur_on_dry:
-                                # al layer precedente ad activeLayer, applica il blur
-                                for layerPrima in parentNode.childNodes()[ : -2]:
-                                    
-                                    print(f"applicando blur a  {layerPrima.name()}:{selectionStroke.x()}, {selectionStroke.y()}, {selectionStroke.width()},{selectionStroke.height()}")
-                                    
-                                    selFuori = Selection()
-                                    selFuori.select(selectionStroke.x(), selectionStroke.y(), selectionStroke.width(), selectionStroke.height(), 255)
-                                    selFuori.subtract(selectionStroke)
-                                    
-                                    currentDoc.setSelection(selFuori)
-                                    selFuori.copy(layerPrima)
-                                    
-                                    blurFilter.apply(layerPrima, selectionStroke.x(), selectionStroke.y(), selectionStroke.width(), selectionStroke.height()) 
-                                    
-                                    currentDoc.setSelection(None)
-                                    #paste è bacata, non posso usarlo                               
-                                    #selFuori.paste(layerPrima, selectionStroke.x() + 20  , selectionStroke.y() + 20 ) # copia il pezzo che non doveva essere blurred
-                                    
-                                    currentDoc.setActiveNode(layerPrima)
-                                    Krita.instance().action('edit_paste').trigger()
-                                    
-                                    
-                                    currentDoc.waitForDone () # action needs to finish before continuing
-                                    
-                                    
-                                    
-                                    # ora ci devo 
-                                    
-                                    
-                                currentDoc.refreshProjection()
-                                currentDoc.setSelection(None)
-                                #currentDoc.setSelection(None)
-                            
-
-                            g.g_opacity_decided_for_layer = False
-                            
-                            
-                            
-                            # currentDoc.setActiveNode(newLa)
-                            
-                            
-                            
-                            # currentDoc.refreshProjection() # tenta di agggirare il bug di quickmessage a tutto schermo
-                            # currentDoc.waitForDone()
-                    else:
-                            messageBox("In order to call \"Dry paper\", the current layer needs to have a parent group")
-                            showMessage = False
-                            # newLa = currentDoc.createNode("Wet_area", "paintLayer")
-                            # newLa.setOpacity(50.0 * 255.0 / 100.0)
-                            # root.addChildNode(newLa, None)
-                            
-                    #test blur        
-                    
-                    if showMessage:
-                        print("dry paper called message")
-                        quickMessage("Dry paper")
-                        #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
-                            
-                            
-                    
-                    return newLa
+    
+    #print(f"dry paper called showMessage = {showMessage}")
+    application = Krita.instance()
+    currentDoc = application.activeDocument()
+    if currentDoc is  None:
+    
+        return None
+    else:
+        activeLayer = currentDoc.activeNode()
+        
+        if g.g_blur_on_dry:
+            application.action('selectopaque').trigger()
+            currentDoc.waitForDone () # action needs to finish before continuing
+            selectionStroke = currentDoc.selection()
+            blurFilter = application.filter('gaussian blur')
+            blurFilter.setProperty('level', 50)
+            blurFilter.setProperty('radius', 50)
+        
+        
+        parentNode = activeLayer.parentNode()
+        newLa = None
+        if parentNode is not None:  
+        
+    
             
+    
+            print("dry paper called1")
+            oldOpacity = activeLayer.opacity()
+            
+            #activeLayer.mergeDown()
+            #currentDoc.waitForDone()
+            
+            root = currentDoc.rootNode()
+            newLa = currentDoc.createNode("Wet_area", "paintLayer")
+            newLa.setOpacity(oldOpacity)
+            
+            
+            backgroundLayer = parentNode.childNodes()[0]
+            
+            
+            parentNode.addChildNode(newLa, None)
+            
+
+            if g.g_set_spectral_blend_mode_when_creating_layer:
+                #print("setting over spectral")
+                newLa.setBlendingMode("over spectral");
+            
+            if g.g_blur_on_dry:
+                # al layer precedente ad activeLayer, applica il blur
+                for layerPrima in parentNode.childNodes()[ : -2]:
+                    
+                    print(f"applicando blur a  {layerPrima.name()}:{selectionStroke.x()}, {selectionStroke.y()}, {selectionStroke.width()},{selectionStroke.height()}")
+                    
+                    selFuori = Selection()
+                    selFuori.select(selectionStroke.x(), selectionStroke.y(), selectionStroke.width(), selectionStroke.height(), 255)
+                    selFuori.subtract(selectionStroke)
+                    
+                    currentDoc.setSelection(selFuori)
+                    selFuori.copy(layerPrima)
+                    
+                    blurFilter.apply(layerPrima, selectionStroke.x(), selectionStroke.y(), selectionStroke.width(), selectionStroke.height()) 
+                    
+                    currentDoc.setSelection(None)
+                    #paste è bacata, non posso usarlo                               
+                    #selFuori.paste(layerPrima, selectionStroke.x() + 20  , selectionStroke.y() + 20 ) # copia il pezzo che non doveva essere blurred
+                    
+                    currentDoc.setActiveNode(layerPrima)
+                    Krita.instance().action('edit_paste').trigger()
+                    
+                    
+                    currentDoc.waitForDone () # action needs to finish before continuing
+                    
+                    
+                    
+                    # ora ci devo 
+                    
+                    
+                currentDoc.refreshProjection()
+                currentDoc.setSelection(None)
+                #currentDoc.setSelection(None)
+            
+
+            g.g_opacity_decided_for_layer = False
+            
+            
+            
+            # currentDoc.setActiveNode(newLa)
+            
+            
+            
+            # currentDoc.refreshProjection() # tenta di agggirare il bug di quickmessage a tutto schermo
+            # currentDoc.waitForDone()
+        else:
+            messageBox("In order to call \"Dry paper\", the current layer needs to have a parent group")
+            showMessage = False
+            # newLa = currentDoc.createNode("Wet_area", "paintLayer")
+            # newLa.setOpacity(50.0 * 255.0 / 100.0)
+            # root.addChildNode(newLa, None)
+                
+        #test blur        
+        
+        if showMessage:
+            print("dry paper called message")
+            quickMessage("Dry paper")
+            #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
+                
+                
+        
+        return newLa
+
 
 def node_to_index(node, model):
     path = list()
@@ -1080,6 +1080,7 @@ class AutoFocusSetter(QObject):
                 # now,  pick color ignoring stroke just made (which is on its own layer) 
                 col = getColorUnderCursorOrAtPos(forcedPos = xyOfQpoint(g.g_last_coord_mouse_down )) 
                 setFgColor(col)
+                print("g_virtual_fg_color_rgb pickingcolor")
                 g.g_virtual_fg_color_rgb  = col
                 g.g_picking_color = False
                 
@@ -1243,7 +1244,7 @@ class AutoFocusSetter(QObject):
                         view.setForeGroundColor(fg)
                         
                
-                        
+                        print("g_virtual_fg_color_rgb dirty")
                         g.g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
                         update_label_from_virtual_color()
                             
@@ -1921,6 +1922,7 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                         
                                                         # setto anche il virtual fg color al result del mix
                                                         
+                                                        print("g_virtual_fg_color_rgb = mix 2")
                                                         g.g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
                                                         update_label_from_virtual_color()
                                                         
@@ -2376,7 +2378,7 @@ class MyExtension(Extension):
                             mergedColor = rgb(comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255)
                                 
 
-                            
+                            print(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}")
                             g.g_virtual_fg_color_rgb = mergedColor #lo memorizzo
                             
                             update_label_from_virtual_color()
@@ -2689,6 +2691,7 @@ class MyExtension(Extension):
                         if next_index < num_colors:
                             g.g_color_history_index = next_index # Update the global index
                             target_color = g.g_last_virtual_colors_used[g.g_color_history_index]
+                            print(f"g_virtual_fg_color_rgb = last color cioe' {target_color.toString()}")
                             g.g_virtual_fg_color_rgb = target_color.clone() # Set the virtual foreground color
                             print(f"  Switched to color at index {g.g_color_history_index}: {target_color.toString()}")
                             # Update Krita's actual foreground color (if needed, depends on plugin logic)
@@ -2838,7 +2841,7 @@ class MyExtension(Extension):
                 
                 
             
-        def _on_history_was_made(self):   # User painted, probably
+        def _on_history_was_made(self):   # User painted, probably. ma a volte scatta anche quando faccio enter da selector a canvas
                 """Adds the color of the last stroke to the history list and resets the history index, handling A->B->Paint A case."""
                 self.counter += 1
                 print(f"\n--- _on_history_was_made (Stroke {self.counter}) ---")
@@ -3051,7 +3054,7 @@ class MyExtension(Extension):
                                                 
                                                 
                                                 # setto anche il virtual fg color al result del mix
-                                                
+                                                print("g_virtual_fg_color_rgb mixando")
                                                 g.g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
                                                 update_label_from_virtual_color()
                                                 
@@ -3506,7 +3509,7 @@ class MyExtension(Extension):
                                                     # mergedColor = rgb(   min (255, mergedColor.r / curLayerOpac01 ),    min(255,mergedColor.g / curLayerOpac01 ),    min(255, mergedColor.b / curLayerOpac01 ),  255)
                                                                 
                                                                  
-                                                
+                                                print("g_virtual_fg_color_rgb = mergedcolor")
                                                 g.g_virtual_fg_color_rgb = mergedColor #lo memorizzo come target
                                                 update_label_from_virtual_color()
                                                 
