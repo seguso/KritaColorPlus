@@ -291,7 +291,7 @@ class HelloDocker(DockWidget):
         
         g.lblActiveColor = QLabel()
         g.lblActiveColor.setToolTip("Current foreground color")
-        layoutHorizColorAndDry.addWidget(lblActiveColor)
+        layoutHorizColorAndDry.addWidget(g.lblActiveColor)
         #lblActiveColor.setStyleSheet("background-color: red")
         g.lblActiveColor.setMinimumHeight(45)
         g.lblActiveColor.setMinimumWidth(65)
@@ -426,7 +426,7 @@ class HelloDocker(DockWidget):
     
         
         if g.g_btn_mix.isChecked():
-            g.g_mixing.g_color = True
+            g.g_mixing_color = True
             
             # I create the layer even if I'm in single layer mode. Then I will either delete it or clear it
             newLa = dryPaper(showMessage = False)
@@ -435,7 +435,7 @@ class HelloDocker(DockWidget):
             
             
         else:
-            g.g_mixing.g_color = False
+            g.g_mixing_color = False
         
  
     def mixLevelValueChanged(self, level):
@@ -964,7 +964,7 @@ class AutoFocusSetter(QObject):
             
             
             
-            if g.g_mixing.g_color:
+            if g.g_mixing_color:
             
                 app = Krita.instance()
             
@@ -985,7 +985,7 @@ class AutoFocusSetter(QObject):
                 app.activeDocument().activeNode().setVisible(True)
                 
                 
-                g.g_mixing.g_color = False
+                g.g_mixing_color = False
                 
                 g.g_btn_mix.setChecked(False)
                 
@@ -2133,7 +2133,7 @@ class MyExtension(Extension):
                 
                 g.g_temp_switched_to_25_previous_opac = None
                 
-                self.mixing.g_target_distance = 20.0
+                self.mixing_target_distance = 20.0
                 
                 self.correct_color_for_transparency = True
                 
@@ -2921,7 +2921,7 @@ class MyExtension(Extension):
                                                 picked50 = False
                                                 
                                                 # calcola curFg
-                                                if dist  <= self.mixing.g_target_distance:
+                                                if dist  <= self.mixing_target_distance:
                                                     #i colori sono molto vicini. fai 50%
                                                     curMul = 0.5
                                                     curFg = rgb( fg2.r * curMul + bgColor.r * (1.0 - curMul),
@@ -2948,7 +2948,7 @@ class MyExtension(Extension):
                                                         
                                                         print(f"iterando. mul  = {curMul}, dist  tra {curFg.toString()} e {fg2.toString()} = {curDist}. ")
                                                         
-                                                        if curDist <= self.mixing.g_target_distance:  
+                                                        if curDist <= self.mixing_target_distance:  
                                                             break
                                                             
                                                         curMul += stepMul   
@@ -3184,7 +3184,7 @@ class MyExtension(Extension):
                                                         #print(f"fg color = {comp}")
                          
                                                         dist = fg2.distance(bgColor)
-                                                        #print(f"distance = {dist}, target distance = {self.mixing.g_target_distance}")
+                                                        #print(f"distance = {dist}, target distance = {self.mixing_target_distance}")
                          
                                                         
                                                         curDist = None
@@ -3493,7 +3493,7 @@ class MyExtension(Extension):
         
         def increaseMixing(self):
                 
-                g.g_how_much_canvas_to_pick += g.g_mixing.g_step
+                g.g_how_much_canvas_to_pick += g.g_mixing_step
                 if g.g_how_much_canvas_to_pick > 1.0:
                         g.g_how_much_canvas_to_pick = 1.0
                         
@@ -3503,7 +3503,7 @@ class MyExtension(Extension):
         
         def decreaseMixing(self):
                 
-                g.g_how_much_canvas_to_pick -= g.g_mixing.g_step
+                g.g_how_much_canvas_to_pick -= g.g_mixing_step
                 if g.g_how_much_canvas_to_pick < 0.0:
                         g.g_how_much_canvas_to_pick = 0.0
                         
@@ -3524,7 +3524,7 @@ class MyExtension(Extension):
                     quickMessage(f"Increased auto-mixing distance to {round(g.g_auto_mixing_target_distance )}")
 
                 else:
-                    g.g_auto_mix__how_much_canvas_to_pick += g.g_mixing.g_step
+                    g.g_auto_mix__how_much_canvas_to_pick += g.g_mixing_step
                     if g.g_auto_mix__how_much_canvas_to_pick > 1.0:
                             g.g_auto_mix__how_much_canvas_to_pick = 1.0
                             
@@ -3544,7 +3544,7 @@ class MyExtension(Extension):
                     quickMessage(f"Decreased auto-mixing distance to {round(g.g_auto_mixing_target_distance)}")
         
                 else:
-                    g.g_auto_mix__how_much_canvas_to_pick -= g.g_mixing.g_step
+                    g.g_auto_mix__how_much_canvas_to_pick -= g.g_mixing_step
                     if g.g_auto_mix__how_much_canvas_to_pick < 0.0:
                             g.g_auto_mix__how_much_canvas_to_pick = 0.0
                             
@@ -3575,20 +3575,20 @@ class MyExtension(Extension):
         
 
         
-        # def increaseMixing.g_targetLogic(self):
-                # self.mixing.g_target_distance += g.g_step_mixing.g_target_distance
-                # if self.mixing.g_target_distance > 255.0:
-                        # self.mixing.g_target_distance = 255.0
+        # def increasemixing_targetLogic(self):
+                # self.mixing_target_distance += g.g_step_mixing_target_distance
+                # if self.mixing_target_distance > 255.0:
+                        # self.mixing_target_distance = 255.0
                         
                         
-                # quickMessage(f"Increased mixing. Target distance from fg color: {round(self.mixing.g_target_distance )}")
+                # quickMessage(f"Increased mixing. Target distance from fg color: {round(self.mixing_target_distance )}")
         
-        # def decreaseMixing.g_targetLogic(self):
-                # self.mixing.g_target_distance -= g.g_step_mixing.g_target_distance
-                # if self.mixing.g_target_distance < 0.0:
-                        # self.mixing.g_target_distance = 0.0
+        # def decreasemixing_targetLogic(self):
+                # self.mixing_target_distance -= g.g_step_mixing_target_distance
+                # if self.mixing_target_distance < 0.0:
+                        # self.mixing_target_distance = 0.0
                         
-                # quickMessage(f"Decreased mixing. Target distance from fg color: {round(self.mixing.g_target_distance)}")
+                # quickMessage(f"Decreased mixing. Target distance from fg color: {round(self.mixing_target_distance)}")
 
                 
         def increaseLayerOpacity(self):
