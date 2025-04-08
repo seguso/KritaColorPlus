@@ -1,3 +1,9 @@
+from typing import List, TYPE_CHECKING # Import List and TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .recent_color import rgb # Import for type hinting only
+    from PyQt5.QtWidgets import QLabel # Import for type hinting only
+
 g_blur_on_dry = False
 
 countColorChanged = 0
@@ -73,7 +79,7 @@ g_temp_switched_to_100_previous_opac = None
 
 g_opacity_decided_for_layer = False
 
-lblActiveColor : QLabel = null
+lblActiveColor : 'QLabel' = None # Use None, forward reference QLabel
 
 event_lookup = {"0": "QEvent::None",
                 "114": "QEvent::ActionAdded",
@@ -222,4 +228,4 @@ event_lookup = {"0": "QEvent::None",
                 "203": "QEvent::WinIdChange",
                 "126": "QEvent::ZOrderChange", }
                 
-allBrushPresets = null
+allBrushPresets = None # Use None instead of null
