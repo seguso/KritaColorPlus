@@ -13,15 +13,15 @@ def get_files_to_install():
         if not appdata_dir:
             raise EnvironmentError("Could not find APPDATA environment variable.")
 
-        # 1. Python Plugin File
-        py_source_rel = os.path.join('pykrita', 'recent_color', 'recent_color.py')
-        py_source_abs = os.path.join(script_dir, py_source_rel)
-        py_dest_dir = os.path.join(appdata_dir, 'krita', 'pykrita', 'recent_color')
-        py_dest_abs = os.path.join(py_dest_dir, 'recent_color.py')
-        if os.path.exists(py_source_abs): # Only add if source exists
-             files_to_install.append((py_source_abs, py_dest_abs))
+        # 1. Python Plugin Directory
+        py_source_dir_rel = os.path.join('pykrita', 'recent_color')
+        py_source_dir_abs = os.path.join(script_dir, py_source_dir_rel)
+        py_dest_dir = os.path.join(appdata_dir, 'krita', 'pykrita', 'recent_color') # Destination is the directory itself
+        if os.path.isdir(py_source_dir_abs): # Check if source directory exists
+             # Mark this as a directory copy operation
+             files_to_install.append(('dir', py_source_dir_abs, py_dest_dir))
         else:
-             print(f"Warning: Python source file not found: {py_source_abs}")
+             print(f"Warning: Python source directory not found: {py_source_dir_abs}")
 
 
         # 2. Action Files
@@ -33,7 +33,8 @@ def get_files_to_install():
                 if filename.lower().endswith('.action'):
                     action_source_abs = os.path.join(actions_source_dir, filename)
                     action_dest_abs = os.path.join(actions_dest_dir, filename)
-                    files_to_install.append((action_source_abs, action_dest_abs))
+                    # Mark this as a file copy operation
+                    files_to_install.append(('file', action_source_abs, action_dest_abs))
         else:
              print(f"Warning: Actions source directory not found: {actions_source_dir}")
 
@@ -58,8 +59,15 @@ def install_plugin():
     # The preview in the text area serves as confirmation.
 
     dest_dirs = set()
-    for _, dest in files_to_copy:
-         dest_dirs.add(os.path.dirname(dest)) # Collect unique destination directories
+    for op_type, src, dest in files_to_copy:
+         if op_type == 'file':
+              dest_dirs.add(os.path.dirname(dest)) # Collect unique destination directories for files
+         # For 'dir' type, copytree handles directory creation, but we still need the parent dir for actions
+         elif op_type == 'dir':
+             # Ensure the parent of the destination directory exists if needed (e.g., %APPDATA%/krita/pykrita might not exist)
+             parent_dest_dir = os.path.dirname(dest)
+             if parent_dest_dir: # Avoid adding empty string if dest is top-level (unlikely here)
+                 dest_dirs.add(parent_dest_dir)
 
     try:
         # Create all destination directories first
@@ -70,13 +78,24 @@ def install_plugin():
         # Copy all files
         copied_files = []
         errors = []
-        for src, dest in files_to_copy:
+        for op_type, src, dest in files_to_copy:
             try:
-                print(f"Copying {src} to {dest}")
-                shutil.copy2(src, dest) # copy2 preserves metadata
-                copied_files.append(dest)
+                if op_type == 'dir':
+                    print(f"Copying directory {src} to {dest}")
+                    # Remove existing destination directory first to avoid merge issues or errors if it's not empty
+                    if os.path.exists(dest):
+                        print(f"Removing existing destination directory: {dest}")
+                        shutil.rmtree(dest)
+                    shutil.copytree(src, dest) # Using copytree for directories
+                    copied_files.append(dest + " (directory)") # Mark as directory
+                elif op_type == 'file':
+                    print(f"Copying file {src} to {dest}")
+                    shutil.copy2(src, dest) # copy2 preserves metadata
+                    copied_files.append(dest)
             except Exception as copy_e:
-                errors.append(f"Failed to copy {os.path.basename(src)}: {copy_e}")
+                 item_name = os.path.basename(src)
+                 item_type = "directory" if op_type == 'dir' else "file"
+                 errors.append(f"Failed to copy {item_type} {item_name}: {copy_e}")
 
         if errors:
              messagebox.showwarning("Installation Issues", "Some files failed to copy:\n\n" + "\n".join(errors))
@@ -103,8 +122,12 @@ root.option_add("*Font", default_font)
 try:
     files_display_list = get_files_to_install()
     display_text = "Files to be installed:\n\n"
-    for src, dest in files_display_list:
-        display_text += f"FROM: {src}\n  TO: {dest}\n\n"
+    for item in files_display_list:
+        op_type, src, dest = item
+        if op_type == 'dir':
+             display_text += f"FROM DIR: {src}\n  TO DIR: {dest}\n\n"
+        elif op_type == 'file':
+             display_text += f"FROM FILE: {src}\n  TO FILE: {dest}\n\n"
 
 except SystemExit: # Exit if get_files_to_install failed early
     sys.exit(1)

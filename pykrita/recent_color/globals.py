@@ -222,3 +222,4 @@ event_lookup = {"0": "QEvent::None",
                 "203": "QEvent::WinIdChange",
                 "126": "QEvent::ZOrderChange", }
                 
+allBrushPresets = null
