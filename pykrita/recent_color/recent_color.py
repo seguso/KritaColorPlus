@@ -19,7 +19,8 @@ from PyQt5.QtCore import (
                 QEvent,
                 QPointF,
                 QRect,
-                QTimer)
+                QTimer,
+                pyqtSignal) # Added pyqtSignal
 
 from PyQt5.QtGui import (
                 QTransform,
@@ -36,8 +37,12 @@ from PyQt5.QtWidgets import (
                 QMdiArea,
                 QTextEdit,
                 QAbstractScrollArea,
-                QAction, QMenu
-                
+                QAction, QMenu,
+                QLabel,           # Added QLabel
+                QHBoxLayout,      # Added QHBoxLayout
+                QVBoxLayout,      # Added QVBoxLayout (already used but good to be explicit)
+                QPushButton,      # Added QPushButton (already used but good to be explicit)
+                QDial             # Added QDial (already used but good to be explicit)
                 )
 
 
@@ -243,12 +248,30 @@ def toggleAutoMixing():
                 g.g_btn_auto_mix.setChecked(True)
                 g.g_actionAutoMix.setChecked(True)
         
+# --- Custom Widget for Clickable Color Squares ---
+class ClickableColorLabel(QLabel):
+    """ A QLabel that displays a color and emits a signal when clicked. """
+    clicked = pyqtSignal(QColor)
 
+    def __init__(self, color, parent=None):
+        super().__init__(parent)
+        self._color = color
+        self.setFixedSize(32, 32)
+        self.setStyleSheet(f"background-color: {self._color.name()}; border: 1px solid black;")
+        self.setToolTip(f"Color: {self._color.name()}")
 
-                
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            print(f"ClickableColorLabel clicked: emitting color {self._color.name()}")
+            self.clicked.emit(self._color)
+        super().mousePressEvent(event)
+
+# --- Docker Definition ---
+# Note: Removed duplicate class definition below
 class HelloDocker(DockWidget):
     def __init__(self):
         super().__init__()
+        g.g_docker_instance = self # Store instance globally
         self.setWindowTitle("ColorPlus")
         mainWidget = QWidget(self)
         self.setWidget(mainWidget)
@@ -258,8 +281,16 @@ class HelloDocker(DockWidget):
         
         mainLayout = QVBoxLayout()
         mainWidget.setLayout(mainLayout)
-        
-        
+
+        # --- Color History Layout ---
+        self.color_history_widget = QWidget() # Container widget
+        self.color_history_layout = QHBoxLayout()
+        self.color_history_layout.setContentsMargins(0, 5, 0, 5) # Add some vertical margin
+        self.color_history_layout.setSpacing(2) # Spacing between squares
+        self.color_history_widget.setLayout(self.color_history_layout)
+        mainLayout.addWidget(self.color_history_widget) # Add container to main layout
+        self.color_history_layout.addStretch(1) # Push squares to the left
+
         # active color
         
         layoutHorizColorAndDry = QHBoxLayout()
@@ -386,6 +417,10 @@ class HelloDocker(DockWidget):
         
         # pick color button
         self.buttonPickColor = QPushButton("Pick color", mainWidget)
+        # --- Initial Color History UI Population ---
+        self.update_color_history_ui() # Call initially
+
+ 
         self.buttonPickColor.setMinimumHeight(50)
         self.buttonPickColor.setCheckable(True)
         font = self.buttonPickColor.font()
@@ -399,7 +434,51 @@ class HelloDocker(DockWidget):
         g.g_btn_pick_color = self.buttonPickColor
         
         
-        
+   # --- Method to Update Color History UI ---
+    def update_color_history_ui(self):
+        """ Clears and rebuilds the color history UI display. """
+        # Clear existing widgets from the layout
+        while self.color_history_layout.count() > 1: # Keep the stretch item
+            item = self.color_history_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+        # Add new color squares
+        print(f"Updating color history UI with {len(g.g_last_virtual_colors_used)} colors.")
+        for item in g.g_last_virtual_colors_used:
+            qcolor_to_display = None
+            if isinstance(item, rgb): # Check if it's our custom rgb class
+                # Convert rgb object to QColor, ensuring values are integers
+                try:
+                    r_val = int(round(item.b))  #inverto! perche' in realta' la mia immagine e' bgr, e quindi anche la classe rgb ha gia' invertiti dentro r e b
+                    g_val = int(round(item.g))
+                    b_val = int(round(item.r))
+                    # Clamp values to 0-255 just in case
+                    r_val = max(0, min(255, r_val))
+                    g_val = max(0, min(255, g_val))
+                    b_val = max(0, min(255, b_val))
+                    qcolor_to_display = QColor(r_val, g_val, b_val)
+                except Exception as e:
+                    print(f"Error converting rgb to QColor: {e}, rgb values: r={item.r}, g={item.g}, b={item.b}")
+            elif isinstance(item, QColor): # Handle if it's already a QColor (less likely now)
+                 qcolor_to_display = item
+            else:
+                print(f"Warning: Item in g_last_virtual_colors_used is not an rgb or QColor object: {type(item)}")
+
+            if qcolor_to_display:
+                color_square = ClickableColorLabel(qcolor_to_display) # Pass the QColor
+                color_square.clicked.connect(self._on_color_square_clicked)
+                # Insert before the stretch item
+                self.color_history_layout.insertWidget(self.color_history_layout.count() - 1, color_square)
+    # --- Slot for Color Square Clicks ---
+    def _on_color_square_clicked(self, color):
+        """ Handles clicks on the color history squares. """
+        print(f"Color square clicked: {color.name()}")
+        # TODO: Implement desired action, e.g., set foreground color
+        # g.g_virtual_fg_color_rgb = color.clone()
+        # Krita.instance().activeWindow().activeView().setForegroundColor(color)
+        # updateActiveColorLabel() # Update the main color label if needed        
         
     def leaveEvent(self, event):
         pass
@@ -2797,6 +2876,13 @@ class MyExtension(Extension):
                     
                     # Update the absolute last color tracker (always, inside try)
                     g.g_virtual_color_used_last_rgb = stroke_color
+
+                    # --- Update the Docker UI ---
+                    if hasattr(g, 'g_docker_instance') and g.g_docker_instance:
+                        print("  Calling docker update UI...")
+                        g.g_docker_instance.update_color_history_ui()
+                    else:
+                        print("  Warning: Docker instance not found in globals (g.g_docker_instance). UI not updated.")
                     print(f"  After Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
                 except Exception as e:
