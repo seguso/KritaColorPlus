@@ -673,7 +673,7 @@ def dryPaper( showMessage = True):
                             parentNode.addChildNode(newLa, None)
                             
 
-                            if g.g_set_spectral_blend_mode_when_creating.g_layer:
+                            if g.g_set_spectral_blend_mode_when_creating_layer:
                                 #print("setting over spectral")
                                 newLa.setBlendingMode("over spectral");
                             
@@ -881,7 +881,7 @@ class AutoFocusSetter(QObject):
                 
                 
                         
-                        if g.g_diminishing.g_opacity:
+                        if g.g_diminishing_opacity:
                             g.g_auto_mix__how_much_canvas_to_pick = 1.0
                             
                             val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
@@ -1031,7 +1031,7 @@ class AutoFocusSetter(QObject):
                 
                 
 
-                if g.g_diminishing.g_opacity:
+                if g.g_diminishing_opacity:
                     g.g_auto_mix__how_much_canvas_to_pick = 1.0
                     
                     val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
@@ -1060,7 +1060,7 @@ class AutoFocusSetter(QObject):
             # uncomment this to have dirty brush =============== mouse released
             
             
-            if g.g_diminishing.g_opacity:
+            if g.g_diminishing_opacity:
                 g.g_auto_mix__how_much_canvas_to_pick = g.g_auto_mix__how_much_canvas_to_pick * 0.9
                 
                 val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
@@ -1072,7 +1072,7 @@ class AutoFocusSetter(QObject):
             
                                                     
             
-            # if g.g_diminishing.g_opacity:
+            # if g.g_diminishing_opacity:
             
                 # doc = Krita.instance().activeDocument()
 
@@ -1845,7 +1845,7 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                         update_label_from_virtual_color()
                                                         
                                                         
-                                                        if g.g_diminishing.g_opacity:
+                                                        if g.g_diminishing_opacity:
                                                             g.g_auto_mix__how_much_canvas_to_pick = 1.0
                                                             
                                                             val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
@@ -2632,7 +2632,7 @@ class MyExtension(Extension):
                         print(f"  Set FG Color to: {g.g_virtual_fg_color_rgb.toString()}")
 
                         # DO NOT reorder the list.
-                        acView.showFloatingMessage(f"Switched color (History pos {g.g_color_history_index})", QIcon(), timeMessage, 1)
+                        acView.showFloatingMessage(f"Switched color (History pos {g.g_color_history_index})", QIcon(), g.timeMessage, 1)
                         print(f"After Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
 
@@ -2660,14 +2660,14 @@ class MyExtension(Extension):
                      traceback.print_exc()
                 except Exception as e:
                         if 'acView' in locals() and acView is not None:
-                            acView.showFloatingMessage(f"Error switching color: {e}.", QIcon(), timeMessage * 2, 1)
+                            acView.showFloatingMessage(f"Error switching color: {e}.", QIcon(), g.timeMessage * 2, 1)
                         print(f"Error in switchToLastColor: {e}")
                         import traceback
                         traceback.print_exc()
                         g.g_color_history_index = -1 # Reset index on other errors too
                         print("Resetting index to -1 due to exception.")
                 except Exception as e:
-                                acView.showFloatingMessage(f"error {e}.", QIcon(), timeMessage * 2, 1)
+                                acView.showFloatingMessage(f"error {e}.", QIcon(), g.timeMessage * 2, 1)
                                 print("errore trovato in swap:")
                                 print(e)
                                 
@@ -2982,9 +2982,9 @@ class MyExtension(Extension):
                                                 
                                                 # messaggio
                                                 if picked50:
-                                                    view.showFloatingMessage(f"Picked 50% because distance was small ({round(curDist)})", QIcon(), timeMessage, 1)
+                                                    view.showFloatingMessage(f"Picked 50% because distance was small ({round(curDist)})", QIcon(), g.timeMessage, 1)
                                                 else:
-                                                    view.showFloatingMessage(f"Picked a bit of color from canvas. Distance: {round(curDist)}", QIcon(), timeMessage, 1)
+                                                    view.showFloatingMessage(f"Picked a bit of color from canvas. Distance: {round(curDist)}", QIcon(), g.timeMessage, 1)
         
         def acceptCurrentColorAndStopDirty(self, clearCurLayer = True):
             
@@ -3474,7 +3474,7 @@ class MyExtension(Extension):
                                                         g.g_auto_mixing_just_once_now_on = True
                          
                                                     
-                                                    if g.g_diminishing.g_opacity:
+                                                    if g.g_diminishing_opacity:
                                                         g.g_auto_mix__how_much_canvas_to_pick = 1.0
                                                         
                                                         val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
@@ -3483,7 +3483,7 @@ class MyExtension(Extension):
                         
                                                     # messaggio
                                                     if showMessage:
-                                                        view.showFloatingMessage("Pick color", QIcon(), timeMessage, 1)
+                                                        view.showFloatingMessage("Pick color", QIcon(), g.timeMessage, 1)
                                                 elif len(comp ) == 2:
                                                     messageBox(" Your foreground color is currently grayscale. In order to use \"pick\", please set your foreground color to an RGB color first.")
                                                 else:
@@ -3636,7 +3636,7 @@ class MyExtension(Extension):
                 
                 
                 
-                application.activeWindow().activeView().showFloatingMessage(f"Increased layer opacity to {round(newOpac * 100.0 / 255.0)}", QIcon(), timeMessage, 1)
+                application.activeWindow().activeView().showFloatingMessage(f"Increased layer opacity to {round(newOpac * 100.0 / 255.0)}", QIcon(), g.timeMessage, 1)
         
 
         def increaseAutoOpacityMaxDistance(self):
@@ -3720,7 +3720,7 @@ class MyExtension(Extension):
           
                 
                 
-                application.activeWindow().activeView().showFloatingMessage(f"Decreased layer opacity to { round(newOpac * 100.0 / 255.0)}", QIcon(), timeMessage, 1)
+                application.activeWindow().activeView().showFloatingMessage(f"Decreased layer opacity to { round(newOpac * 100.0 / 255.0)}", QIcon(), g.timeMessage, 1)
                 
                 
         def grum(self, currentSelection, currentLayer, application):
@@ -3828,7 +3828,7 @@ class MyExtension(Extension):
                 if showMessage:
                     print("dry paper called message")
                     quickMessage("Dry paper")
-                    #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
+                    #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), g.timeMessage, 1)
                         
                 return newLa
         
@@ -3920,7 +3920,7 @@ class MyExtension(Extension):
                             newLa.setOpacity(oldOpacity)
                             
                             
-                            if g.g_set_spectral_blend_mode_when_creating.g_layer:
+                            if g.g_set_spectral_blend_mode_when_creating_layer:
                                 #print("setting over spectral")
                                 newLa.setBlendingMode("over spectral");
                             

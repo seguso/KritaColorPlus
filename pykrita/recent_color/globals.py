@@ -33,7 +33,7 @@ g_mixing_step = 0.05
 
 g_auto_mixing_distance_step = 5
 
-g_set_spectral_blend_mode_when_creating_layer = True
+g_set_spectral_blend_mode_when_creating_layer = False
 
 g_multi_layer_mode = False
 
