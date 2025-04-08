@@ -59,6 +59,7 @@ g_auto_mix_ignore_current_layer = False # metti false se vuoi trascinare il colo
 g_auto_opacity_max_distance = 40
 
 g_auto_dry_each_stroke = False
+g_is_drying_paper = False # Flag to prevent history update during dryPaper
 
 g_auto_mix_paused = False
 g_auto_mix_enabled = False

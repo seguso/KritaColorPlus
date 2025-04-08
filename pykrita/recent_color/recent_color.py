@@ -6,6 +6,7 @@
 
 import pprint
 from . import globals as g
+from .whichtool import EKritaTools, EKritaToolsId # Import the necessary classes
 
 from krita import *
 
@@ -741,15 +742,20 @@ def dryPaper( showMessage = True):
             #activeLayer.mergeDown()
             #currentDoc.waitForDone()
             
-            # root = currentDoc.rootNode()
-            newLa = currentDoc.createNode("Wet_area", "paintLayer")
-            newLa.setOpacity(oldOpacity)
-            
-            
-            # backgroundLayer = parentNode.childNodes()[0]
-            
-            
-            parentNode.addChildNode(newLa, None)
+            g.g_is_drying_paper = True # Set flag before history-modifying actions
+            try:
+                # root = currentDoc.rootNode()
+                newLa = currentDoc.createNode("Wet_area", "paintLayer")
+                newLa.setOpacity(oldOpacity)
+                
+                
+                # backgroundLayer = parentNode.childNodes()[0]
+                
+                print("--faccio add node")
+                parentNode.addChildNode(newLa, None)
+                print("--finito add node")
+            finally:
+                g.g_is_drying_paper = False # Ensure flag is reset
             
 
             if g.g_set_spectral_blend_mode_when_creating_layer:
@@ -2843,13 +2849,48 @@ class MyExtension(Extension):
                 
                 
             
-        def _on_history_was_made(self):   # User painted, probably. ma a volte scatta anche quando faccio enter da selector a canvas
+        # Note: Updated signature to accept arguments from currentChanged signal
+        def _on_history_was_made(self, current, previous):   # User painted, probably. ma a volte scatta anche quando faccio enter da selector a canvas
                 """Adds the color of the last stroke to the history list and resets the history index, handling A->B->Paint A case."""
+
+
+                print("********************\n on history was made\n\n")
+                # --- Check if this history event was triggered by dryPaper ---
+                if hasattr(g, 'g_is_drying_paper') and g.g_is_drying_paper:
+                    # print("History change ignored because dryPaper is active.")
+                    return # Exit immediately if dryPaper is running
+                # --- End of dryPaper check ---
+
+                # --- Check if the current tool is a brush tool using whichtool.py ---
+                current_tool_id = EKritaTools.current()
+
+                if not current_tool_id:
+                    # print("Could not determine current tool ID.")
+                    return # Exit if tool ID couldn't be determined
+
+                # Define the list of brush tool IDs using constants from EKritaToolsId
+                brush_tool_ids = [
+                    EKritaToolsId.PAINT_BRUSH,
+                    EKritaToolsId.PAINT_PENCIL,
+                    # EKritaToolsId.PAINT_AIRBRUSH, # Note: Airbrush seems not defined in whichtool.py's EKritaToolsId
+                    EKritaToolsId.PAINT_DYNAMIC_BRUSH,
+                    EKritaToolsId.FILL_SMARTPATCH, # Smart Patch is listed under FILL but acts like a brush
+                    # EKritaToolsId.PAINT_CLONE_BRUSH # Note: Clone brush seems not defined
+                    EKritaToolsId.PAINT_MULTI_BRUSH,
+                    # Add any other relevant IDs from EKritaToolsId if needed
+                ]
+
+                if current_tool_id not in brush_tool_ids:
+                    # History changed due to another action (new layer, filter, etc.)
+                    # print(f"History changed, but current tool ({current_tool_id}) is not a brush. Ignoring.")
+                    return # Exit the function if it's not a brush stroke
+                # --- End of tool check ---
+
+                # If it is a brush tool, proceed with the original logic:
                 self.counter += 1
-                print(f"\n--- _on_history_was_made (Stroke {self.counter}) ---")
+                # print(f"\n--- _on_history_was_made (Stroke {self.counter}, Tool: {current_tool_name}) ---")
                 try:
-                    # Get globals
-                    
+                    # Get globals (original code continues here)
                     # Get the actual foreground color from Krita
                     krita_fg_color = Krita.instance().activeWindow().activeView().foregroundColor()
                     # Get color components (usually [R, G, B, A] as floats 0.0-1.0)
