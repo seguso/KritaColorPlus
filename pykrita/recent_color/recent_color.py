@@ -735,18 +735,18 @@ def dryPaper( showMessage = True):
     
             
     
-            print("dry paper called1")
+            print("dry paper called")
             oldOpacity = activeLayer.opacity()
             
             #activeLayer.mergeDown()
             #currentDoc.waitForDone()
             
-            root = currentDoc.rootNode()
+            # root = currentDoc.rootNode()
             newLa = currentDoc.createNode("Wet_area", "paintLayer")
             newLa.setOpacity(oldOpacity)
             
             
-            backgroundLayer = parentNode.childNodes()[0]
+            # backgroundLayer = parentNode.childNodes()[0]
             
             
             parentNode.addChildNode(newLa, None)
@@ -2353,7 +2353,7 @@ class MyExtension(Extension):
                 
             
             
-            #print(f"fg color changed event: {countColorChanged}")
+            # print(f"fg color changed event: {g.countColorChanged}")
             
             g.countColorChanged += 1
             
