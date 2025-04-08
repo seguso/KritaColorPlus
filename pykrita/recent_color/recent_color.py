@@ -454,7 +454,7 @@ class HelloDocker(DockWidget):
     
         
         if self.buttonPickColor.isChecked():
-            g.g_picking.g_color = True # I start layer picking mode
+            g.g_picking_color = True # I start layer picking mode
             
             # global g.g_multi_layer_mode
             # if g.g_multi_layer_mode:
@@ -484,7 +484,7 @@ class HelloDocker(DockWidget):
             
             
         else:
-            g.g_picking.g_color = False
+            g.g_picking_color = False
         
         
     def canvasChanged(self, canvas):
@@ -755,9 +755,9 @@ def node_to_index(node, model):
 
 def update_label_from_virtual_color():
     r = g.g_virtual_fg_color_rgb.r
-    g = g.g_virtual_fg_color_rgb.g
+    green_val = g.g_virtual_fg_color_rgb.g # Use a different name for the local variable
     b = g.g_virtual_fg_color_rgb.b
-    g.lblActiveColor.setStyleSheet(f"background-color: rgb({b}, {g}, {r})")
+    g.lblActiveColor.setStyleSheet(f"background-color: rgb({b}, {green_val}, {r})") # Use the new variable name
 
 def index_to_node(index, document):
     if not index.isValid():
@@ -990,7 +990,7 @@ class AutoFocusSetter(QObject):
                 g.g_btn_mix.setChecked(False)
                 
                 return True # annulla l'evento, ma non funziona
-            elif g.g_picking.g_color:
+            elif g.g_picking_color:
                 # clear layer first, otherwise I pick the color just painted
                 app = Krita.instance()
                 
@@ -1002,7 +1002,7 @@ class AutoFocusSetter(QObject):
                 col = getColorUnderCursorOrAtPos(forcedPos = xyOfQpoint(g.g_last_coord_mouse_down )) 
                 setFgColor(col)
                 g.g_virtual_fg_color_rgb  = col
-                g.g_picking.g_color = False
+                g.g_picking_color = False
                 
                 app.activeDocument().activeNode().setVisible(True)
                 
@@ -1179,7 +1179,7 @@ class AutoFocusSetter(QObject):
                 
                 # col = getColorUnderCursorOrAtPos()
                 # setFgColor(col)
-                # g.g_picking.g_color = False
+                # g.g_picking_color = False
                 # return True # annulla l'evento
             
             
