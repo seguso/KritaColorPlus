@@ -2124,7 +2124,7 @@ class MyExtension(Extension):
                 g.g_color_history_index = -1 # New
                 
                 
-                self.g.g_auto_focus = Krita.instance().readSetting("colorPlus", "g.g_auto_focus", "true")
+                g.g_auto_focus = Krita.instance().readSetting("colorPlus", "g.g_auto_focus", "true")
                 
                 
                 self.mix_radius = 1 # pixel
@@ -2210,7 +2210,7 @@ class MyExtension(Extension):
                 if wi is not None:
                     subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
                     
-                    if self.g.g_auto_focus ==  "true":
+                    if g.g_auto_focus ==  "true":
                         for su in subwins:
                                 if su not in self.windows_with_autofocus:
                                     print(f"installing autofocus for window {su}")
@@ -4284,14 +4284,14 @@ class MyExtension(Extension):
             
             
         def toggleAutoFocus(self):
-            if self.g.g_auto_focus == "true":
+            if g.g_auto_focus == "true":
                 
-                self.g.g_auto_focus = "false"
+                g.g_auto_focus = "false"
             else:
                 
-                self.g.g_auto_focus = "true"
+                g.g_auto_focus = "true"
                 
-            Krita.instance().writeSetting("colorPlus", "g.g_auto_focus", self.g.g_auto_focus)
+            Krita.instance().writeSetting("colorPlus", "g.g_auto_focus", g.g_auto_focus)
         
 
         def toggleAutoResetOpacityOnPick(self):
@@ -4428,7 +4428,7 @@ class MyExtension(Extension):
                 
                 self.actionAutoFocus= window.createAction("autoFocus", "Autofocus windows on mouse over")
                 self.actionAutoFocus.setCheckable(True)
-                self.actionAutoFocus.setChecked(self.g.g_auto_focus == "true")
+                self.actionAutoFocus.setChecked(g.g_auto_focus == "true")
                 self.actionAutoFocus.triggered.connect(self.toggleAutoFocus)
                 
 

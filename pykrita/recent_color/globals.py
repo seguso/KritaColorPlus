@@ -229,3 +229,5 @@ event_lookup = {"0": "QEvent::None",
                 "126": "QEvent::ZOrderChange", }
                 
 allBrushPresets = None # Use None instead of null
+
+g_auto_focus = "False"
