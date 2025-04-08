@@ -225,178 +225,26 @@ from PyQt5.QtWidgets import QTreeView
 
 
 def toggleAutoMixing():
-            global g_actionAutoMix
-            global g_btn_auto_mix 
-            global g_auto_mix_enabled
-            global g_auto_mixing_just_once_logic
-            global g_auto_mixing_just_once_now_on
             
-            if g_auto_mix_enabled:
+            if g.g.g_auto_mix_enabled:
                 
-                g_auto_mix_enabled = False
-                g_actionAutoMix.setChecked(False)
+                g.g.g_auto_mix_enabled = False
+                g.g.g_actionAutoMix.setChecked(False)
                 
                 # you probably disabled auto-mixing in order to manually change the fg color (= target color). but the color selector has probably changed. so reset it to the current target
                 resetForegroundColorToLastColorPicked()
                                 
                 quickMessage("Disabled auto-mixing")                                        
                 
-                g_btn_auto_mix.setChecked(False)
+                g.g.g_btn_auto_mix.setChecked(False)
             else:
                 quickMessage("Enabled auto-mixing")
-                g_auto_mix_enabled = True
-                g_btn_auto_mix.setChecked(True)
-                g_actionAutoMix.setChecked(True)
+                g.g.g_auto_mix_enabled = True
+                g.g.g_btn_auto_mix.setChecked(True)
+                g.g.g_actionAutoMix.setChecked(True)
         
 
 
-event_lookup = {"0": "QEvent::None",
-                "114": "QEvent::ActionAdded",
-                "113": "QEvent::ActionChanged",
-                "115": "QEvent::ActionRemoved",
-                "99": "QEvent::ActivationChange",
-                "121": "QEvent::ApplicationActivate",
-                "122": "QEvent::ApplicationDeactivate",
-                "36": "QEvent::ApplicationFontChange",
-                "37": "QEvent::ApplicationLayoutDirectionChange",
-                "38": "QEvent::ApplicationPaletteChange",
-                "214": "QEvent::ApplicationStateChange",
-                "35": "QEvent::ApplicationWindowIconChange",
-                "68": "QEvent::ChildAdded",
-                "69": "QEvent::ChildPolished",
-                "71": "QEvent::ChildRemoved",
-                "40": "QEvent::Clipboard",
-                "19": "QEvent::Close",
-                "200": "QEvent::CloseSoftwareInputPanel",
-                "178": "QEvent::ContentsRectChange",
-                "82": "QEvent::ContextMenu",
-                "183": "QEvent::CursorChange",
-                "52": "QEvent::DeferredDelete",
-                "60": "QEvent::DragEnter",
-                "62": "QEvent::DragLeave",
-                "61": "QEvent::DragMove",
-                "63": "QEvent::Drop",
-                "170": "QEvent::DynamicPropertyChange",
-                "98": "QEvent::EnabledChange",
-                "10": "QEvent::Enter",
-                "150": "QEvent::EnterEditFocus",
-                "124": "QEvent::EnterWhatsThisMode",
-                "206": "QEvent::Expose",
-                "116": "QEvent::FileOpen",
-                "8": "QEvent::FocusIn",
-                "9": "QEvent::FocusOut",
-                "23": "QEvent::FocusAboutToChange",
-                "97": "QEvent::FontChange",
-                "198": "QEvent::Gesture",
-                "202": "QEvent::GestureOverride",
-                "188": "QEvent::GrabKeyboard",
-                "186": "QEvent::GrabMouse",
-                "159": "QEvent::GraphicsSceneContextMenu",
-                "164": "QEvent::GraphicsSceneDragEnter",
-                "166": "QEvent::GraphicsSceneDragLeave",
-                "165": "QEvent::GraphicsSceneDragMove",
-                "167": "QEvent::GraphicsSceneDrop",
-                "163": "QEvent::GraphicsSceneHelp",
-                "160": "QEvent::GraphicsSceneHoverEnter",
-                "162": "QEvent::GraphicsSceneHoverLeave",
-                "161": "QEvent::GraphicsSceneHoverMove",
-                "158": "QEvent::GraphicsSceneMouseDoubleClick",
-                "155": "QEvent::GraphicsSceneMouseMove",
-                "156": "QEvent::GraphicsSceneMousePress",
-                "157": "QEvent::GraphicsSceneMouseRelease",
-                "182": "QEvent::GraphicsSceneMove",
-                "181": "QEvent::GraphicsSceneResize",
-                "168": "QEvent::GraphicsSceneWheel",
-                "18": "QEvent::Hide",
-                "27": "QEvent::HideToParent",
-                "127": "QEvent::HoverEnter",
-                "128": "QEvent::HoverLeave",
-                "129": "QEvent::HoverMove",
-                "96": "QEvent::IconDrag",
-                "101": "QEvent::IconTextChange",
-                "83": "QEvent::InputMethod",
-                "207": "QEvent::InputMethodQuery",
-                "169": "QEvent::KeyboardLayoutChange",
-                "6": "QEvent::KeyPress",
-                "7": "QEvent::KeyRelease",
-                "89": "QEvent::LanguageChange",
-                "90": "QEvent::LayoutDirectionChange",
-                "76": "QEvent::LayoutRequest",
-                "11": "QEvent::Leave",
-                "151": "QEvent::LeaveEditFocus",
-                "125": "QEvent::LeaveWhatsThisMode",
-                "88": "QEvent::LocaleChange",
-                "176": "QEvent::NonClientAreaMouseButtonDblClick",
-                "174": "QEvent::NonClientAreaMouseButtonPress",
-                "175": "QEvent::NonClientAreaMouseButtonRelease",
-                "173": "QEvent::NonClientAreaMouseMove",
-                "177": "QEvent::MacSizeChange",
-                "43": "QEvent::MetaCall",
-                "102": "QEvent::ModifiedChange",
-                "4": "QEvent::MouseButtonDblClick",
-                "2": "QEvent::MouseButtonPress",
-                "3": "QEvent::MouseButtonRelease",
-                "5": "QEvent::MouseMove",
-                "109": "QEvent::MouseTrackingChange",
-                "13": "QEvent::Move",
-                "197": "QEvent::NativeGesture",
-                "208": "QEvent::OrientationChange",
-                "12": "QEvent::Paint",
-                "39": "QEvent::PaletteChange",
-                "131": "QEvent::ParentAboutToChange",
-                "21": "QEvent::ParentChange",
-                "212": "QEvent::PlatformPanel",
-                "217": "QEvent::PlatformSurface",
-                "75": "QEvent::Polish",
-                "74": "QEvent::PolishRequest",
-                "123": "QEvent::QueryWhatsThis",
-                "106": "QEvent::ReadOnlyChange",
-                "199": "QEvent::RequestSoftwareInputPanel",
-                "14": "QEvent::Resize",
-                "204": "QEvent::ScrollPrepare",
-                "205": "QEvent::Scroll",
-                "117": "QEvent::Shortcut",
-                "51": "QEvent::ShortcutOverride",
-                "17": "QEvent::Show",
-                "26": "QEvent::ShowToParent",
-                "50": "QEvent::SockAct",
-                "192": "QEvent::StateMachineSignal",
-                "193": "QEvent::StateMachineWrapped",
-                "112": "QEvent::StatusTip",
-                "100": "QEvent::StyleChange",
-                "87": "QEvent::TabletMove",
-                "92": "QEvent::TabletPress",
-                "93": "QEvent::TabletRelease",
-                "171": "QEvent::TabletEnterProximity",
-                "172": "QEvent::TabletLeaveProximity",
-                "219": "QEvent::TabletTrackingChange",
-                "22": "QEvent::ThreadChange",
-                "1": "QEvent::Timer",
-                "120": "QEvent::ToolBarChange",
-                "110": "QEvent::ToolTip",
-                "184": "QEvent::ToolTipChange",
-                "194": "QEvent::TouchBegin",
-                "209": "QEvent::TouchCancel",
-                "196": "QEvent::TouchEnd",
-                "195": "QEvent::TouchUpdate",
-                "189": "QEvent::UngrabKeyboard",
-                "187": "QEvent::UngrabMouse",
-                "78": "QEvent::UpdateLater",
-                "77": "QEvent::UpdateRequest",
-                "111": "QEvent::WhatsThis",
-                "118": "QEvent::WhatsThisClicked",
-                "31": "QEvent::Wheel",
-                "132": "QEvent::WinEventAct",
-                "24": "QEvent::WindowActivate",
-                "103": "QEvent::WindowBlocked",
-                "25": "QEvent::WindowDeactivate",
-                "34": "QEvent::WindowIconChange",
-                "105": "QEvent::WindowStateChange",
-                "33": "QEvent::WindowTitleChange",
-                "104": "QEvent::WindowUnblocked",
-                "203": "QEvent::WinIdChange",
-                "126": "QEvent::ZOrderChange", }
-                
                 
 class HelloDocker(DockWidget):
     def __init__(self):
@@ -440,13 +288,13 @@ class HelloDocker(DockWidget):
         
         
         
-        global lblActiveColor
-        lblActiveColor = QLabel()
-        lblActiveColor.setToolTip("Current foreground color")
+        
+        g.lblActiveColor = QLabel()
+        g.lblActiveColor.setToolTip("Current foreground color")
         layoutHorizColorAndDry.addWidget(lblActiveColor)
         #lblActiveColor.setStyleSheet("background-color: red")
-        lblActiveColor.setMinimumHeight(45)
-        lblActiveColor.setMinimumWidth(65)
+        g.lblActiveColor.setMinimumHeight(45)
+        g.lblActiveColor.setMinimumWidth(65)
         
         
         
@@ -465,32 +313,30 @@ class HelloDocker(DockWidget):
         mainLayout.addLayout(layoutHorizMix)
         
         
-        global g_btn_mix;
-        g_btn_mix = QPushButton("Mix color", mainWidget)
-        g_btn_mix.setCheckable(True)
-        layoutHorizMix.addWidget(g_btn_mix)
-        g_btn_mix.clicked.connect(self.manualMixColorButtonClicked)
-        g_btn_mix.setMinimumHeight(60)
-        font = g_btn_mix.font()
+        
+        g.g_btn_mix = QPushButton("Mix color", mainWidget)
+        g.g_btn_mix.setCheckable(True)
+        layoutHorizMix.addWidget(g.g.g_btn_mix)
+        g.g_btn_mix.clicked.connect(self.manualMixColorButtonClicked)
+        g.g_btn_mix.setMinimumHeight(60)
+        font = g.g.g_btn_mix.font()
         font.setPixelSize(15)
-        g_btn_mix.setFont(font)
+        g.g.g_btn_mix.setFont(font)
         
         
         
         
         
-        global g_dial_mix
-        global g_how_much_canvas_to_pick
-        g_dial_mix = QDial(mainWidget)
-        g_dial_mix.setToolTip("Mix level")
-        layoutHorizMix.addWidget(g_dial_mix)
-        g_dial_mix.setWrapping(False)
-        g_dial_mix.setMinimumHeight(60)
+        g.g_dial_mix = QDial(mainWidget)
+        g.g_dial_mix.setToolTip("Mix level")
+        layoutHorizMix.addWidget(g.g_dial_mix)
+        g.g_dial_mix.setWrapping(False)
+        g.g_dial_mix.setMinimumHeight(60)
         
-        val099 =  round(g_how_much_canvas_to_pick * 100.0) - 1
-        g_dial_mix.setValue(val099)
+        val099 =  round(g.g_how_much_canvas_to_pick * 100.0) - 1
+        g.g_dial_mix.setValue(val099)
                 
-        g_dial_mix.valueChanged.connect(self.mixLevelValueChanged)
+        g.g_dial_mix.valueChanged.connect(self.mixLevelValueChanged)
         
         
         
@@ -505,34 +351,32 @@ class HelloDocker(DockWidget):
         
         
         # auto-mix button
-        global g_btn_auto_mix 
         
-        g_btn_auto_mix = QPushButton("Auto-mix color", mainWidget)
-        g_btn_auto_mix.setCheckable(True)
-        layoutHorizAutoMix.addWidget(g_btn_auto_mix)
-        g_btn_auto_mix.clicked.connect(toggleAutoMixing)
-        g_btn_auto_mix.setMinimumHeight(60)
         
-        font = g_btn_auto_mix.font()
+        g.g_btn_auto_mix = QPushButton("Auto-mix color", mainWidget)
+        g.g_btn_auto_mix.setCheckable(True)
+        layoutHorizAutoMix.addWidget(g.g_btn_auto_mix)
+        g.g_btn_auto_mix.clicked.connect(toggleAutoMixing)
+        g.g_btn_auto_mix.setMinimumHeight(60)
+        
+        font = g.g_btn_auto_mix.font()
         font.setPixelSize(15)
-        g_btn_auto_mix.setFont(font)
+        g.g_btn_auto_mix.setFont(font)
         
         
         
         # auto-mix level
-        global g_dial_auto_mix_level
-        global g_auto_mix__how_much_canvas_to_pick
         
-        g_dial_auto_mix_level = QDial(mainWidget)
-        g_dial_auto_mix_level.setToolTip("Auto-mix level")
-        layoutHorizAutoMix.addWidget(g_dial_auto_mix_level)
-        g_dial_auto_mix_level.setWrapping(False)
-        g_dial_auto_mix_level.setMinimumHeight(60)
+        g.g_dial_auto_mix_level = QDial(mainWidget)
+        g.g_dial_auto_mix_level.setToolTip("Auto-mix level")
+        layoutHorizAutoMix.addWidget(g.g_dial_auto_mix_level)
+        g.g_dial_auto_mix_level.setWrapping(False)
+        g.g_dial_auto_mix_level.setMinimumHeight(60)
         
-        val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-        g_dial_auto_mix_level.setValue(val099)
+        val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+        g.g_dial_auto_mix_level.setValue(val099)
         
-        g_dial_auto_mix_level.valueChanged.connect(self.autoMixLevelValueChanged)
+        g.g_dial_auto_mix_level.valueChanged.connect(self.autoMixLevelValueChanged)
         
         
         
@@ -552,8 +396,7 @@ class HelloDocker(DockWidget):
         
         
         self.buttonPickColor.clicked.connect(self.pickColorClicked)
-        global g_btn_pick_color
-        g_btn_pick_color = self.buttonPickColor
+        g.g_btn_pick_color = self.buttonPickColor
         
         
         
@@ -569,24 +412,21 @@ class HelloDocker(DockWidget):
     def autoMixLevelValueChanged(self, level):
         #print(f"autoMixLevelValueChanged {level}")
         
-        global g_auto_mix__how_much_canvas_to_pick
         
-        g_auto_mix__how_much_canvas_to_pick = ( level  + 1.0) / 100.0
+        g.g_auto_mix__how_much_canvas_to_pick = ( level  + 1.0) / 100.0
         
                 
-        Krita.instance().writeSetting("colorPlus", "g_auto_mix__how_much_canvas_to_pick", str(g_auto_mix__how_much_canvas_to_pick))
+        Krita.instance().writeSetting("colorPlus", "g.g_auto_mix__how_much_canvas_to_pick", str(g.g_auto_mix__how_much_canvas_to_pick))
         
-        quickMessage(f"Changed auto-mixing to {round(g_auto_mix__how_much_canvas_to_pick * 100.0)} %")
+        quickMessage(f"Changed auto-mixing to {round(g.g_auto_mix__how_much_canvas_to_pick * 100.0)} %")
 
 
     
     def manualMixColorButtonClicked(self):
     
-        global g_mixing_color
-        global g_btn_mix
         
-        if g_btn_mix.isChecked():
-            g_mixing_color = True
+        if g.g_btn_mix.isChecked():
+            g.g_mixing.g_color = True
             
             # I create the layer even if I'm in single layer mode. Then I will either delete it or clear it
             newLa = dryPaper(showMessage = False)
@@ -595,31 +435,29 @@ class HelloDocker(DockWidget):
             
             
         else:
-            g_mixing_color = False
+            g.g_mixing.g_color = False
         
  
     def mixLevelValueChanged(self, level):
     
-        global g_how_much_canvas_to_pick
         
-        g_how_much_canvas_to_pick = ( level  + 1.0) / 100.0
+        g.g_how_much_canvas_to_pick = ( level  + 1.0) / 100.0
         
                 
-        Krita.instance().writeSetting("colorPlus", "g_how_much_canvas_to_pick", str(g_how_much_canvas_to_pick))
+        Krita.instance().writeSetting("colorPlus", "g.g_how_much_canvas_to_pick", str(g.g_how_much_canvas_to_pick))
         
-        quickMessage(f"Changed mixing level to {round(g_how_much_canvas_to_pick * 100.0)} %")
+        quickMessage(f"Changed mixing level to {round(g.g_how_much_canvas_to_pick * 100.0)} %")
 
  
     def pickColorClicked(self):
     
     
-        global g_picking_color
         
         if self.buttonPickColor.isChecked():
-            g_picking_color = True # I start layer picking mode
+            g.g_picking.g_color = True # I start layer picking mode
             
-            # global g_multi_layer_mode
-            # if g_multi_layer_mode:
+            # global g.g_multi_layer_mode
+            # if g.g_multi_layer_mode:
             
             # i need to create a layer because I can then exclude the stroke just drawn and delete it.
             newLa = dryPaper(showMessage = False)  # I create the layer, but if not multi-layer-mode I will then delete it when the color is actually picked
@@ -634,23 +472,19 @@ class HelloDocker(DockWidget):
             print(f"color model  = {document.colorModel()}")  #     RGBA
             
             if document is not None:
-                global g_auto_reset_opacity_on_pick_level
-                global g_auto_reset_opacity_on_pick
-                global g_temp_switched_to_100_previous_opac
-                global g_multi_layer_mode
-                if  g_temp_switched_to_100_previous_opac is None and g_multi_layer_mode: # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
+                if  g.g_temp_switched_to_100_previous_opac is None and g.g_multi_layer_mode: # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
                     
                     
                                             
-                    if g_auto_reset_opacity_on_pick == 1 :
-                        newLa.setOpacity(int( g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) # bm_djiwejdie
+                    if g.g_auto_reset_opacity_on_pick == 1 :
+                        newLa.setOpacity(int( g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) # bm_djiwejdie
                         
                         document.refreshProjection()
                 
             
             
         else:
-            g_picking_color = False
+            g.g_picking.g_color = False
         
         
     def canvasChanged(self, canvas):
@@ -794,7 +628,6 @@ def getColorUnderCursorOrAtPos( forcedPos = None):
 
 def dryPaper( showMessage = True):
                 
-                global g_blur_on_dry
                 
                 
                 
@@ -807,7 +640,7 @@ def dryPaper( showMessage = True):
                 else:
                     activeLayer = currentDoc.activeNode()
                     
-                    if g_blur_on_dry:
+                    if g.g_blur_on_dry:
                         application.action('selectopaque').trigger()
                         currentDoc.waitForDone () # action needs to finish before continuing
                         selectionStroke = currentDoc.selection()
@@ -839,12 +672,12 @@ def dryPaper( showMessage = True):
                             
                             parentNode.addChildNode(newLa, None)
                             
-                            global g_set_spectral_blend_mode_when_creating_layer
-                            if g_set_spectral_blend_mode_when_creating_layer:
+
+                            if g.g_set_spectral_blend_mode_when_creating.g_layer:
                                 #print("setting over spectral")
                                 newLa.setBlendingMode("over spectral");
                             
-                            if g_blur_on_dry:
+                            if g.g_blur_on_dry:
                                 # al layer precedente ad activeLayer, applica il blur
                                 for layerPrima in parentNode.childNodes()[ : -2]:
                                     
@@ -878,8 +711,8 @@ def dryPaper( showMessage = True):
                                 currentDoc.setSelection(None)
                                 #currentDoc.setSelection(None)
                             
-                            global g_opacity_decided_for_layer
-                            g_opacity_decided_for_layer = False
+
+                            g.g_opacity_decided_for_layer = False
                             
                             
                             
@@ -921,12 +754,10 @@ def node_to_index(node, model):
     return index
 
 def update_label_from_virtual_color():
-    global g_virtual_fg_color_rgb
-    global lblActiveColor
-    r = g_virtual_fg_color_rgb.r
-    g = g_virtual_fg_color_rgb.g
-    b = g_virtual_fg_color_rgb.b
-    lblActiveColor.setStyleSheet(f"background-color: rgb({b}, {g}, {r})")
+    r = g.g_virtual_fg.g_color_rgb.r
+    g = g.g_virtual_fg.g_color_rgb.g
+    b = g.g_virtual_fg.g_color_rgb.b
+    g.lblActiveColor.setStyleSheet(f"background-color: rgb({b}, {g}, {r})")
 
 def index_to_node(index, document):
     if not index.isValid():
@@ -953,30 +784,10 @@ class AutoFocusSetter(QObject):
     # eventFilter = bool(QObject obj, QEvent event)
 
     def eventFilter(self, obj, event):
-        global g_auto_mix_paused
-        global g_color_changed_from_selector_probably
-        global g_auto_mix_paused
-        global g_auto_mix_enabled
         
-        global g_virtual_fg_color_rgb
-        global g_color_changed_from_selector_probably
-        global g_virtual_color_used_last_rgb
-        global g_dirty_brush_currently_on
-        global g_dirty_brush_overall_enabled
-        global g_color_on_down_dirty_brush
-        global g_auto_mixing_just_once_now_on
-        global g_auto_mixing_just_once_logic
-        global g_auto_dry_each_stroke
-        global g_last_coord_mouse_up
-        global g_last_coord_mouse_down
-        global g_diminishing_opacity
-        global g_auto_mix__how_much_canvas_to_pick
-        global g_dial_auto_mix_level
-        global g_layer_is_dirty
         
-        global event_lookup
         
-        # print(f"event {event_lookup.get(str(event.type()), 'sconosciuto')}")
+        # print(f"event {g.event_lookup.get(str(event.type()), 'sconosciuto')}")
         
         
         
@@ -1013,22 +824,22 @@ class AutoFocusSetter(QObject):
                 
                 # if the color has just been changed manually, create a new layer
             
-                global g_layer_is_dirty
+                global g.g_layer_is_dirty
                 
-                if g_color_changed_from_selector_probably:
+                if g.g_color_changed_from_selector_probably:
                 
                     curLayerId = Krita.instance().activeDocument().activeNode().uniqueId()
                     # print (f"debug - color changed probably. curnode =  {curLayerId}")
-                    # pprint.pprint(g_layer_is_dirty)
+                    # pprint.pprint(g.g_layer_is_dirty)
                     
-                    if(curLayerId in g_layer_is_dirty ):  # if cur layer is dirty
+                    if(curLayerId in g.g_layer_is_dirty ):  # if cur layer is dirty
                         l_color_changed_from_selector = True
                     else:
                         l_color_changed_from_selector = False
                         
                     # questo era bacato! a volte era uguale. lo commento. così crea layer anche se esco e rientro dal canvas, ma può essere comodo invece che premere D per rafforzare.
                     # TODO aggiungi controllo "se il layer attuale è dirty"
-                    # if g_virtual_fg_color_rgb.equals(g_virtual_color_used_last_rgb):
+                    # if g.g_virtual_fg.g_color_rgb.equals(g.g_virtual_color_used_last_rgb):
                         # l_color_changed_from_selector = False
                     # else:
                         # l_color_changed_from_selector = True
@@ -1037,53 +848,53 @@ class AutoFocusSetter(QObject):
                     
                     
                 #print ("debug 1")
-                if not isAlwaysOnTop and  l_color_changed_from_selector and (not g_auto_mix_enabled or g_auto_mix_paused) and g_multi_layer_mode:
+                if not isAlwaysOnTop and  l_color_changed_from_selector and (not g.g_auto_mix_enabled or g.g_auto_mix_paused) and g.g_multi_layer_mode:
                 
                         # print ("debug 2 creating layer")
                         newLa = dryPaper(False)
                         
                         
                         # reenable dirty brush
-                        global g_dirty_brush_currently_on
-                        global g_dirty_brush_overall_enabled
+                        global g.g_dirty_brush_currently_on
+                        global g.g_dirty_brush_overall_enabled
                         
-                        if g_dirty_brush_overall_enabled:
-                            g_dirty_brush_currently_on = True
+                        if g.g_dirty_brush_overall_enabled:
+                            g.g_dirty_brush_currently_on = True
                         
                         
                         
                         
                         #devo anche resettare opacità di default
                        
-                        global g_auto_reset_opacity_on_pick_level
-                        global g_auto_reset_opacity_on_pick
+                        global g.g_auto_reset_opacity_on_pick_level
+                        global g.g_auto_reset_opacity_on_pick
             
                         
                 
                 
                 
                         document = Krita.instance().activeDocument()
-                        if g_auto_reset_opacity_on_pick == 1 and  document is not None :
-                            newLa.setOpacity(int (g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) 
+                        if g.g_auto_reset_opacity_on_pick == 1 and  document is not None :
+                            newLa.setOpacity(int (g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) 
                     
                             document.refreshProjection()
             
             
             
-                        g_color_changed_from_selector_probably = False
+                        g.g_color_changed_from_selector_probably = False
                 
                 
                         
-                        if g_diminishing_opacity:
-                            g_auto_mix__how_much_canvas_to_pick = 1.0
+                        if g.g_diminishing.g_opacity:
+                            g.g_auto_mix__how_much_canvas_to_pick = 1.0
                             
-                            val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                            g_dial_auto_mix_level.setValue(val099)
+                            val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+                            g.g_dial_auto_mix_level.setValue(val099)
         
                         
                 
-                if g_auto_mix_paused and not isAlwaysOnTop: #if I am entering a window that is not always on top (the part "and not isalwaysontop" is there to attemp to fix a bug: auto-mix sometimes stops pausing when you hover the color picker)
-                    g_auto_mix_paused = False
+                if g.g_auto_mix_paused and not isAlwaysOnTop: #if I am entering a window that is not always on top (the part "and not isalwaysontop" is there to attemp to fix a bug: auto-mix sometimes stops pausing when you hover the color picker)
+                    g.g_auto_mix_paused = False
                     
                 
                 #obj.activateWindow()
@@ -1125,8 +936,8 @@ class AutoFocusSetter(QObject):
                 else:
                     # mouse left a normal window. possibly it entered the color picker. So pause automixing, so you can use the picker
                     
-                    if g_auto_mix_enabled:
-                        g_auto_mix_paused = True
+                    if g.g_auto_mix_enabled:
+                        g.g_auto_mix_paused = True
                         #print("pausing automix")
                         resetForegroundColorToLastColorPicked()
                     else:
@@ -1155,12 +966,12 @@ class AutoFocusSetter(QObject):
             
             # print(f"debug mouse buttonreleased. cur layer ={ Krita.instance().activeDocument().activeNode().uniqueId()}")
             
-            global g_picking_color
-            global g_mixing_color
-            global g_last_coord_mouse_down
+            global g.g_picking.g_color
+            global g.g_mixing.g_color
+            global g.g_last_coord_mouse_down
             
             
-            if g_mixing_color:
+            if g.g_mixing.g_color:
             
                 app = Krita.instance()
             
@@ -1170,7 +981,7 @@ class AutoFocusSetter(QObject):
                 
                 
                 
-                if g_multi_layer_mode:
+                if g.g_multi_layer_mode:
                     # TODO dovrei cancellare il precedente layer, non il corrente. perché è un errore
                     mixFgColorWithBgColor_normalLogic( createLayer = False, deleteCurLayer = True, clearCurLayer = False)
                     
@@ -1181,12 +992,12 @@ class AutoFocusSetter(QObject):
                 app.activeDocument().activeNode().setVisible(True)
                 
                 
-                g_mixing_color = False
-                global g_btn_mix
-                g_btn_mix.setChecked(False)
+                g.g_mixing.g_color = False
+                global g.g_btn_mix
+                g.g_btn_mix.setChecked(False)
                 
                 return True # annulla l'evento, ma non funziona
-            elif g_picking_color:
+            elif g.g_picking.g_color:
                 # clear layer first, otherwise I pick the color just painted
                 app = Krita.instance()
                 
@@ -1195,16 +1006,16 @@ class AutoFocusSetter(QObject):
                 app.activeDocument().refreshProjection()
                 
                 # now,  pick color ignoring stroke just made (which is on its own layer) 
-                col = getColorUnderCursorOrAtPos(forcedPos = xyOfQpoint(g_last_coord_mouse_down )) 
+                col = getColorUnderCursorOrAtPos(forcedPos = xyOfQpoint(g.g_last_coord_mouse_down )) 
                 setFgColor(col)
-                g_virtual_fg_color_rgb  = col
-                g_picking_color = False
+                g.g_virtual_fg.g_color_rgb  = col
+                g.g_picking.g_color = False
                 
                 app.activeDocument().activeNode().setVisible(True)
                 
                 
                 # now I have to delete the stroke just made. normally I would just clear the layer. But if I'm in single layer mode I need to DELETE the layer
-                if g_multi_layer_mode:  # altrimenti non ho creato un nuovo layer
+                if g.g_multi_layer_mode:  # altrimenti non ho creato un nuovo layer
                     app.action('clear').trigger()
                     app.activeDocument().waitForDone () # action needs to finish before continuing  
                 else:
@@ -1212,8 +1023,8 @@ class AutoFocusSetter(QObject):
                     
                     
                 
-                global g_btn_pick_color
-                g_btn_pick_color.setChecked(False)
+                global g.g_btn_pick_color
+                g.g_btn_pick_color.setChecked(False)
                 
                 
                 # todo update layer opacity
@@ -1227,27 +1038,27 @@ class AutoFocusSetter(QObject):
                 
                 
 
-                if g_diminishing_opacity:
-                    g_auto_mix__how_much_canvas_to_pick = 1.0
+                if g.g_diminishing.g_opacity:
+                    g.g_auto_mix__how_much_canvas_to_pick = 1.0
                     
-                    val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                    g_dial_auto_mix_level.setValue(val099)
+                    val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+                    g.g_dial_auto_mix_level.setValue(val099)
 
                 return True # annulla l'evento, ma non funziona
                 
                 
             
-            g_last_coord_mouse_up = get_cursor_in_document_coords()
+            g.g_last_coord_mouse_up = get_cursor_in_document_coords()
             
             
             
             # remember layer is dirty
             
-            g_layer_is_dirty[ Krita.instance().activeDocument().activeNode().uniqueId()] = True
+            g.g_layer_is_dirty[ Krita.instance().activeDocument().activeNode().uniqueId()] = True
             #print(f"setting layer dirty {Krita.instance().activeDocument().activeNode().uniqueId()}")
             
             
-            if g_auto_dry_each_stroke and g_multi_layer_mode:
+            if g.g_auto_dry_each_stroke and g.g_multi_layer_mode:
                 newLa = dryPaper(showMessage = False)
             
             
@@ -1256,19 +1067,19 @@ class AutoFocusSetter(QObject):
             # uncomment this to have dirty brush =============== mouse released
             
             
-            if g_diminishing_opacity:
-                g_auto_mix__how_much_canvas_to_pick = g_auto_mix__how_much_canvas_to_pick * 0.9
+            if g.g_diminishing.g_opacity:
+                g.g_auto_mix__how_much_canvas_to_pick = g.g_auto_mix__how_much_canvas_to_pick * 0.9
                 
-                val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                g_dial_auto_mix_level.setValue(val099)
+                val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+                g.g_dial_auto_mix_level.setValue(val099)
         
                 
-                # if g_auto_mix__how_much_canvas_to_pick > 1.0:
-                    # g_auto_mix__how_much_canvas_to_pick = 1.0
+                # if g.g_auto_mix__how_much_canvas_to_pick > 1.0:
+                    # g.g_auto_mix__how_much_canvas_to_pick = 1.0
             
                                                     
             
-            # if g_diminishing_opacity:
+            # if g.g_diminishing.g_opacity:
             
                 # doc = Krita.instance().activeDocument()
 
@@ -1313,7 +1124,7 @@ class AutoFocusSetter(QObject):
                 # doc.setActiveBrushPreset(new_preset)
                                 
             
-            if g_dirty_brush_currently_on and g_dirty_brush_overall_enabled:
+            if g.g_dirty_brush_currently_on and g.g_dirty_brush_overall_enabled:
                 application = Krita.instance()
                 win = application.activeWindow()
                 if win is not None:
@@ -1321,8 +1132,8 @@ class AutoFocusSetter(QObject):
                     if  view is not None:
                     
                     
-                        global g_virtual_fg_color_rgb_previous_when_dirty_brush_on
-                        g_virtual_fg_color_rgb_previous_when_dirty_brush_on = g_virtual_fg_color_rgb.clone()
+                        global g.g_virtual_fg.g_color_rgb_previous_when_dirty_brush_on
+                        g.g_virtual_fg.g_color_rgb_previous_when_dirty_brush_on = g.g_virtual_fg.g_color_rgb.clone()
                         
                         
                         
@@ -1332,15 +1143,15 @@ class AutoFocusSetter(QObject):
                             
                         # fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
                         
-                        # global g_virtual_fg_color_rgb
-                        # g_virtual_fg_color_rgb = fg2
+                        # global g.g_virtual_fg.g_color_rgb
+                        # g.g_virtual_fg.g_color_rgb = fg2
                         
                         # non riesco aprendere il colore precedente
                         #bgColor = getColorUnderCursorOrAtPos(True) # skippo current layer altrimenti prende il fg attuale
                         
                         # average between color when mouse down and color when mouse up
                         
-                        bgColorAverage =  g_color_on_down_dirty_brush # bgColor.average( g_color_on_down_dirty_brush)
+                        bgColorAverage =  g.g_color_on_down_dirty_brush # bgColor.average( g.g_color_on_down_dirty_brush)
                         
                         
                         
@@ -1361,12 +1172,12 @@ class AutoFocusSetter(QObject):
                         
                
                         
-                        g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
+                        g.g_virtual_fg.g_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
                         update_label_from_virtual_color()
                             
                             
                             
-                        print (f"dirty brush: adding a bit of {bgColorAverage.toString()} setting {g_virtual_fg_color_rgb.toString()}")
+                        print (f"dirty brush: adding a bit of {bgColorAverage.toString()} setting {g.g_virtual_fg.g_color_rgb.toString()}")
         
         
         if event.type() == QEvent.MouseButtonPress:
@@ -1375,18 +1186,18 @@ class AutoFocusSetter(QObject):
                 
                 # col = getColorUnderCursorOrAtPos()
                 # setFgColor(col)
-                # g_picking_color = False
+                # g.g_picking.g_color = False
                 # return True # annulla l'evento
             
             
-            g_last_coord_mouse_down = get_cursor_in_document_coords()
+            g.g_last_coord_mouse_down = get_cursor_in_document_coords()
             
             
-            if g_auto_mixing_just_once_logic:
-                g_auto_mixing_just_once_now_on = False
+            if g.g_auto_mixing.g_just_once_logic:
+                g.g_auto_mixing.g_just_once_now_on = False
             
             
-            if g_dirty_brush_currently_on and g_dirty_brush_overall_enabled:
+            if g.g_dirty_brush_currently_on and g.g_dirty_brush_overall_enabled:
                 application = Krita.instance()
                 win = application.activeWindow()
                 if win is not None:
@@ -1397,13 +1208,13 @@ class AutoFocusSetter(QObject):
                             
                         # fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
                         
-                        # global g_virtual_fg_color_rgb
-                        # g_virtual_fg_color_rgb = fg2
+                        # global g.g_virtual_fg.g_color_rgb
+                        # g.g_virtual_fg.g_color_rgb = fg2
                         
                         
                         
                 
-                        # if g_dirty_brush_currently_on :
+                        # if g.g_dirty_brush_currently_on :
                                                             
                                 # currentDoc = application.activeDocument()
                                 # if currentDoc is not None:
@@ -1414,7 +1225,7 @@ class AutoFocusSetter(QObject):
                         
                         # in theory I should skip current layer because  I am deciding the correct color, so the color on the current layer is incorrect. but I can also try the other logic because then you can drag around color without getting dirty. 
                         # kind of like auto-mixing with 100 background pick.
-                        g_color_on_down_dirty_brush = getColorUnderCursorOrAtPos( skipCurrentLayer = False)
+                        g.g_color_on_down_dirty_brush = getColorUnderCursorOrAtPos( skipCurrentLayer = False)
                         
                         
             # uncomment this to have dirty brush ===============
@@ -1422,8 +1233,8 @@ class AutoFocusSetter(QObject):
             
             pass
             
-            # global g_opacity_decided_for_layer
-            # if not g_opacity_decided_for_layer:
+            # global g.g_opacity_decided_for_layer
+            # if not g.g_opacity_decided_for_layer:
                 # bgColor = getColorUnderCursorOrAtPosExceptCurrentLayer()
                 # application = Krita.instance()
                 # win = application.activeWindow()
@@ -1465,11 +1276,11 @@ class AutoFocusSetter(QObject):
                             # picked50 = False
                             
                             
-                            # global g_auto_opacity_max_distance
-                            # max_distance = g_auto_opacity_max_distance
+                            # global g.g_auto_opacity_max_distance
+                            # max_distance = g.g_auto_opacity_max_distance
                             
                             # # calcola curFg
-                            # if dist  <= g_auto_opacity_max_distance:
+                            # if dist  <= g.g_auto_opacity_max_distance:
                                 # #i colori sono molto vicini. fai 50%
                                 # quickMessage("colors very close. leaving same")
                                 # # curMul = 0.5
@@ -1498,7 +1309,7 @@ class AutoFocusSetter(QObject):
                                     
                                     # #print(f"iterando. mul  = {curMul}, dist  tra {curFg.toString()} e {fg2.toString()} = {curDist}. ")
                                     
-                                    # if curDist <= g_auto_opacity_max_distance:  
+                                    # if curDist <= g.g_auto_opacity_max_distance:  
                                         # break
                                         
                                     # curMul -= stepMul   
@@ -1529,11 +1340,11 @@ class AutoFocusSetter(QObject):
                             
                             
                             # # setto anche il virtual fg color al result del mix
-                            # global g_virtual_fg_color_rgb
-                            # g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
+                            # global g.g_virtual_fg.g_color_rgb
+                            # g.g_virtual_fg.g_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
                             
                             
-                            # g_opacity_decided_for_layer = True
+                            # g.g_opacity_decided_for_layer = True
                             
                             
                             # # messaggio
@@ -1548,8 +1359,8 @@ class AutoFocusSetter(QObject):
                             # # curDist = None
                             # # picked50 = False
                             
-                            # # global g_auto_opacity_max_distance
-                            # # max_distance = g_auto_opacity_max_distance
+                            # # global g.g_auto_opacity_max_distance
+                            # # max_distance = g.g_auto_opacity_max_distance
                             
                             # # # calcola curFg
                             # # if dist  <= max_distance:
@@ -1591,7 +1402,7 @@ class AutoFocusSetter(QObject):
                                 # # document.refreshProjection()           #altrimenti non si aggiorna    
                                 # # quickMessage(f"auto-opacity {round(curOp01 * 255)}")
                                 
-                            # # g_opacity_decided_for_layer = True
+                            # # g.g_opacity_decided_for_layer = True
                         
                     
                 
@@ -1637,14 +1448,14 @@ def QPointHash(qp):
     return f"{qp.x()}-{qp.y()}"
 
 def setFgColorEqualToColorOfLastStrokeAfterOpacityAdjust():
-    global g_last_coord_mouse_up
-    if g_last_coord_mouse_up is None:
-        print("error g_last_coord_mouse_up is none")
+    global g.g_last_coord_mouse_up
+    if g.g_last_coord_mouse_up is None:
+        print("error g.g_last_coord_mouse_up is none")
         
     else:
         fr = queue.Queue(0) # maxsize = means infinite
         
-        fr.put(xyOfQpoint( g_last_coord_mouse_up))
+        fr.put(xyOfQpoint( g.g_last_coord_mouse_up))
         visited = {}
         count = 0
         foundColors = []
@@ -1708,7 +1519,7 @@ def setFgColorEqualToColorOfLastStrokeAfterOpacityAdjust():
         
         newLa = dryPaper(False)
         
-        newLa.setOpacity(int(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) 
+        newLa.setOpacity(int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) 
                         
         application = Krita.instance()
         currentDoc = application.activeDocument()
@@ -1718,9 +1529,9 @@ def setFgColorEqualToColorOfLastStrokeAfterOpacityAdjust():
         
     
 def resetForegroundColorToLastColorPicked():
-                global g_virtual_fg_color_rgb
-                if g_virtual_fg_color_rgb is not None:
-                    setFgColor(g_virtual_fg_color_rgb)
+                global g.g_virtual_fg.g_color_rgb
+                if g.g_virtual_fg.g_color_rgb is not None:
+                    setFgColor(g.g_virtual_fg.g_color_rgb)
                     
                     # app = Krita.instance()
                     # win = app.activeWindow()
@@ -1733,14 +1544,14 @@ def resetForegroundColorToLastColorPicked():
                                      
                                      
                                 
-                                # comp[0] = (g_virtual_fg_color_rgb.r/255.0) 
-                                # comp[1] = (g_virtual_fg_color_rgb.g / 255.0)
-                                # comp[2] = (g_virtual_fg_color_rgb.b / 255.0) 
+                                # comp[0] = (g.g_virtual_fg.g_color_rgb.r/255.0) 
+                                # comp[1] = (g.g_virtual_fg.g_color_rgb.g / 255.0)
+                                # comp[2] = (g.g_virtual_fg.g_color_rgb.b / 255.0) 
                                 
                                 # fg.setComponents(comp)
                                 
                                 # view.setForeGroundColor(fg)
-                                # #print(f"color reset to {g_virtual_fg_color_rgb.toString()}")
+                                # #print(f"color reset to {g.g_virtual_fg.g_color_rgb.toString()}")
         
 class Dict2Class(object):
       
@@ -1884,10 +1695,10 @@ def get_q_canvas(q_view):
                         return child
 
 def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = False, deleteCurLayer = False):
-                global g_temp_switched_to_100_previous_opac
-                global g_dial_auto_mix_level
-                global g_auto_mix__how_much_canvas_to_pick
-                global g_diminishing_opacity
+                global g.g_temp_switched_to_100_previous_opac
+                global g.g_dial_auto_mix_level
+                global g.g_auto_mix__how_much_canvas_to_pick
+                global g.g_diminishing.g_opacity
                 
                 app = Krita.instance()
                 win = app.activeWindow()
@@ -1947,7 +1758,7 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                 # for curLayer in brothers:
                                                     # # If this is the current layer and it is transparent, I skip this layer, because I only want to pick from layers below it.  Why? Because you typically use the mix shortcut when the stroke you just made is wrong, and it needs to be more similar to the background layer. But then, you want to be able to click on the stroke you just did and pick the color BELOW it. 
                                                     # # the exception is if I've switched to single-layer mode, aka temp_switched_to_100_previous_opac
-                                                    # if curLayer.uniqueId() != document.activeNode().uniqueId() or curLayer.opacity() == 255 or g_temp_switched_to_100_previous_opac is not None: 
+                                                    # if curLayer.uniqueId() != document.activeNode().uniqueId() or curLayer.opacity() == 255 or g.g_temp_switched_to_100_previous_opac is not None: 
                                                     
                                                         # pixelBytes = curLayer.pixelData( int(round(doc_pos.x())), int(round(doc_pos.y())), 1, 1)
                                                         
@@ -1979,8 +1790,8 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                     comp = fg.components() 
                                                     
                                                     if len(comp ) == 4:    
-                                                        global g_how_much_canvas_to_pick
-                                                        canv = g_how_much_canvas_to_pick
+                                                        global g.g_how_much_canvas_to_pick
+                                                        canv = g.g_how_much_canvas_to_pick
                                                         
                                                         
                                                         # BEGIN mix color the old way (non spectral) 
@@ -2040,23 +1851,23 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                         
                                                         
                                                         # setto anche il virtual fg color al result del mix
-                                                        global g_virtual_fg_color_rgb
-                                                        g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
+                                                        global g.g_virtual_fg.g_color_rgb
+                                                        g.g_virtual_fg.g_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
                                                         update_label_from_virtual_color()
                                                         
                                                         
-                                                        if g_diminishing_opacity:
-                                                            g_auto_mix__how_much_canvas_to_pick = 1.0
+                                                        if g.g_diminishing.g_opacity:
+                                                            g.g_auto_mix__how_much_canvas_to_pick = 1.0
                                                             
-                                                            val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                                                            g_dial_auto_mix_level.setValue(val099)
+                                                            val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+                                                            g.g_dial_auto_mix_level.setValue(val099)
                                                         
                                                         quickMessage(f"Picked {round(canv * 100)}%  color from the canvas.")
                                                         
                                                         # 1) if I mixed because the color is wrong, i.e. I made a mistake, then erase the mistake                                                        
                                                         if clearCurLayer :
                                                         
-                                                            if g_multi_layer_mode:
+                                                            if g.g_multi_layer_mode:
                                                             
                                                                     app.action('selectopaque').trigger()
                                                                     document.waitForDone () # action needs to finish before continuing
@@ -2068,14 +1879,14 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                                     
                                                                     
                                                         # 2) if I didn't make a mistake, I just want to fade the current color, then create a new layer
-                                                        if createLayer and g_multi_layer_mode:
-                                                            if  g_temp_switched_to_100_previous_opac is None: # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
+                                                        if createLayer and g.g_multi_layer_mode:
+                                                            if  g.g_temp_switched_to_100_previous_opac is None: # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
                                                                 newLa = dryPaper(showMessage = False)
                                                                 
                                                                 # if active layer opacity < 70, set to 70
-                                                                global g_auto_reset_opacity_on_pick
-                                                                if g_auto_reset_opacity_on_pick == 1 and  document is not None :
-                                                                    newLa.setOpacity(int(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) 
+                                                                global g.g_auto_reset_opacity_on_pick
+                                                                if g.g_auto_reset_opacity_on_pick == 1 and  document is not None :
+                                                                    newLa.setOpacity(int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) 
                                                                     
                                                                     document.refreshProjection()
                                                             
@@ -2214,7 +2025,7 @@ class PluginState:
     
 
     
-global g_opacity_decided_for_layer
+global g.g_opacity_decided_for_layer
 
     
     
@@ -2291,60 +2102,60 @@ class MyExtension(Extension):
                 self.qdock = QDockWidget()
                 
                 
-                global g_multi_layer_mode
-                multi_layer_mode_str = Krita.instance().readSetting("colorPlus", "g_multi_layer_mode","1")                
-                g_multi_layer_mode = multi_layer_mode_str == "1"
+                global g.g_multi_layer_mode
+                multi_layer_mode_str = Krita.instance().readSetting("colorPlus", "g.g_multi_layer_mode","1")                
+                g.g_multi_layer_mode = multi_layer_mode_str == "1"
                 
                 
-                global g_auto_reset_opacity_on_pick_level 
+                global g.g_auto_reset_opacity_on_pick_level 
                 
-                g_auto_reset_opacity_on_pick_level = float(Krita.instance().readSetting("colorPlus", "g_auto_reset_opacity_on_pick_level","68.0"))
-                
-                
-                # global g_mix_auto_clears_cur_layer
-                # g_mix_auto_clears_cur_layer = Krita.instance().readSetting("colorPlus", "g_mix_auto_clears_cur_layer","1")
-                
-                global g_auto_mix__how_much_canvas_to_pick
-                g_auto_mix__how_much_canvas_to_pick = float(Krita.instance().readSetting("colorPlus", "g_auto_mix__how_much_canvas_to_pick","0.5"))
+                g.g_auto_reset_opacity_on_pick_level = float(Krita.instance().readSetting("colorPlus", "g.g_auto_reset_opacity_on_pick_level","68.0"))
                 
                 
+                # global g.g_mix_auto_clears_cur_layer
+                # g.g_mix_auto_clears_cur_layer = Krita.instance().readSetting("colorPlus", "g.g_mix_auto_clears_cur_layer","1")
+                
+                global g.g_auto_mix__how_much_canvas_to_pick
+                g.g_auto_mix__how_much_canvas_to_pick = float(Krita.instance().readSetting("colorPlus", "g.g_auto_mix__how_much_canvas_to_pick","0.5"))
                 
                 
-                global g_auto_mixing_target_distance
-                g_auto_mixing_target_distance = float(Krita.instance().readSetting("colorPlus", "g_auto_mixing_target_distance","40.0"))
                 
                 
-                global g_auto_reset_opacity_on_pick
+                global g.g_auto_mixing.g_target_distance
+                g.g_auto_mixing.g_target_distance = float(Krita.instance().readSetting("colorPlus", "g.g_auto_mixing.g_target_distance","40.0"))
                 
-                g_auto_reset_opacity_on_pick = int(Krita.instance().readSetting("colorPlus", "g_auto_reset_opacity_on_pick","0"))
                 
-                strHowMuch = Krita.instance().readSetting("colorPlus", "g_how_much_canvas_to_pick","0.45")
-                global g_how_much_canvas_to_pick
-                g_how_much_canvas_to_pick = float(strHowMuch)
+                global g.g_auto_reset_opacity_on_pick
                 
-                global g_auto_opacity_max_distance
-                g_auto_opacity_max_distance = int(Krita.instance().readSetting("colorPlus", "g_auto_opacity_max_distance","40"))
+                g.g_auto_reset_opacity_on_pick = int(Krita.instance().readSetting("colorPlus", "g.g_auto_reset_opacity_on_pick","0"))
+                
+                strHowMuch = Krita.instance().readSetting("colorPlus", "g.g_how_much_canvas_to_pick","0.45")
+                global g.g_how_much_canvas_to_pick
+                g.g_how_much_canvas_to_pick = float(strHowMuch)
+                
+                global g.g_auto_opacity_max_distance
+                g.g_auto_opacity_max_distance = int(Krita.instance().readSetting("colorPlus", "g.g_auto_opacity_max_distance","40"))
                 
                 # dev values , only read when timer is active
-                global g_virtual_fg_color_rgb
-                g_virtual_fg_color_rgb = None # di tipo rgb
+                global g.g_virtual_fg.g_color_rgb
+                g.g_virtual_fg.g_color_rgb = None # di tipo rgb
                 
-                global g_color_history_index # New
-                g_color_history_index = -1 # New
+                global g.g_color_history_index # New
+                g.g_color_history_index = -1 # New
                 
                 
-                self.g_auto_focus = Krita.instance().readSetting("colorPlus", "g_auto_focus", "true")
+                self.g.g_auto_focus = Krita.instance().readSetting("colorPlus", "g.g_auto_focus", "true")
                 
                 
                 self.mix_radius = 1 # pixel
                 
-                global g_temp_switched_to_100_previous_opac
-                g_temp_switched_to_100_previous_opac = None
+                global g.g_temp_switched_to_100_previous_opac
+                g.g_temp_switched_to_100_previous_opac = None
                 
-                global g_temp_switched_to_25_previous_opac
-                g_temp_switched_to_25_previous_opac = None
+                global g.g_temp_switched_to_25_previous_opac
+                g.g_temp_switched_to_25_previous_opac = None
                 
-                self.mixing_target_distance = 20.0
+                self.mixing.g_target_distance = 20.0
                 
                 self.correct_color_for_transparency = True
                 
@@ -2421,7 +2232,7 @@ class MyExtension(Extension):
                 if wi is not None:
                     subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
                     
-                    if self.g_auto_focus ==  "true":
+                    if self.g.g_auto_focus ==  "true":
                         for su in subwins:
                                 if su not in self.windows_with_autofocus:
                                     print(f"installing autofocus for window {su}")
@@ -2457,26 +2268,26 @@ class MyExtension(Extension):
 
         
         def onFgColorChanged(self):
-            # this is fired several times when the user changes a color via the color selector. So I can't add a layer here, because I would add hundreds of layers. So I don't do anything, but mark it dirty via g_color_changed_from_selector_probably.
-            global g_color_changed_from_selector_probably
+            # this is fired several times when the user changes a color via the color selector. So I can't add a layer here, because I would add hundreds of layers. So I don't do anything, but mark it dirty via g.g_color_changed_from_selector_probably.
+            global g.g_color_changed_from_selector_probably
             
-            global g_virtual_color_used_last_rgb
+            global g.g_virtual_color_used_last_rgb
             
             
             
             #capisci se è davvero cambiato, dato che questa callback è inaffidabile e viene chiamata anche se entro ed esco dal selector senza cliccare
-            g_color_changed_from_selector_probably = True
-            # if g_color_used_last_array is not None:
+            g.g_color_changed_from_selector_probably = True
+            # if g.g_color_used_last_array is not None:
                 # view  = Krita.instance().activeWindow().activeView()
                 # if view is not None:
                     # fg = view.foregroundColor()
                     # if fg is not None:
                         # comp = fg.components() 
                         # if comp is not None:
-                            # #if listEqual(comp, g_color_used_last_array):  # non funziona con automix
+                            # #if listEqual(comp, g.g_color_used_last_array):  # non funziona con automix
                             
                             # fgCol = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
-                            # if fgCol.equals(g_virtual_color_used_last_rgb):
+                            # if fgCol.equals(g.g_virtual_color_used_last_rgb):
                                 # print("current color is same")
                                 # pass
                             # else:
@@ -2493,13 +2304,13 @@ class MyExtension(Extension):
             
             
             
-            global g_auto_mix_enabled
-            global g_auto_mix_paused
-            global g_last_virtual_colors_used
-            global g_virtual_fg_color_rgb
-            global g_virtual_color_used_last_rgb
+            global g.g_auto_mix_enabled
+            global g.g_auto_mix_paused
+            global g.g_last_virtual_colors_used
+            global g.g_virtual_fg.g_color_rgb
+            global g.g_virtual_color_used_last_rgb
             
-            if not g_auto_mix_enabled or g_auto_mix_paused:  # otherwise it is the auto-mixing timer that changed the color. ignore
+            if not g.g_auto_mix_enabled or g.g_auto_mix_paused:  # otherwise it is the auto-mixing timer that changed the color. ignore
                 
                 # the color has been changed manually, not by auto-mix                
                     
@@ -2516,12 +2327,12 @@ class MyExtension(Extension):
                                 
 
                             
-                            g_virtual_fg_color_rgb = mergedColor #lo memorizzo
+                            g.g_virtual_fg.g_color_rgb = mergedColor #lo memorizzo
                             
                             update_label_from_virtual_color()
                             
                             
-                            #print(f"setting last_color_picked = {g_virtual_fg_color_rgb.toString()}")
+                            #print(f"setting last_color_picked = {g.g_virtual_fg.g_color_rgb.toString()}")
                         else:
                             print("err1")
                     else:
@@ -2532,7 +2343,7 @@ class MyExtension(Extension):
                     
                     pass # color changed by auto-mix
                     
-                    #print(f"fg color changed event ignored. paused = {g_auto_mix_paused}")
+                    #print(f"fg color changed event ignored. paused = {g.g_auto_mix_paused}")
                     
             
             
@@ -2802,13 +2613,13 @@ class MyExtension(Extension):
         
         def switchToLastColor(self):
                 """Switches color based on history, handling consecutive presses vs. first press after paint."""
-                global g_temp_switched_to_100_previous_opac
-                global g_virtual_fg_color_rgb
-                global g_last_virtual_colors_used
-                global g_color_history_index
+                global g.g_temp_switched_to_100_previous_opac
+                global g.g_virtual_fg.g_color_rgb
+                global g.g_last_virtual_colors_used
+                global g.g_color_history_index
 
                 print("\n--- switchToLastColor ---")
-                print(f"Before Switch: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
+                print(f"Before Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
                 try:
                         acView = Krita.instance().activeWindow().activeView()
@@ -2816,52 +2627,52 @@ class MyExtension(Extension):
                             print("  Abort: No active view.")
                             return
 
-                        num_colors = len(g_last_virtual_colors_used)
+                        num_colors = len(g.g_last_virtual_colors_used)
                         if num_colors < 2:
                             print("  Abort: Not enough colors in history.")
                             quickMessage("Not enough colors in history to switch.")
                             return
 
-                        original_index = g_color_history_index
+                        original_index = g.g_color_history_index
                         target_index = -1 # Default invalid index
 
                         # Determine target color based on whether this is the first switch or consecutive
                         if original_index == -1: # First switch since last paint
                             target_index = -2
-                            g_color_history_index = -2
-                            print(f"  First switch detected. Target index: {target_index}. New index: {g_color_history_index}")
+                            g.g_color_history_index = -2
+                            print(f"  First switch detected. Target index: {target_index}. New index: {g.g_color_history_index}")
                         else: # Consecutive switch without painting
                             target_index = original_index - 1
                             # Handle wrap-around
                             if target_index < -num_colors:
                                 target_index = -1 # Wrap back to the most recent color (List[-1])
-                            g_color_history_index = target_index # Update the global index
-                            print(f"  Consecutive switch detected. Decremented index: {g_color_history_index}. Target index: {target_index}")
+                            g.g_color_history_index = target_index # Update the global index
+                            print(f"  Consecutive switch detected. Decremented index: {g.g_color_history_index}. Target index: {target_index}")
 
-                        target_color = g_last_virtual_colors_used[target_index]
+                        target_color = g.g_last_virtual_colors_used[target_index]
                         print(f"  Target Color: {target_color.toString()} at index {target_index}")
 
                         # Update virtual color and Krita's foreground color
-                        g_virtual_fg_color_rgb = target_color.clone()
+                        g.g_virtual_fg.g_color_rgb = target_color.clone()
                         update_label_from_virtual_color()
 
                         col = acView.foregroundColor()
                         comp = col.components()
-                        comp[0] = (g_virtual_fg_color_rgb.r / 255.0)
-                        comp[1] = (g_virtual_fg_color_rgb.g / 255.0)
-                        comp[2] = (g_virtual_fg_color_rgb.b / 255.0)
+                        comp[0] = (g.g_virtual_fg.g_color_rgb.r / 255.0)
+                        comp[1] = (g.g_virtual_fg.g_color_rgb.g / 255.0)
+                        comp[2] = (g.g_virtual_fg.g_color_rgb.b / 255.0)
                         col.setComponents(comp)
                         acView.setForeGroundColor(col)
-                        print(f"  Set FG Color to: {g_virtual_fg_color_rgb.toString()}")
+                        print(f"  Set FG Color to: {g.g_virtual_fg.g_color_rgb.toString()}")
 
                         # DO NOT reorder the list.
-                        acView.showFloatingMessage(f"Switched color (History pos {g_color_history_index})", QIcon(), timeMessage, 1)
-                        print(f"After Switch: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
+                        acView.showFloatingMessage(f"Switched color (History pos {g.g_color_history_index})", QIcon(), timeMessage, 1)
+                        print(f"After Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
 
                         # --- Optional: Layer creation logic (kept from original) ---
-                        global g_auto_reset_opacity_on_pick
-                        global g_multi_layer_mode
+                        global g.g_auto_reset_opacity_on_pick
+                        global g.g_multi_layer_mode
 
                         document = acView.document()
                         if document is not None:
@@ -2869,18 +2680,18 @@ class MyExtension(Extension):
                             if activeNode is not None:
                                 parentNode = activeNode.parentNode()
                                 if parentNode is not None:
-                                    if g_temp_switched_to_100_previous_opac is None and g_multi_layer_mode:
+                                    if g.g_temp_switched_to_100_previous_opac is None and g.g_multi_layer_mode:
                                         newLa = dryPaper(showMessage=False)
-                                        if newLa is not None and g_auto_reset_opacity_on_pick == 1:
-                                            global g_auto_reset_opacity_on_pick_level
-                                            newLa.setOpacity(int(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
+                                        if newLa is not None and g.g_auto_reset_opacity_on_pick == 1:
+                                            global g.g_auto_reset_opacity_on_pick_level
+                                            newLa.setOpacity(int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
                                             document.refreshProjection()
                         # --- End Optional Layer Logic ---
 
                 except IndexError:
                      quickMessage("Error accessing color history (Index out of bounds).")
-                     g_color_history_index = -1 # Reset index on error
-                     print(f"IndexError in switchToLastColor (Index was {g_color_history_index}), resetting index to -1.")
+                     g.g_color_history_index = -1 # Reset index on error
+                     print(f"IndexError in switchToLastColor (Index was {g.g_color_history_index}), resetting index to -1.")
                      import traceback
                      traceback.print_exc()
                 except Exception as e:
@@ -2889,7 +2700,7 @@ class MyExtension(Extension):
                         print(f"Error in switchToLastColor: {e}")
                         import traceback
                         traceback.print_exc()
-                        g_color_history_index = -1 # Reset index on other errors too
+                        g.g_color_history_index = -1 # Reset index on other errors too
                         print("Resetting index to -1 due to exception.")
                 except Exception as e:
                                 acView.showFloatingMessage(f"error {e}.", QIcon(), timeMessage * 2, 1)
@@ -2900,15 +2711,15 @@ class MyExtension(Extension):
 
 
         def toggle_100_opac(self):
-            global g_temp_switched_to_100_previous_opac
-            global g_temp_switched_to_25_previous_opac
+            global g.g_temp_switched_to_100_previous_opac
+            global g.g_temp_switched_to_25_previous_opac
             application = Krita.instance()
             currentDoc = application.activeDocument()
             if currentDoc is not None:
                 activeLayer = currentDoc.activeNode()
                 curOpac = activeLayer.opacity()
                 
-                if g_temp_switched_to_100_previous_opac is None:
+                if g.g_temp_switched_to_100_previous_opac is None:
                     newLa = dryPaper(False)
                     
                     activeLayer = newLa
@@ -2916,11 +2727,11 @@ class MyExtension(Extension):
                     # currentDoc.waitForDone()
                     # activeLayer = currentDoc.activeNode()
                     
-                    if g_temp_switched_to_25_previous_opac is not None:
-                        g_temp_switched_to_100_previous_opac = g_temp_switched_to_25_previous_opac
-                        g_temp_switched_to_25_previous_opac = None
+                    if g.g_temp_switched_to_25_previous_opac is not None:
+                        g.g_temp_switched_to_100_previous_opac = g.g_temp_switched_to_25_previous_opac
+                        g.g_temp_switched_to_25_previous_opac = None
                     else:
-                        g_temp_switched_to_100_previous_opac = activeLayer.opacity()
+                        g.g_temp_switched_to_100_previous_opac = activeLayer.opacity()
                         
                     
                     activeLayer.setOpacity(255)
@@ -2936,39 +2747,39 @@ class MyExtension(Extension):
                     
                     
                     
-                    quickMessage(f"Temporarily set 100% opacity. Press again to restore. debug. mix-paused = {g_auto_mix_paused}")
+                    quickMessage(f"Temporarily set 100% opacity. Press again to restore. debug. mix-paused = {g.g_auto_mix_paused}")
                 else:
                     newLa = dryPaper(False)
                     
                     # currentDoc = application.activeDocument()
                     activeLayer = newLa #currentDoc.activeNode()
-                    activeLayer.setOpacity(g_temp_switched_to_100_previous_opac)
+                    activeLayer.setOpacity(g.g_temp_switched_to_100_previous_opac)
                     
                     
-                    quickMessage(f"Restored {round (g_temp_switched_to_100_previous_opac * 100.0 / 255.0)}  opacity. debug. mix-paused = {g_auto_mix_paused}")
+                    quickMessage(f"Restored {round (g.g_temp_switched_to_100_previous_opac * 100.0 / 255.0)}  opacity. debug. mix-paused = {g.g_auto_mix_paused}")
                     
                     # view  = Krita.instance().activeWindow().activeView()
                     # view.setPaintingOpacity(1.0)
                     
-                    g_temp_switched_to_100_previous_opac = None
+                    g.g_temp_switched_to_100_previous_opac = None
         
         def toggle_25_opac(self):
-            global g_temp_switched_to_100_previous_opac
-            global g_temp_switched_to_25_previous_opac
+            global g.g_temp_switched_to_100_previous_opac
+            global g.g_temp_switched_to_25_previous_opac
             application = Krita.instance()
             currentDoc = application.activeDocument()
             if currentDoc is not None:
                 activeLayer = currentDoc.activeNode()
                 curOpac = activeLayer.opacity()
                 
-                if g_temp_switched_to_25_previous_opac is None:
+                if g.g_temp_switched_to_25_previous_opac is None:
                     activeLayer = dryPaper(False)
                     
-                    if g_temp_switched_to_100_previous_opac is not None:
-                        g_temp_switched_to_25_previous_opac = g_temp_switched_to_100_previous_opac
-                        g_temp_switched_to_100_previous_opac = None
+                    if g.g_temp_switched_to_100_previous_opac is not None:
+                        g.g_temp_switched_to_25_previous_opac = g.g_temp_switched_to_100_previous_opac
+                        g.g_temp_switched_to_100_previous_opac = None
                     else:
-                        g_temp_switched_to_25_previous_opac = activeLayer.opacity()
+                        g.g_temp_switched_to_25_previous_opac = activeLayer.opacity()
                     
                     activeLayer.setOpacity(int(25.0 * 255.0 / 100.0))
                     
@@ -2976,12 +2787,12 @@ class MyExtension(Extension):
                     quickMessage(f"Temporarily set 25% opacity. Press again to restore.")
                 else:
                     activeLayer = dryPaper(False)
-                    activeLayer.setOpacity(g_temp_switched_to_25_previous_opac)
+                    activeLayer.setOpacity(g.g_temp_switched_to_25_previous_opac)
                     
                     
-                    quickMessage(f"Restored {round (g_temp_switched_to_25_previous_opac * 100.0 / 255.0)}  opacity")
+                    quickMessage(f"Restored {round (g.g_temp_switched_to_25_previous_opac * 100.0 / 255.0)}  opacity")
                     
-                    g_temp_switched_to_25_previous_opac = None
+                    g.g_temp_switched_to_25_previous_opac = None
                 
                 
             
@@ -2991,57 +2802,57 @@ class MyExtension(Extension):
                 print(f"\n--- _on_history_was_made (Stroke {self.counter}) ---")
                 try:
                     # Get globals
-                    global g_virtual_fg_color_rgb
-                    global g_last_virtual_colors_used
-                    global g_virtual_color_used_last_rgb
-                    global g_color_history_index # Need to reset this
+                    global g.g_virtual_fg.g_color_rgb
+                    global g.g_last_virtual_colors_used
+                    global g.g_virtual_color_used_last_rgb
+                    global g.g_color_history_index # Need to reset this
 
-                    stroke_color = g_virtual_fg_color_rgb
-                    print(f"  Stroke Color (g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
-                    print(f"  Before Update: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
+                    stroke_color = g.g_virtual_fg.g_color_rgb
+                    print(f"  Stroke Color (g.g_virtual_fg.g_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
+                    print(f"  Before Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
                     if stroke_color is not None:
                         stroke_color_clone = stroke_color.clone()
-                        num_colors = len(g_last_virtual_colors_used)
+                        num_colors = len(g.g_last_virtual_colors_used)
                         reset_index_needed = True # Assume we need to reset unless color is same as last
 
                         if num_colors > 0:
-                            last_in_history = g_last_virtual_colors_used[-1]
+                            last_in_history = g.g_last_virtual_colors_used[-1]
                             print(f"  Comparing stroke color {stroke_color_clone.toString()} with last in history {last_in_history.toString()}")
 
                             if last_in_history.equals(stroke_color_clone):
                                 print("  Color is same as last in history. No list change needed.")
                                 # No need to add, but still reset index
-                            elif num_colors > 1 and g_last_virtual_colors_used[-2].equals(stroke_color_clone):
+                            elif num_colors > 1 and g.g_last_virtual_colors_used[-2].equals(stroke_color_clone):
                                 # Painted with the second-to-last color (e.g., switched A->B, painted A)
                                 # Swap last two to make A the most recent: [..., C, B, A] -> [..., C, A, B]
                                 print(f"  Color matches second-to-last. Swapping last two elements.")
-                                temp = g_last_virtual_colors_used[-1]
-                                g_last_virtual_colors_used[-1] = g_last_virtual_colors_used[-2]
-                                g_last_virtual_colors_used[-2] = temp
+                                temp = g.g_last_virtual_colors_used[-1]
+                                g.g_last_virtual_colors_used[-1] = g.g_last_virtual_colors_used[-2]
+                                g.g_last_virtual_colors_used[-2] = temp
                             else:
                                 # Genuinely new color or reusing one further back
                                 print(f"  Adding new/different color {stroke_color_clone.toString()} to history.")
-                                g_last_virtual_colors_used.append(stroke_color_clone)
+                                g.g_last_virtual_colors_used.append(stroke_color_clone)
                                 # Trim list
                                 max_history = 5
-                                if len(g_last_virtual_colors_used) > max_history:
-                                    g_last_virtual_colors_used = g_last_virtual_colors_used[-max_history:]
+                                if len(g.g_last_virtual_colors_used) > max_history:
+                                    g.g_last_virtual_colors_used = g.g_last_virtual_colors_used[-max_history:]
                                     print(f"  History trimmed to {max_history} items.")
                         else:
                              # First color ever added
                              print(f"  Adding first color {stroke_color_clone.toString()} to history.")
-                             g_last_virtual_colors_used.append(stroke_color_clone)
+                             g.g_last_virtual_colors_used.append(stroke_color_clone)
 
                         # Reset index if a stroke occurred (even if color wasn't added/swapped)
                         if reset_index_needed:
-                             g_color_history_index = -1
+                             g.g_color_history_index = -1
                              print("  Reset color history index to -1.")
 
 
                     # Update the absolute last color tracker (always, inside try)
-                    g_virtual_color_used_last_rgb = stroke_color
-                    print(f"  After Update: Index = {g_color_history_index}, History = {[c.toString() for c in g_last_virtual_colors_used]}")
+                    g.g_virtual_color_used_last_rgb = stroke_color
+                    print(f"  After Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
                 except Exception as e:
                     # Correctly indented except block
@@ -3154,7 +2965,7 @@ class MyExtension(Extension):
                                                 picked50 = False
                                                 
                                                 # calcola curFg
-                                                if dist  <= self.mixing_target_distance:
+                                                if dist  <= self.mixing.g_target_distance:
                                                     #i colori sono molto vicini. fai 50%
                                                     curMul = 0.5
                                                     curFg = rgb( fg2.r * curMul + bgColor.r * (1.0 - curMul),
@@ -3181,7 +2992,7 @@ class MyExtension(Extension):
                                                         
                                                         print(f"iterando. mul  = {curMul}, dist  tra {curFg.toString()} e {fg2.toString()} = {curDist}. ")
                                                         
-                                                        if curDist <= self.mixing_target_distance:  
+                                                        if curDist <= self.mixing.g_target_distance:  
                                                             break
                                                             
                                                         curMul += stepMul   
@@ -3208,8 +3019,8 @@ class MyExtension(Extension):
                                                 
                                                 
                                                 # setto anche il virtual fg color al result del mix
-                                                global g_virtual_fg_color_rgb
-                                                g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
+                                                global g.g_virtual_fg.g_color_rgb
+                                                g.g_virtual_fg.g_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
                                                 update_label_from_virtual_color()
                                                 
                                                 
@@ -3221,22 +3032,22 @@ class MyExtension(Extension):
         
         def acceptCurrentColorAndStopDirty(self, clearCurLayer = True):
             
-                global g_temp_switched_to_100_previous_opac
-                global g_dirty_brush_currently_on
-                global g_dirty_brush_overall_enabled
-                global g_virtual_fg_color_rgb_previous_when_dirty_brush_on
+                global g.g_temp_switched_to_100_previous_opac
+                global g.g_dirty_brush_currently_on
+                global g.g_dirty_brush_overall_enabled
+                global g.g_virtual_fg.g_color_rgb_previous_when_dirty_brush_on
                 
-                if g_dirty_brush_overall_enabled:
-                    g_dirty_brush_currently_on = False
+                if g.g_dirty_brush_overall_enabled:
+                    g.g_dirty_brush_currently_on = False
                 
                 
                 # reset previous color, because the dirty brush has already changed items
-                if g_dirty_brush_overall_enabled:
-                    setFgColor(g_virtual_fg_color_rgb_previous_when_dirty_brush_on)
+                if g.g_dirty_brush_overall_enabled:
+                    setFgColor(g.g_virtual_fg.g_color_rgb_previous_when_dirty_brush_on)
                 
                 
                 
-                if clearCurLayer and  g_temp_switched_to_100_previous_opac is None:
+                if clearCurLayer and  g.g_temp_switched_to_100_previous_opac is None:
                     app = Krita.instance()
                     win = app.activeWindow()
                     if win is not None:
@@ -3276,13 +3087,13 @@ class MyExtension(Extension):
                 
                 
         def mixOnTimer(self):
-                global g_auto_mix_enabled
+                global g.g_auto_mix_enabled
                 # print("timer 1")
-                global g_virtual_fg_color_rgb
-                global g_auto_mix_paused
-                global g_auto_mix_ignore_current_layer
+                global g.g_virtual_fg.g_color_rgb
+                global g.g_auto_mix_paused
+                global g.g_auto_mix_ignore_current_layer
                 
-                if g_virtual_fg_color_rgb is None or not g_auto_mix_enabled  or g_auto_mix_paused or (g_auto_mixing_just_once_logic and not g_auto_mixing_just_once_now_on):
+                if g.g_virtual_fg.g_color_rgb is None or not g.g_auto_mix_enabled  or g.g_auto_mix_paused or (g.g_auto_mixing.g_just_once_logic and not g.g_auto_mixing.g_just_once_now_on):
                         return
                         
                 # print("timer 2")        
@@ -3366,7 +3177,7 @@ class MyExtension(Extension):
                                                         
                                                         
                                                         # # important choice: skip the fg layer or not? I f you don't skip the curent layer, if you click on the previous stroke it adds to it. The problem is that you can drag the color along.
-                                                        # if curLayer.uniqueId() != document.activeNode().uniqueId()  or  not g_auto_mix_ignore_current_layer: 
+                                                        # if curLayer.uniqueId() != document.activeNode().uniqueId()  or  not g.g_auto_mix_ignore_current_layer: 
                                                             
                                                             # self.pixelBytes = curLayer.pixelData(pos.x, pos.y, 1, 1)
                                                             
@@ -3409,11 +3220,11 @@ class MyExtension(Extension):
                                                 fg = view.foregroundColor() 
                                                 comp = fg.components() 
                                                 
-                                                #global g_auto_mix_snap_distance
-                                                global g_auto_mixing_uses_distance_logic
-                                                global g_auto_mix__how_much_canvas_to_pick
+                                                #global g.g_auto_mix_snap_distance
+                                                global g.g_auto_mixing.g_uses_distance_logic
+                                                global g.g_auto_mix__how_much_canvas_to_pick
                                                 
-                                                if g_auto_mixing_uses_distance_logic:
+                                                if g.g_auto_mixing.g_uses_distance_logic:
                                                 
                                                                                 
                                                                                 
@@ -3422,22 +3233,22 @@ class MyExtension(Extension):
                                                             
                                                         # setto il fg color uguale a merged color (cioè bg color) mischiato con l'ultimo colore memorizzato
                                                         
-                                                        fg2 = g_virtual_fg_color_rgb # rgbOfManagedColor(fg) # valori da 0 a 255
+                                                        fg2 = g.g_virtual_fg.g_color_rgb # rgbOfManagedColor(fg) # valori da 0 a 255
                                                         #fg2.print("fg2")
                                                         
                                                         comp = fg.components() 
                                                         #print(f"fg color = {comp}")
                          
                                                         dist = fg2.distance(bgColor)
-                                                        #print(f"distance = {dist}, target distance = {self.mixing_target_distance}")
+                                                        #print(f"distance = {dist}, target distance = {self.mixing.g_target_distance}")
                          
                                                         
                                                         curDist = None
                                                         picked50 = False
-                                                        global g_auto_mixing_target_distance
+                                                        global g.g_auto_mixing.g_target_distance
                                                         
                                                         curLayerTransp01 = float(document.activeNode().opacity()) / 255.0
-                                                        target_distance_corretta_per_layer_transp = g_auto_mixing_target_distance / curLayerTransp01
+                                                        target_distance_corretta_per_layer_transp = g.g_auto_mixing.g_target_distance / curLayerTransp01
                                                         
                                                         # calcola curFg
                                                         if dist  <= target_distance_corretta_per_layer_transp:
@@ -3509,13 +3320,13 @@ class MyExtension(Extension):
                                                     
                                                     
                                                     #anche qui vedo la distanza, perche' se è piccola faccio snap
-                                                    dist = g_virtual_fg_color_rgb.distance(mergedColor)
+                                                    dist = g.g_virtual_fg.g_color_rgb.distance(mergedColor)
                                                     
-                                                    # if dist < g_auto_mix_snap_distance and g_auto_mix__how_much_canvas_to_pick < 0.98:
+                                                    # if dist < g.g_auto_mix_snap_distance and g.g_auto_mix__how_much_canvas_to_pick < 0.98:
                                                         # #snap to destination
-                                                        # comp[0] = (g_virtual_fg_color_rgb.r/255.0) 
-                                                        # comp[1] = (g_virtual_fg_color_rgb.g / 255.0) 
-                                                        # comp[2] = (g_virtual_fg_color_rgb.b / 255.0)
+                                                        # comp[0] = (g.g_virtual_fg.g_color_rgb.r/255.0) 
+                                                        # comp[1] = (g.g_virtual_fg.g_color_rgb.g / 255.0) 
+                                                        # comp[2] = (g.g_virtual_fg.g_color_rgb.b / 255.0)
                                                         
                                                     # else:
                                                         # blending
@@ -3523,25 +3334,25 @@ class MyExtension(Extension):
                          
                      
                                                     
-                                                    canv = g_auto_mix__how_much_canvas_to_pick
+                                                    canv = g.g_auto_mix__how_much_canvas_to_pick
                                                     
                                                
                                                     fgMul = 1.0 - canv
                                                     
                                                     
                                                     # BEGIN mix colors old way
-                                                    # comp[0] = (g_virtual_fg_color_rgb.r/255.0) * fgMul + (mergedColor.r / 255.0)  * canv
-                                                    # comp[1] = (g_virtual_fg_color_rgb.g / 255.0) * fgMul + (mergedColor.g / 255.0)  * canv
-                                                    # comp[2] = (g_virtual_fg_color_rgb.b / 255.0) * fgMul + (mergedColor.b  / 255.0)  * canv
+                                                    # comp[0] = (g.g_virtual_fg.g_color_rgb.r/255.0) * fgMul + (mergedColor.r / 255.0)  * canv
+                                                    # comp[1] = (g.g_virtual_fg.g_color_rgb.g / 255.0) * fgMul + (mergedColor.g / 255.0)  * canv
+                                                    # comp[2] = (g.g_virtual_fg.g_color_rgb.b / 255.0) * fgMul + (mergedColor.b  / 255.0)  * canv
                                                     
                                                     #END
                                                     
                                                     
                                                     #begin mix colors spectral, bgr
                                                     fgMul = 1.0 - canv
-                                                    sb = g_virtual_fg_color_rgb.r
-                                                    sg = g_virtual_fg_color_rgb.g
-                                                    sr = g_virtual_fg_color_rgb.b
+                                                    sb = g.g_virtual_fg.g_color_rgb.r
+                                                    sg = g.g_virtual_fg.g_color_rgb.g
+                                                    sr = g.g_virtual_fg.g_color_rgb.b
                                                     
                                                    
                                                     db = mergedColor.r 
@@ -3579,8 +3390,8 @@ class MyExtension(Extension):
         
                                    
         def pick(self, showMessage = True):
-                global g_auto_mixing_just_once_now_on
-                global g_auto_mixing_just_once_logic
+                global g.g_auto_mixing.g_just_once_now_on
+                global g.g_auto_mixing.g_just_once_logic
                 # print("pick called")
                 app = Krita.instance()
                 win = app.activeWindow()
@@ -3676,21 +3487,21 @@ class MyExtension(Extension):
                                                     # mergedColor = rgb(   min (255, mergedColor.r / curLayerOpac01 ),    min(255,mergedColor.g / curLayerOpac01 ),    min(255, mergedColor.b / curLayerOpac01 ),  255)
                                                                 
                                                                  
-                                                global g_virtual_fg_color_rgb
-                                                g_virtual_fg_color_rgb = mergedColor #lo memorizzo come target
+                                                global g.g_virtual_fg.g_color_rgb
+                                                g.g_virtual_fg.g_color_rgb = mergedColor #lo memorizzo come target
                                                 update_label_from_virtual_color()
                                                 
                                                 # importante: non aggiungerlo alla coda,  perché poi scatta lo stesso l'aggiunta alla coda con colore leggermente diverso, non so perche'. se non fai niente funziona.
                                                 # # aggiungo alla lista solo se non è già in coda (stranamente è necessario)
-                                                # if g_virtual_fg_color_rgb is None:
+                                                # if g.g_virtual_fg.g_color_rgb is None:
                                                     # pass
-                                                # if len(g_last_virtual_colors_used) > 0:
-                                                    # if g_last_virtual_colors_used[-1].equals(g_virtual_fg_color_rgb):
+                                                # if len(g.g_last_virtual_colors_used) > 0:
+                                                    # if g.g_last_virtual_colors_used[-1].equals(g.g_virtual_fg.g_color_rgb):
                                                         # pass
                                                     # else:
-                                                        # g_last_virtual_colors_used.append(g_virtual_fg_color_rgb.clone())
+                                                        # g.g_last_virtual_colors_used.append(g.g_virtual_fg.g_color_rgb.clone())
                                                 # else:
-                                                    # g_last_virtual_colors_used.append(g_virtual_fg_color_rgb.clone())
+                                                    # g.g_last_virtual_colors_used.append(g.g_virtual_fg.g_color_rgb.clone())
                                                 
                                                     
                                                 
@@ -3716,17 +3527,17 @@ class MyExtension(Extension):
                                                     
                                                     view.setForeGroundColor(fg)
                             
-                                                    if g_auto_mixing_just_once_logic:
-                                                        g_auto_mixing_just_once_now_on = True
+                                                    if g.g_auto_mixing.g_just_once_logic:
+                                                        g.g_auto_mixing.g_just_once_now_on = True
                          
-                                                    global g_diminishing_opacity
-                                                    global g_auto_mix__how_much_canvas_to_pick
-                                                    global g_dial_auto_mix_level
-                                                    if g_diminishing_opacity:
-                                                        g_auto_mix__how_much_canvas_to_pick = 1.0
+                                                    global g.g_diminishing.g_opacity
+                                                    global g.g_auto_mix__how_much_canvas_to_pick
+                                                    global g.g_dial_auto_mix_level
+                                                    if g.g_diminishing.g_opacity:
+                                                        g.g_auto_mix__how_much_canvas_to_pick = 1.0
                                                         
-                                                        val099 =  round(g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                                                        g_dial_auto_mix_level.setValue(val099)
+                                                        val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+                                                        g.g_dial_auto_mix_level.setValue(val099)
         
                         
                                                     # messaggio
@@ -3740,124 +3551,124 @@ class MyExtension(Extension):
         
         
         def increaseMixing(self):
-                global g_how_much_canvas_to_pick
-                g_how_much_canvas_to_pick += g_mixing_step
-                if g_how_much_canvas_to_pick > 1.0:
-                        g_how_much_canvas_to_pick = 1.0
+                global g.g_how_much_canvas_to_pick
+                g.g_how_much_canvas_to_pick += g.g_mixing.g_step
+                if g.g_how_much_canvas_to_pick > 1.0:
+                        g.g_how_much_canvas_to_pick = 1.0
                         
-                Krita.instance().writeSetting("colorPlus", "g_how_much_canvas_to_pick", str(g_how_much_canvas_to_pick))
+                Krita.instance().writeSetting("colorPlus", "g.g_how_much_canvas_to_pick", str(g.g_how_much_canvas_to_pick))
                 
-                quickMessage(f"Increased mixing to {round(g_how_much_canvas_to_pick* 100.0)}%")
+                quickMessage(f"Increased mixing to {round(g.g_how_much_canvas_to_pick* 100.0)}%")
         
         def decreaseMixing(self):
-                global g_how_much_canvas_to_pick
-                g_how_much_canvas_to_pick -= g_mixing_step
-                if g_how_much_canvas_to_pick < 0.0:
-                        g_how_much_canvas_to_pick = 0.0
+                global g.g_how_much_canvas_to_pick
+                g.g_how_much_canvas_to_pick -= g.g_mixing.g_step
+                if g.g_how_much_canvas_to_pick < 0.0:
+                        g.g_how_much_canvas_to_pick = 0.0
                         
-                Krita.instance().writeSetting("colorPlus", "g_how_much_canvas_to_pick", str(g_how_much_canvas_to_pick))
+                Krita.instance().writeSetting("colorPlus", "g.g_how_much_canvas_to_pick", str(g.g_how_much_canvas_to_pick))
                 
-                quickMessage(f"Decreased mixing to {round(g_how_much_canvas_to_pick * 100.0)}%")
+                quickMessage(f"Decreased mixing to {round(g.g_how_much_canvas_to_pick * 100.0)}%")
         
 
         def increaseAutoMixing(self):
-                global g_auto_mix__how_much_canvas_to_pick
-                global g_mixing_step
-                global g_auto_mixing_distance_step
-                global g_auto_mixing_target_distance
+                global g.g_auto_mix__how_much_canvas_to_pick
+                global g.g_mixing.g_step
+                global g.g_auto_mixing.g_distance_step
+                global g.g_auto_mixing.g_target_distance
                 
-                if g_auto_mixing_uses_distance_logic:
-                    g_auto_mixing_target_distance += g_auto_mixing_distance_step
-                    if g_auto_mixing_target_distance > 255.0:
-                            g_auto_mixing_target_distance = 255.0
+                if g.g_auto_mixing.g_uses_distance_logic:
+                    g.g_auto_mixing.g_target_distance += g.g_auto_mixing.g_distance_step
+                    if g.g_auto_mixing.g_target_distance > 255.0:
+                            g.g_auto_mixing.g_target_distance = 255.0
                             
-                    Krita.instance().writeSetting("colorPlus", "g_auto_mixing_target_distance", str(g_auto_mixing_target_distance))
+                    Krita.instance().writeSetting("colorPlus", "g.g_auto_mixing.g_target_distance", str(g.g_auto_mixing.g_target_distance))
                     
-                    quickMessage(f"Increased auto-mixing distance to {round(g_auto_mixing_target_distance )}")
+                    quickMessage(f"Increased auto-mixing distance to {round(g.g_auto_mixing.g_target_distance )}")
 
                 else:
-                    g_auto_mix__how_much_canvas_to_pick += g_mixing_step
-                    if g_auto_mix__how_much_canvas_to_pick > 1.0:
-                            g_auto_mix__how_much_canvas_to_pick = 1.0
+                    g.g_auto_mix__how_much_canvas_to_pick += g.g_mixing.g_step
+                    if g.g_auto_mix__how_much_canvas_to_pick > 1.0:
+                            g.g_auto_mix__how_much_canvas_to_pick = 1.0
                             
-                    Krita.instance().writeSetting("colorPlus", "g_auto_mix__how_much_canvas_to_pick", str(g_auto_mix__how_much_canvas_to_pick))
+                    Krita.instance().writeSetting("colorPlus", "g.g_auto_mix__how_much_canvas_to_pick", str(g.g_auto_mix__how_much_canvas_to_pick))
                     
-                    quickMessage(f"Increased auto-mixing to {round(g_auto_mix__how_much_canvas_to_pick * 100.0)} %")
+                    quickMessage(f"Increased auto-mixing to {round(g.g_auto_mix__how_much_canvas_to_pick * 100.0)} %")
         
         def decreaseAutoMixing(self):
-                global g_auto_mix__how_much_canvas_to_pick
-                global g_mixing_step
-                global g_auto_mixing_target_distance
-                global g_auto_mixing_distance_step
+                global g.g_auto_mix__how_much_canvas_to_pick
+                global g.g_mixing.g_step
+                global g.g_auto_mixing.g_target_distance
+                global g.g_auto_mixing.g_distance_step
                 
-                if g_auto_mixing_uses_distance_logic:
-                    g_auto_mixing_target_distance -= g_auto_mixing_distance_step
-                    if g_auto_mixing_target_distance < 0.0:
-                            g_auto_mixing_target_distance = 0.0
+                if g.g_auto_mixing.g_uses_distance_logic:
+                    g.g_auto_mixing.g_target_distance -= g.g_auto_mixing.g_distance_step
+                    if g.g_auto_mixing.g_target_distance < 0.0:
+                            g.g_auto_mixing.g_target_distance = 0.0
                             
-                    Krita.instance().writeSetting("colorPlus", "g_auto_mixing_target_distance", str(g_auto_mixing_target_distance))
+                    Krita.instance().writeSetting("colorPlus", "g.g_auto_mixing.g_target_distance", str(g.g_auto_mixing.g_target_distance))
                     
-                    quickMessage(f"Decreased auto-mixing distance to {round(g_auto_mixing_target_distance)}")
+                    quickMessage(f"Decreased auto-mixing distance to {round(g.g_auto_mixing.g_target_distance)}")
         
                 else:
-                    g_auto_mix__how_much_canvas_to_pick -= g_mixing_step
-                    if g_auto_mix__how_much_canvas_to_pick < 0.0:
-                            g_auto_mix__how_much_canvas_to_pick = 0.0
+                    g.g_auto_mix__how_much_canvas_to_pick -= g.g_mixing.g_step
+                    if g.g_auto_mix__how_much_canvas_to_pick < 0.0:
+                            g.g_auto_mix__how_much_canvas_to_pick = 0.0
                             
-                    Krita.instance().writeSetting("colorPlus", "g_auto_mix__how_much_canvas_to_pick", str(g_auto_mix__how_much_canvas_to_pick))
+                    Krita.instance().writeSetting("colorPlus", "g.g_auto_mix__how_much_canvas_to_pick", str(g.g_auto_mix__how_much_canvas_to_pick))
                     
-                    quickMessage(f"Decreased auto-mixing to {round(g_auto_mix__how_much_canvas_to_pick * 100.0)}%")
+                    quickMessage(f"Decreased auto-mixing to {round(g.g_auto_mix__how_much_canvas_to_pick * 100.0)}%")
         
 
         
         def increaseAutoResetOpacityOnPick (self):
-                global g_auto_reset_opacity_on_pick_level
-                g_auto_reset_opacity_on_pick_level += 5.0
-                if g_auto_reset_opacity_on_pick_level >= 100.0:
-                        g_auto_reset_opacity_on_pick_level = 100.0
+                global g.g_auto_reset_opacity_on_pick_level
+                g.g_auto_reset_opacity_on_pick_level += 5.0
+                if g.g_auto_reset_opacity_on_pick_level >= 100.0:
+                        g.g_auto_reset_opacity_on_pick_level = 100.0
                         
-                Krita.instance().writeSetting("colorPlus", "g_auto_reset_opacity_on_pick_level", str(g_auto_reset_opacity_on_pick_level))
+                Krita.instance().writeSetting("colorPlus", "g.g_auto_reset_opacity_on_pick_level", str(g.g_auto_reset_opacity_on_pick_level))
                 
-                quickMessage(f"Increased default opacity to {round(g_auto_reset_opacity_on_pick_level)}%")
+                quickMessage(f"Increased default opacity to {round(g.g_auto_reset_opacity_on_pick_level)}%")
         def decreaseAutoResetOpacityOnPick (self):
-                global g_auto_reset_opacity_on_pick_level
-                g_auto_reset_opacity_on_pick_level -= 5.0
-                if g_auto_reset_opacity_on_pick_level <= 0.0:
-                        g_auto_reset_opacity_on_pick_level = 0.0
+                global g.g_auto_reset_opacity_on_pick_level
+                g.g_auto_reset_opacity_on_pick_level -= 5.0
+                if g.g_auto_reset_opacity_on_pick_level <= 0.0:
+                        g.g_auto_reset_opacity_on_pick_level = 0.0
                         
-                Krita.instance().writeSetting("colorPlus", "g_auto_reset_opacity_on_pick_level", str(g_auto_reset_opacity_on_pick_level))
+                Krita.instance().writeSetting("colorPlus", "g.g_auto_reset_opacity_on_pick_level", str(g.g_auto_reset_opacity_on_pick_level))
                 
-                quickMessage(f"Decreased default opacity to {round(g_auto_reset_opacity_on_pick_level)}%")
+                quickMessage(f"Decreased default opacity to {round(g.g_auto_reset_opacity_on_pick_level)}%")
         
 
         
-        # def increaseMixing_targetLogic(self):
-                # self.mixing_target_distance += g_step_mixing_target_distance
-                # if self.mixing_target_distance > 255.0:
-                        # self.mixing_target_distance = 255.0
+        # def increaseMixing.g_targetLogic(self):
+                # self.mixing.g_target_distance += g.g_step_mixing.g_target_distance
+                # if self.mixing.g_target_distance > 255.0:
+                        # self.mixing.g_target_distance = 255.0
                         
                         
-                # quickMessage(f"Increased mixing. Target distance from fg color: {round(self.mixing_target_distance )}")
+                # quickMessage(f"Increased mixing. Target distance from fg color: {round(self.mixing.g_target_distance )}")
         
-        # def decreaseMixing_targetLogic(self):
-                # self.mixing_target_distance -= g_step_mixing_target_distance
-                # if self.mixing_target_distance < 0.0:
-                        # self.mixing_target_distance = 0.0
+        # def decreaseMixing.g_targetLogic(self):
+                # self.mixing.g_target_distance -= g.g_step_mixing.g_target_distance
+                # if self.mixing.g_target_distance < 0.0:
+                        # self.mixing.g_target_distance = 0.0
                         
-                # quickMessage(f"Decreased mixing. Target distance from fg color: {round(self.mixing_target_distance)}")
+                # quickMessage(f"Decreased mixing. Target distance from fg color: {round(self.mixing.g_target_distance)}")
 
                 
         def increaseLayerOpacity(self):
         
         
-                global g_normal_step_layer_opacity
+                global g.g_normal_step_layer_opacity
                 
                 #dryPaper() # conviene, perche' tanto significa che i segni precedenti non si vedono.
                 
                 application = Krita.instance()
                 currentDoc = application.activeDocument()
                 
-                if g_auto_dry_each_stroke:
+                if g.g_auto_dry_each_stroke:
                     parentNode = currentDoc.activeNode().parentNode()
                     if parentNode is not None:
                          activeLayer = parentNode.childNodes()[-2]
@@ -3870,9 +3681,9 @@ class MyExtension(Extension):
                 curOpac = activeLayer.opacity()
                 
                 if curOpac <= 12.0 * 255.0 / 100.0:
-                    stepOpacity = g_normal_step_layer_opacity / 2.0
+                    stepOpacity = g.g_normal_step_layer_opacity / 2.0
                 else:
-                    stepOpacity = g_normal_step_layer_opacity 
+                    stepOpacity = g.g_normal_step_layer_opacity 
                 
                 newOpac = curOpac + stepOpacity  
                 
@@ -3898,31 +3709,31 @@ class MyExtension(Extension):
         def increaseAutoOpacityMaxDistance(self):
         
         
-                global g_auto_opacity_max_distance
-                g_auto_opacity_max_distance += 5
+                global g.g_auto_opacity_max_distance
+                g.g_auto_opacity_max_distance += 5
                 
-                if g_auto_opacity_max_distance > 255:
-                        g_auto_opacity_max_distance = 255
-                
-                
-                Krita.instance().writeSetting("colorPlus", "g_auto_opacity_max_distance", g_auto_opacity_max_distance)
+                if g.g_auto_opacity_max_distance > 255:
+                        g.g_auto_opacity_max_distance = 255
                 
                 
-                quickMessage(f"Increased max distance to {g_auto_opacity_max_distance}")
+                Krita.instance().writeSetting("colorPlus", "g.g_auto_opacity_max_distance", g.g_auto_opacity_max_distance)
+                
+                
+                quickMessage(f"Increased max distance to {g.g_auto_opacity_max_distance}")
         
         
         def decreaseAutoOpacityMaxDistance(self):
         
         
-                global g_auto_opacity_max_distance
-                g_auto_opacity_max_distance -= 5
+                global g.g_auto_opacity_max_distance
+                g.g_auto_opacity_max_distance -= 5
                 
-                if g_auto_opacity_max_distance <= 0 :
-                        g_auto_opacity_max_distance = 0
+                if g.g_auto_opacity_max_distance <= 0 :
+                        g.g_auto_opacity_max_distance = 0
                 
                 
-                Krita.instance().writeSetting("colorPlus", "g_auto_opacity_max_distance", g_auto_opacity_max_distance)
-                quickMessage(f"Decreased max distance to {g_auto_opacity_max_distance}")
+                Krita.instance().writeSetting("colorPlus", "g.g_auto_opacity_max_distance", g.g_auto_opacity_max_distance)
+                quickMessage(f"Decreased max distance to {g.g_auto_opacity_max_distance}")
         
 
 
@@ -3938,7 +3749,7 @@ class MyExtension(Extension):
                 
                 application = Krita.instance()
                 currentDoc = application.activeDocument()
-                if g_auto_dry_each_stroke:
+                if g.g_auto_dry_each_stroke:
                     parentNode = currentDoc.activeNode().parentNode()
                     if parentNode is not None:
                          activeLayer = parentNode.childNodes()[-2]
@@ -3950,11 +3761,11 @@ class MyExtension(Extension):
                     
                 curOpac = activeLayer.opacity()
                 
-                global g_normal_step_layer_opacity
+                global g.g_normal_step_layer_opacity
                 if curOpac <= 20.0 * 255.0 / 100.0:
-                    stepOpacity = g_normal_step_layer_opacity / 2.0
+                    stepOpacity = g.g_normal_step_layer_opacity / 2.0
                 else:
-                    stepOpacity = g_normal_step_layer_opacity 
+                    stepOpacity = g.g_normal_step_layer_opacity 
                 
                 
                 newOpac = curOpac - stepOpacity
@@ -4033,7 +3844,7 @@ class MyExtension(Extension):
             dryPaper(True)
             
         def dryPaperOldWithMerge(self, showMessage = True):
-                global g_opacity_decided_for_layer
+                global g.g_opacity_decided_for_layer
                 #print(f"dry paper called showMessage = {showMessage}")
                 application = Krita.instance()
                 currentDoc = application.activeDocument()
@@ -4061,7 +3872,7 @@ class MyExtension(Extension):
                         parentNode.addChildNode(newLa, None)
                         
                         
-                        g_opacity_decided_for_layer = False
+                        g.g_opacity_decided_for_layer = False
                         
                         # currentDoc.setActiveNode(newLa)
                         # currentDoc.refreshProjection()
@@ -4076,7 +3887,7 @@ class MyExtension(Extension):
                         root.addChildNode(newLa, None)
                         
                         
-                        g_opacity_decided_for_layer = False
+                        g.g_opacity_decided_for_layer = False
                         
                         
                 #test blur        
@@ -4170,13 +3981,13 @@ class MyExtension(Extension):
                         currentDoc.waitForDone()
                         
                         
-                        if g_multi_layer_mode:
+                        if g.g_multi_layer_mode:
                             # root = currentDoc.rootNode()
                             newLa = currentDoc.createNode("Wet_area", "paintLayer")
                             newLa.setOpacity(oldOpacity)
                             
-                            global g_set_spectral_blend_mode_when_creating_layer
-                            if g_set_spectral_blend_mode_when_creating_layer:
+                            global g.g_set_spectral_blend_mode_when_creating.g_layer
+                            if g.g_set_spectral_blend_mode_when_creating.g_layer:
                                 #print("setting over spectral")
                                 newLa.setBlendingMode("over spectral");
                             
@@ -4206,18 +4017,18 @@ class MyExtension(Extension):
                 return newLa
         
         def manualResetLayerOpacityToDefault(self):
-                global g_auto_reset_opacity_on_pick_level
+                global g.g_auto_reset_opacity_on_pick_level
                 
                 application = Krita.instance()
                 document = application.activeDocument()
                 
                                         
                 if document is not None :
-                    document.activeNode().setOpacity(int(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) # bm_djiwejdie
+                    document.activeNode().setOpacity(int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) # bm_djiwejdie
                     
                     document.refreshProjection()
                     
-                    quickMessage(f"Reset layer opacity to default ({round(g_auto_reset_opacity_on_pick_level )}%)")
+                    quickMessage(f"Reset layer opacity to default ({round(g.g_auto_reset_opacity_on_pick_level )}%)")
         
         def dryPaperAndPick(self):
             print("dry paper and pick")
@@ -4256,25 +4067,25 @@ class MyExtension(Extension):
             
             
             
-            global g_auto_reset_opacity_on_pick_level
-            global g_auto_reset_opacity_on_pick
-            global g_temp_switched_to_100_previous_opac
-            if  g_temp_switched_to_100_previous_opac is None and hasParentNode and g_multi_layer_mode: # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
+            global g.g_auto_reset_opacity_on_pick_level
+            global g.g_auto_reset_opacity_on_pick
+            global g.g_temp_switched_to_100_previous_opac
+            if  g.g_temp_switched_to_100_previous_opac is None and hasParentNode and g.g_multi_layer_mode: # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
                 newLa = dryPaper(showMessage = False)
                 
                 # if active layer opacity < 70, set to 70
                                         
-                if g_auto_reset_opacity_on_pick == 1 and  document is not None and g_temp_switched_to_25_previous_opac is None :
-                    newLa.setOpacity(int(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) # bm_djiwejdie
+                if g.g_auto_reset_opacity_on_pick == 1 and  document is not None and g.g_temp_switched_to_25_previous_opac is None :
+                    newLa.setOpacity(int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) # bm_djiwejdie
                     
                     document.refreshProjection()
                     
                 quickMessage("Dry paper and pick color")
-            elif g_temp_switched_to_100_previous_opac is not None and hasParentNode:
+            elif g.g_temp_switched_to_100_previous_opac is not None and hasParentNode:
                 # non faccio dry, ma devo cmq resettare l'opacità del layer attuale
                 
-                if g_auto_reset_opacity_on_pick == 1 and  document is not None :
-                    document.activeNode().setOpacity(int(g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) # bm_djiwejdie
+                if g.g_auto_reset_opacity_on_pick == 1 and  document is not None :
+                    document.activeNode().setOpacity(int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) # bm_djiwejdie
                     
                     document.refreshProjection()
                 
@@ -4542,49 +4353,49 @@ class MyExtension(Extension):
             
             
         def toggleAutoFocus(self):
-            if self.g_auto_focus == "true":
+            if self.g.g_auto_focus == "true":
                 
-                self.g_auto_focus = "false"
+                self.g.g_auto_focus = "false"
             else:
                 
-                self.g_auto_focus = "true"
+                self.g.g_auto_focus = "true"
                 
-            Krita.instance().writeSetting("colorPlus", "g_auto_focus", self.g_auto_focus)
+            Krita.instance().writeSetting("colorPlus", "g.g_auto_focus", self.g.g_auto_focus)
         
 
         def toggleAutoResetOpacityOnPick(self):
-            global g_auto_reset_opacity_on_pick
-            if g_auto_reset_opacity_on_pick == 1:
-                g_auto_reset_opacity_on_pick = 0
+            global g.g_auto_reset_opacity_on_pick
+            if g.g_auto_reset_opacity_on_pick == 1:
+                g.g_auto_reset_opacity_on_pick = 0
                 quickMessage("Auto reset opacity on color pick: disabled")
             else:
-                g_auto_reset_opacity_on_pick = 1
-                quickMessage(f"Auto reset opacity on color pick: enabled. Will be reset to {round(g_auto_reset_opacity_on_pick_level)}.")
+                g.g_auto_reset_opacity_on_pick = 1
+                quickMessage(f"Auto reset opacity on color pick: enabled. Will be reset to {round(g.g_auto_reset_opacity_on_pick_level)}.")
                 
                 
-            Krita.instance().writeSetting("colorPlus", "g_auto_reset_opacity_on_pick", str(g_auto_reset_opacity_on_pick))
+            Krita.instance().writeSetting("colorPlus", "g.g_auto_reset_opacity_on_pick", str(g.g_auto_reset_opacity_on_pick))
         
         
         # def toggleMixClearsCurrentLayer(self):
-            # global g_mix_auto_clears_cur_layer
-            # if g_mix_auto_clears_cur_layer == "1":
-                # g_mix_auto_clears_cur_layer = "0"
+            # global g.g_mix_auto_clears_cur_layer
+            # if g.g_mix_auto_clears_cur_layer == "1":
+                # g.g_mix_auto_clears_cur_layer = "0"
                 # quickMessage("Color mix will not clear current layer automatically")
             # else:
-                # g_mix_auto_clears_cur_layer = "1"
+                # g.g_mix_auto_clears_cur_layer = "1"
                 # quickMessage("Color mix will clear current layer automatically")
                 
                 
-            # Krita.instance().writeSetting("colorPlus", "g_mix_auto_clears_cur_layer", g_mix_auto_clears_cur_layer)
+            # Krita.instance().writeSetting("colorPlus", "g.g_mix_auto_clears_cur_layer", g.g_mix_auto_clears_cur_layer)
         
         def toggleMultiLayerMode(self):
-            global g_multi_layer_mode
-            g_multi_layer_mode = not g_multi_layer_mode
+            global g.g_multi_layer_mode
+            g.g_multi_layer_mode = not g.g_multi_layer_mode
             
             
-            multi_layer_mode_str = "1" if g_multi_layer_mode else "0"
+            multi_layer_mode_str = "1" if g.g_multi_layer_mode else "0"
             
-            Krita.instance().writeSetting("colorPlus", "g_multi_layer_mode", multi_layer_mode_str)
+            Krita.instance().writeSetting("colorPlus", "g.g_multi_layer_mode", multi_layer_mode_str)
                 
                 
                 
@@ -4646,10 +4457,10 @@ class MyExtension(Extension):
                 actiondecmi = window.createAction("DecreaseMixing", "Decrease mixing level (amount of color you pick from canvas when mixing)")
                 actiondecmi.triggered.connect(self.decreaseMixing)
 
-                # global g_mix_auto_clears_cur_layer
+                # global g.g_mix_auto_clears_cur_layer
                 # actionmixClear = window.createAction("MixClearCurrentLayer", "Mixing color auto-clears current layer")
                 # actionmixClear.setCheckable(True)
-                # actionmixClear.setChecked(g_mix_auto_clears_cur_layer == "1")
+                # actionmixClear.setChecked(g.g_mix_auto_clears_cur_layer == "1")
                 # actionmixClear.triggered.connect(self.toggleMixClearsCurrentLayer)
 
 
@@ -4686,22 +4497,22 @@ class MyExtension(Extension):
                 
                 self.actionAutoFocus= window.createAction("autoFocus", "Autofocus windows on mouse over")
                 self.actionAutoFocus.setCheckable(True)
-                self.actionAutoFocus.setChecked(self.g_auto_focus == "true")
+                self.actionAutoFocus.setChecked(self.g.g_auto_focus == "true")
                 self.actionAutoFocus.triggered.connect(self.toggleAutoFocus)
                 
 
-                global g_auto_reset_opacity_on_pick
+                global g.g_auto_reset_opacity_on_pick
                 self.actionAutoResOpPick= window.createAction("toggleAutoResetOpacityOnPick", "Auto-reset layer opacity to default on color pick")
                 self.actionAutoResOpPick.setCheckable(True)
-                self.actionAutoResOpPick.setChecked(g_auto_reset_opacity_on_pick == 1)
+                self.actionAutoResOpPick.setChecked(g.g_auto_reset_opacity_on_pick == 1)
                 self.actionAutoResOpPick.triggered.connect(self.toggleAutoResetOpacityOnPick)
                 
 
 
-                global g_multi_layer_mode
+                global g.g_multi_layer_mode
                 self.actionSingleLayerMode = window.createAction("toggleSingleLayerMode", "Single-layer mode (don't auto create layers for watercolor effect)")
                 self.actionSingleLayerMode.setCheckable(True)
-                self.actionSingleLayerMode.setChecked(not g_multi_layer_mode)
+                self.actionSingleLayerMode.setChecked(not g.g_multi_layer_mode)
                 self.actionSingleLayerMode.triggered.connect(self.toggleMultiLayerMode)
                 
 
@@ -4729,14 +4540,14 @@ class MyExtension(Extension):
                 custom_menu.addAction(actionViewFullScreen)
                 
                 
-                global g_auto_mix_enabled
-                global g_actionAutoMix
+                global g.g_auto_mix_enabled
+                global g.g_actionAutoMix
                 
-                g_auto_mix_enabled = False
-                g_actionAutoMix= window.createAction("toggleAutoMixing", "Auto mixing (each stroke picks a bit of color from the background)")
-                g_actionAutoMix.setCheckable(True)
-                g_actionAutoMix.setShortcut("r")                
-                g_actionAutoMix.triggered.connect(toggleAutoMixing)
+                g.g_auto_mix_enabled = False
+                g.g_actionAutoMix= window.createAction("toggleAutoMixing", "Auto mixing (each stroke picks a bit of color from the background)")
+                g.g_actionAutoMix.setCheckable(True)
+                g.g_actionAutoMix.setShortcut("r")                
+                g.g_actionAutoMix.triggered.connect(toggleAutoMixing)
 
 
                 self.actionIncAutoMix = window.createAction("increaseAutoMixing", "Increase auto-mixing (amount of bg color you pick at each stroke)")
@@ -4748,7 +4559,7 @@ class MyExtension(Extension):
                 self.actionDecAutoMix.triggered.connect(self.decreaseAutoMixing)
 
                 custom_menu.addSeparator()
-                custom_menu.addAction(g_actionAutoMix)
+                custom_menu.addAction(g.g_actionAutoMix)
                 custom_menu.addAction(self.actionIncAutoMix)
                 custom_menu.addAction(self.actionDecAutoMix)
                 
