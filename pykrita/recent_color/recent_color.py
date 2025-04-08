@@ -1693,7 +1693,8 @@ class rgb:
                 print(f"{msg}:   {self.toString()}")
                 
         def toString(self):
-            return f" r:{round(self.r)}, g:{round(self.g)}, b:{round(self.b)} ,a:{self.a}"
+            # inverto r e b perche' in realta' siamo bgr
+            return f" b:{round(self.r)}, g:{round(self.g)}, r:{round(self.b)} ,a:{self.a}"
 
         def average(self, c):
                 return rgb((self.r + c.r) / 2,
