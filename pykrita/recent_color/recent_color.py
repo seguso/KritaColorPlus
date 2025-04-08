@@ -2851,14 +2851,17 @@ class MyExtension(Extension):
                     # Get globals
                     
                     # Get the actual foreground color from Krita
-                    q_color = Krita.instance().activeWindow().activeView().foregroundColor()
-                    # Convert QColor (0-1 float) to our rgb class format (0-255 float, BGR order)
-                    # Note: The rgb class stores B in self.r and R in self.b internally
-                    actual_color_rgb = rgb(r=float(q_color.blue()),  # Blue component for rgb.r
-                                           g=float(q_color.green()), # Green component for rgb.g
-                                           b=float(q_color.red()),   # Red component for rgb.b
-                                           a=float(q_color.alpha())) # Alpha component for rgb.a
+                    krita_fg_color = Krita.instance().activeWindow().activeView().foregroundColor()
+                    # Get color components (usually [R, G, B, A] as floats 0.0-1.0)
+                    components = krita_fg_color.components()
                     
+                    # Convert Krita components (0-1 float, RGBA) to our rgb class format (0-255 float, BGR internally)
+                    # Note: The rgb class stores B in self.r and R in self.b internally.
+                    actual_color_rgb = rgb(r=components[0] * 255.0,  # Blue component (index 2) * 255 for rgb.r
+                                           g=components[1] * 255.0,  # Green component (index 1) * 255 for rgb.g
+                                           b=components[2] * 255.0,  # Red component (index 0) * 255 for rgb.b
+                                           a=components[3] * 255.0)  # Alpha component (index 3) * 255 for rgb.a
+        
                     # Use the actual color for the stroke
                     stroke_color = actual_color_rgb.clone()
                     # Update the virtual color to match the actual color
