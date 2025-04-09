@@ -4,6 +4,12 @@ if TYPE_CHECKING:
     from .recent_color import rgb # Import for type hinting only
     from PyQt5.QtWidgets import QLabel # Import for type hinting only
 
+# Funzione di log per il debug
+def log(s):
+    global printCount
+    printCount += 1
+    print(f"{printCount}: {s}\n\n")
+
 g_blur_on_dry = False
 
 countColorChanged = 0
@@ -232,5 +238,8 @@ event_lookup = {"0": "QEvent::None",
                 "126": "QEvent::ZOrderChange", }
                 
 allBrushPresets = None # Use None instead of null
+
+g_docker_instance = None
+g_color_history_docker_instance = None
 
 g_auto_focus = "False"

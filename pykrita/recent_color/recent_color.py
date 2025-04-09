@@ -295,14 +295,7 @@ class HelloDocker(DockWidget):
         mainLayout = QVBoxLayout()
         mainWidget.setLayout(mainLayout)
 
-        # --- Color History Layout ---
-        self.color_history_widget = QWidget() # Container widget
-        self.color_history_layout = QHBoxLayout()
-        self.color_history_layout.setContentsMargins(0, 5, 0, 5) # Add some vertical margin
-        self.color_history_layout.setSpacing(2) # Spacing between squares
-        self.color_history_widget.setLayout(self.color_history_layout)
-        mainLayout.addWidget(self.color_history_widget) # Add container to main layout
-        self.color_history_layout.addStretch(1) # Push squares to the left
+        # Color History has been moved to a separate docker
 
         # active color
         
@@ -430,8 +423,6 @@ class HelloDocker(DockWidget):
         
         # pick color button
         self.buttonPickColor = QPushButton("Pick color", mainWidget)
-        # --- Initial Color History UI Population ---
-        self.update_color_history_ui() # Call initially
 
  
         self.buttonPickColor.setMinimumHeight(50)
@@ -447,51 +438,7 @@ class HelloDocker(DockWidget):
         g.g_btn_pick_color = self.buttonPickColor
         
         
-   # --- Method to Update Color History UI ---
-    def update_color_history_ui(self):
-        """ Clears and rebuilds the color history UI display. """
-        # Clear existing widgets from the layout
-        while self.color_history_layout.count() > 1: # Keep the stretch item
-            item = self.color_history_layout.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
-
-        # Add new color squares
-        log(f"Updating color history UI with {len(g.g_last_virtual_colors_used)} colors.")
-        for item in g.g_last_virtual_colors_used:
-            qcolor_to_display = None
-            if isinstance(item, rgb): # Check if it's our custom rgb class
-                # Convert rgb object to QColor, ensuring values are integers
-                try:
-                    r_val = int(round(item.b))  #inverto! perche' in realta' la mia immagine e' bgr, e quindi anche la classe rgb ha gia' invertiti dentro r e b
-                    g_val = int(round(item.g))
-                    b_val = int(round(item.r))
-                    # Clamp values to 0-255 just in case
-                    r_val = max(0, min(255, r_val))
-                    g_val = max(0, min(255, g_val))
-                    b_val = max(0, min(255, b_val))
-                    qcolor_to_display = QColor(r_val, g_val, b_val)
-                except Exception as e:
-                    log(f"Error converting rgb to QColor: {e}, rgb values: r={item.r}, g={item.g}, b={item.b}")
-            elif isinstance(item, QColor): # Handle if it's already a QColor (less likely now)
-                 qcolor_to_display = item
-            else:
-                log(f"Warning: Item in g_last_virtual_colors_used is not an rgb or QColor object: {type(item)}")
-
-            if qcolor_to_display:
-                color_square = ClickableColorLabel(qcolor_to_display) # Pass the QColor
-                color_square.clicked.connect(self._on_color_square_clicked)
-                # Insert before the stretch item
-                self.color_history_layout.insertWidget(self.color_history_layout.count() - 1, color_square)
-    # --- Slot for Color Square Clicks ---
-    def _on_color_square_clicked(self, color):
-        """ Handles clicks on the color history squares. """
-        log(f"Color square clicked: {color.name()}")
-        # TODO: Implement desired action, e.g., set foreground color
-        # g.g_virtual_fg_color_rgb = color.clone()
-        # Krita.instance().activeWindow().activeView().setForegroundColor(color)
-        # updateActiveColorLabel() # Update the main color label if needed        
+    # Color History functionality has been moved to ColorHistoryDocker class        
         
     def leaveEvent(self, event):
         pass
@@ -1885,7 +1832,9 @@ def handle_release(widget):
 
                 # aggiorna la history
                 
-                g.g_docker_instance.update_color_history_ui()
+                # Aggiorna il dock widget della cronologia colori
+                if g.g_color_history_docker_instance:
+                    g.g_color_history_docker_instance.update_color_history_ui()
 
                 update_label_from_virtual_color()
 
@@ -2220,7 +2169,12 @@ class MyExtension(Extension):
                 self.timer.start(1000)
                 
                 
+                # Register the main ColorPlus docker
                 Application.addDockWidgetFactory(DockWidgetFactory("hello", DockWidgetFactoryBase.DockRight, HelloDocker))
+                
+                # Register the Color History docker
+                from .color_history_docker import ColorHistoryDocker
+                Application.addDockWidgetFactory(DockWidgetFactory("colorhistory", DockWidgetFactoryBase.DockRight, ColorHistoryDocker))
                 
                 log(f"init ok. home = {home}")
 
