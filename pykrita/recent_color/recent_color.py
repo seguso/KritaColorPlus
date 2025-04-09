@@ -21,6 +21,7 @@ from pathlib import Path
     
 from PyQt5.QtCore import (
                 Qt,
+                QObject,
                 QEvent,
                 QPointF,
                 QRect,
@@ -2446,9 +2447,11 @@ class MyExtension(Extension):
                 # self.inited = False
                                 
                 app = Krita.instance()
-                history_docker = next((d for d in app.dockers() if d.objectName() == 'History'), None)
-                kis_undo_view = next((v for v in history_docker.findChildren(QListView) if v.metaObject().className() == 'KisUndoView'), None)
-                s_model = kis_undo_view.selectionModel()
+
+                # non affidabile, scatta troppo spesso
+                # history_docker = next((d for d in app.dockers() if d.objectName() == 'History'), None)
+                # kis_undo_view = next((v for v in history_docker.findChildren(QListView) if v.metaObject().className() == 'KisUndoView'), None)
+                # s_model = kis_undo_view.selectionModel()
                 # s_model.currentChanged.connect(self._on_history_was_made)
                 
                 

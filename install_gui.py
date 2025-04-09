@@ -101,7 +101,7 @@ def install_plugin():
              messagebox.showwarning("Installation Issues", "Some files failed to copy:\n\n" + "\n".join(errors))
         elif copied_files:
              messagebox.showinfo("Success", f"Plugin files installed successfully.\n({len(copied_files)} files copied)\n\nPlease restart Krita.")
-             root.destroy() # Close the window after successful installation
+             # root.destroy() # Removed as GUI is no longer used
         else:
              messagebox.showinfo("No Files Copied", "No files were copied (perhaps source files are missing?).")
 
@@ -109,62 +109,10 @@ def install_plugin():
     except Exception as e:
         messagebox.showerror("Installation Failed", f"An error occurred during installation:\n{e}\n\nPlease check permissions or if Krita is running.")
 
-# --- GUI Setup ---
-root = tk.Tk()
-root.title("KritaColorPlus Installer")
-
-# Set a slightly larger default font
-default_font = font.nametofont("TkDefaultFont")
-default_font.configure(size=10)
-root.option_add("*Font", default_font)
-
-# Get file list for display
-try:
-    files_display_list = get_files_to_install()
-    display_text = "Files to be installed:\n\n"
-    for item in files_display_list:
-        op_type, src, dest = item
-        if op_type == 'dir':
-             display_text += f"FROM DIR: {src}\n  TO DIR: {dest}\n\n"
-        elif op_type == 'file':
-             display_text += f"FROM FILE: {src}\n  TO FILE: {dest}\n\n"
-
-except SystemExit: # Exit if get_files_to_install failed early
-    sys.exit(1)
-except FileNotFoundError as e:
-     display_text = f"Error: {e}"
-     files_display_list = [] # Ensure list is empty if no files found
-
-
-main_frame = tk.Frame(root, padx=15, pady=15)
-main_frame.pack(fill=tk.BOTH, expand=True)
-
-label_info = tk.Label(main_frame, text="This script will install/update the KritaColorPlus plugin and its actions.", justify=tk.LEFT)
-label_info.pack(pady=(0, 10), anchor='w')
-
-# Use ScrolledText widget to display the list of files
-text_area = scrolledtext.ScrolledText(main_frame, wrap=tk.WORD, height=15, width=80)
-text_area.insert(tk.INSERT, display_text)
-text_area.config(state='disabled') # Make it read-only
-text_area.pack(pady=(0, 15), fill=tk.BOTH, expand=True)
-
-
-# Only enable button if files were found
-install_button = tk.Button(main_frame, text="Install Files", command=install_plugin, width=15, height=2)
-if not files_display_list:
-     install_button.config(state='disabled')
-install_button.pack(pady=(5, 0))
-
-# Center the window
-root.update_idletasks()
-# Try to make window slightly larger
-window_width = max(root.winfo_width(), 600) # Min width 600
-window_height = max(root.winfo_height(), 400) # Min height 400
-screen_width = root.winfo_screenwidth()
-screen_height = root.winfo_screenheight()
-x = int((screen_width / 2) - (window_width / 2))
-y = int((screen_height / 2) - (window_height / 2))
-root.geometry(f'{window_width}x{window_height}+{x}+{y}')
-
-
-root.mainloop()
+# --- Direct Installation ---
+# GUI removed, call install function directly.
+if __name__ == "__main__":
+    # Hide the dummy Tkinter root window that messagebox creates
+    root = tk.Tk()
+    root.withdraw()
+    install_plugin()
