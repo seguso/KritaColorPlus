@@ -1561,7 +1561,7 @@ def handle_click(widget):
         log(f"Click su: {widget}")
 
 
-def handle_release(widget):
+def handle_release(widget): # bm_released
     if monitor.is_krita_canvas(widget):
 
         log("******************** on history was made - mouse released on canvas")
@@ -1605,23 +1605,16 @@ def handle_release(widget):
         # Get color components (usually [R, G, B, A] as floats 0.0-1.0)
         components = krita_fg_color.components()
 
-        if g.g_dirty_brush_color_to_ignore is not None and arrEqual(components, g.g_dirty_brush_color_to_ignore):
-            # non aggiorno la history visuale, perche' e' un colore generato dal dirty brush
-            log(f"colore ignorato {components}")
-        else:
-            log(f"colore non ignorato {components}")
 
-            # e' arrivato un colore diverso, quindi l'ha settato l'utente da picker
-            g.g_dirty_brush_color_to_ignore = None
-
+        def aggiorna_history_aggiungendo(aComponents):
             # Convert Krita components (0-1 float, RGBA) to our rgb class format (0-255 float, BGR internally)
             # Note: The rgb class stores B in self.r and R in self.b internally.
-            actual_color_rgb = rgb(r=components[0] * 255.0,  # Blue component (index 2) * 255 for rgb.r
+            actual_color_rgb = rgb(r=aComponents[0] * 255.0,  # Blue component (index 2) * 255 for rgb.r
                                    # Green component (index 1) * 255 for rgb.g
-                                   g=components[1] * 255.0,
+                                   g=aComponents[1] * 255.0,
                                    # Red component (index 0) * 255 for rgb.b
-                                   b=components[2] * 255.0,
-                                   a=components[3] * 255.0)  # Alpha component (index 3) * 255 for rgb.a
+                                   b=aComponents[2] * 255.0,
+                                   a=aComponents[3] * 255.0)  # Alpha component (index 3) * 255 for rgb.a
 
             # Use the actual color for the stroke
             stroke_color = actual_color_rgb.clone()
@@ -1669,6 +1662,32 @@ def handle_release(widget):
 
             update_label_from_virtual_color()
 
+
+        if g.g_dirty_brush_color_to_ignore is not None and arrEqual(components, g.g_dirty_brush_color_to_ignore):
+            # non aggiorno la history visuale, perche' e' un colore generato dal dirty brush
+            log(f"colore ignorato {components}")
+
+        elif g.g_auto_mix_color_to_ignore is not None and arrEqual(components, g.g_auto_mix_color_to_ignore):
+            # non aggiorno la history visuale, perche' e' un colore generato dall'automix
+            log(f"colore ignorato , generato da automix {components}")
+
+            # non aggiungo alla history il colore fasullo dell'automixing, ma devo aggiungere quello vero selezionato dall'utente
+            if g.g_ultimo_colore_vero_settato_dall_utente is not None:
+                log(f"automixing: aggiungo il colore vero:  {g.g_ultimo_colore_vero_settato_dall_utente}")
+                aggiorna_history_aggiungendo(g.g_ultimo_colore_vero_settato_dall_utente)
+                        
+        else:
+            log(f"colore non ignorato {components}")
+
+            # e' arrivato un colore diverso, quindi l'ha settato l'utente da picker
+            g.g_dirty_brush_color_to_ignore = None
+            g.g_auto_mix_color_to_ignore = None
+
+            aggiorna_history_aggiungendo(components)
+
+            
+
+        
             # else:
             #     log("  Warning: Docker instance not found in globals (g.g_docker_instance). UI not updated.")
             # log(f"  After Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
@@ -1994,6 +2013,8 @@ class MyExtension(Extension):
         # openedView.updateAutoFocus()
 
     def onFgColorChanged(self):
+
+        
         # this is fired several times when the user changes a color via the color selector.
         # So I can't add a layer here, because I would add hundreds of layers. So I don't do anything,
         # but mark it dirty via g.g_color_changed_from_selector_probably.
@@ -2019,6 +2040,15 @@ class MyExtension(Extension):
                     # components() likely returns Tuple[float, float, float, float] for RGBA
                     # il ManagedColor si usa cosi'
                     comp: Sequence[float] = fg.components()
+
+
+                    if g.g_auto_mix_color_to_ignore is not None and arrEqual(g.g_auto_mix_color_to_ignore, comp):
+                        pass
+                    elif g.g_dirty_brush_color_to_ignore is not None and arrEqual(g.g_dirty_brush_color_to_ignore, comp):
+                        pass
+                    else:
+                        # e' un colore settato davvero dall'utente. ricordalo
+                        g.g_ultimo_colore_vero_settato_dall_utente = comp
 
                     # Element-wise comparison instead of direct list/tuple comparison
 
@@ -2880,6 +2910,8 @@ class MyExtension(Extension):
 
                             fg.setComponents(comp)
 
+                            g.g_auto_mix_color_to_ignore = comp
+
                             view.setForeGroundColor(fg)
 
     # def mixSmall(self):
@@ -3010,6 +3042,8 @@ class MyExtension(Extension):
                             log(f"fg color after = {comp}")
 
                             fg.setComponents(comp)
+
+                            g.g_ultimo_colore_vero_settato_dall_utente = comp # ricorda che questo e' un colore vero
 
                             view.setForeGroundColor(fg)
 

@@ -50,6 +50,7 @@ g_auto_mixing_uses_distance_logic = False # perche' io posso prendere un colore 
                                                                         # d'altra parta, è sbagliato concettualmente se io fisso un target color e voglio arrivarci in N strokes
 g_auto_mixing_just_once_logic = False
 g_auto_mixing_just_once_now_on = False
+g_ultimo_colore_vero_settato_dall_utente = None
 
 #when distance logic is active
 g_auto_mixing_target_distance = None  # value is ignored, will be read from settings.
