@@ -1057,215 +1057,6 @@ class AutoFocusSetter(QObject):
             # log(">>>>>>>>> paint event detected");
             
             
-            if g.g_mixing_color:
-            
-                app = Krita.instance()
-            
-                # hide current layer, because I need to pick the color excluding the stroke just made
-                app.activeDocument().activeNode().setVisible(False)
-                app.activeDocument().refreshProjection()
-                
-                
-                
-                if g.g_multi_layer_mode:
-                    # TODO dovrei cancellare il precedente layer, non il corrente. perché è un errore
-                    mixFgColorWithBgColor_normalLogic( createLayer = False, deleteCurLayer = True, clearCurLayer = False)
-                    
-                else:
-                    mixFgColorWithBgColor_normalLogic( createLayer = False, deleteCurLayer = True, clearCurLayer = False)
-
-
-                app.activeDocument().activeNode().setVisible(True)
-                
-                
-                g.g_mixing_color = False
-                
-                g.g_btn_mix.setChecked(False)
-                
-                return True # annulla l'evento, ma non funziona
-            elif g.g_picking_color:
-                # clear layer first, otherwise I pick the color just painted
-                app = Krita.instance()
-                
-                # hide current layer, because I need to pick the color excluding the stroke just made
-                app.activeDocument().activeNode().setVisible(False)
-                app.activeDocument().refreshProjection()
-                
-                # now,  pick color ignoring stroke just made (which is on its own layer) 
-                col = getColorUnderCursorOrAtPos(forcedPos = xyOfQpoint(g.g_last_coord_mouse_down )) 
-                setFgColor(col)
-                log("g_virtual_fg_color_rgb pickingcolor")
-                g.g_virtual_fg_color_rgb  = col
-                g.g_picking_color = False
-                
-                app.activeDocument().activeNode().setVisible(True)
-                
-                
-                # now I have to delete the stroke just made. normally I would just clear the layer. But if I'm in single layer mode I need to DELETE the layer
-                if g.g_multi_layer_mode:  # altrimenti non ho creato un nuovo layer
-                    app.action('clear').trigger()
-                    app.activeDocument().waitForDone () # action needs to finish before continuing  
-                else:
-                    app.activeDocument().activeNode().remove()
-                    
-                    
-                
-                
-                g.g_btn_pick_color.setChecked(False)
-                
-                
-                # todo update layer opacity
-                
-                
-                
-                # set color label
-                update_label_from_virtual_color()
-                
-                #lblActiveColor.setStyleSheet("background-color: blue")
-                
-                
-
-                if g.g_diminishing_opacity:
-                    g.g_auto_mix__how_much_canvas_to_pick = 1.0
-                    
-                    val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                    g.g_dial_auto_mix_level.setValue(val099)
-
-                return True # annulla l'evento, ma non funziona
-                
-                
-            
-            g.g_last_coord_mouse_up = get_cursor_in_document_coords()
-            
-            
-            
-            # remember layer is dirty
-            
-            g.g_layer_is_dirty[ Krita.instance().activeDocument().activeNode().uniqueId()] = True
-            #log(f"setting layer dirty {Krita.instance().activeDocument().activeNode().uniqueId()}")
-            
-            
-            if g.g_auto_dry_each_stroke and g.g_multi_layer_mode:
-                newLa = dryPaper(showMessage = False)
-            
-            
-            
-                
-            # uncomment this to have dirty brush =============== mouse released
-            
-            
-            if g.g_diminishing_opacity:
-                g.g_auto_mix__how_much_canvas_to_pick = g.g_auto_mix__how_much_canvas_to_pick * 0.9
-                
-                val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                g.g_dial_auto_mix_level.setValue(val099)
-        
-                
-                # if g.g_auto_mix__how_much_canvas_to_pick > 1.0:
-                    # g.g_auto_mix__how_much_canvas_to_pick = 1.0
-            
-                                                    
-            
-            # if g.g_diminishing_opacity:
-            
-                # doc = Krita.instance().activeDocument()
-
-                # # # Get the current brush
-                # brush = doc.activeNode()
-                # current_opacity = brush.opacity()
-                # if current_opacity > 20:
-                    # newLa = dryPaper(False)
-            
-                    # newLa.setOpacity(current_opacity * 0.82) 
-            
-
-                # # Get the current opacity of the brush
-                # current_opacity = brush.opacity()
-
-                # # Calculate the new opacity
-                # new_opacity = current_opacity * 0.9
-
-                # # Set the new opacity of the brush
-                # brush.setOpacity(new_opacity)
-                
-                
-                # # Get the active document
-                # doc = Krita.instance().activeDocument()
-
-                # # Get the current brush
-                # brush = doc.activeBrush()
-
-                # # Get the current opacity of the brush
-                # current_opacity = brush.opacity()
-
-                # # Calculate the new opacity
-                # new_opacity = current_opacity * 0.5
-                
-                # brush.setOpacity(new_opacity)
-
-                # # Create a new brush preset with the modified opacity
-                # new_preset = brush.duplicatePreset()
-                # new_preset.setOpacity(new_opacity)
-
-                # # Select the new brush preset
-                # doc.setActiveBrushPreset(new_preset)
-                                
-            
-            if g.g_dirty_brush_currently_on and g.g_dirty_brush_overall_enabled:
-                application = Krita.instance()
-                win = application.activeWindow()
-                if win is not None:
-                    view = win.activeView()
-                    if  view is not None:
-                    
-                    
-                        
-                        g.g_virtual_fg_color_rgb_previous_when_dirty_brush_on = g.g_virtual_fg_color_rgb.clone()
-                        
-                        
-                        
-                        
-                        fg = view.foregroundColor() #tipo ManagedColor, valori da 0 a 1
-                            # log(f"fg  = {fg}")
-                            
-                        # fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
-                        
-                        # global g.g_virtual_fg_color_rgb
-                        # g.g_virtual_fg_color_rgb = fg2
-                        
-                        # non riesco aprendere il colore precedente
-                        #bgColor = getColorUnderCursorOrAtPos(True) # skippo current layer altrimenti prende il fg attuale
-                        
-                        # average between color when mouse down and color when mouse up
-                        
-                        bgColorAverage =  g.g_color_on_down_dirty_brush # bgColor.average( g.g_color_on_down_dirty_brush)
-                        
-                        
-                        
-                        comp = fg.components() 
-                        
-                        canv = 0.12 # 0.18 troppo difficile fare contorni scuri
-                    
-                        fgMul = 1.0 - canv
-                        comp[0] = comp[0] * fgMul + (bgColorAverage.r / 255.0)  * canv
-                        comp[1] = comp[1] * fgMul + (bgColorAverage.g / 255.0)  * canv
-                        comp[2] = comp[2] * fgMul + (bgColorAverage.b  / 255.0)  * canv
-                        
-                    
-                        
-                        fg.setComponents(comp)
-                        
-                        view.setForeGroundColor(fg)
-                        
-               
-                        log("g_virtual_fg_color_rgb dirty")
-                        g.g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
-                        update_label_from_virtual_color()
-                            
-                            
-                            
-                        print (f"dirty brush: adding a bit of {bgColorAverage.toString()} setting {g.g_virtual_fg_color_rgb.toString()}")
-        
         if event.type() == QEvent.MouseButtonRelease:
             log(">>>>>>>>>mouse button release")
 
@@ -2187,6 +1978,10 @@ def handle_release(widget):
 
         log("******************** on history was made - mouse released on canvas")
         
+
+        # ********************************
+        # 1)  aggiorna la color history
+        #
         # --- Check if the current tool is a brush tool using whichtool.py ---
         current_tool_id = EKritaTools.current()
 
@@ -2279,6 +2074,181 @@ def handle_release(widget):
             import traceback
             traceback.print_exc()
 
+
+
+        # ********************************
+        # 
+
+    
+        if g.g_mixing_color:
+        
+            app = Krita.instance()
+        
+            # hide current layer, because I need to pick the color excluding the stroke just made
+            app.activeDocument().activeNode().setVisible(False)
+            app.activeDocument().refreshProjection()
+            
+            
+            
+            if g.g_multi_layer_mode:
+                # TODO dovrei cancellare il precedente layer, non il corrente. perché è un errore
+                mixFgColorWithBgColor_normalLogic( createLayer = False, deleteCurLayer = True, clearCurLayer = False)
+                
+            else:
+                mixFgColorWithBgColor_normalLogic( createLayer = False, deleteCurLayer = True, clearCurLayer = False)
+
+
+            app.activeDocument().activeNode().setVisible(True)
+            
+            
+            g.g_mixing_color = False
+            
+            g.g_btn_mix.setChecked(False)
+            
+            return True # annulla l'evento, ma non funziona
+        elif g.g_picking_color:
+            # clear layer first, otherwise I pick the color just painted
+            app = Krita.instance()
+            
+            # hide current layer, because I need to pick the color excluding the stroke just made
+            app.activeDocument().activeNode().setVisible(False)
+            app.activeDocument().refreshProjection()
+            
+            # now,  pick color ignoring stroke just made (which is on its own layer) 
+            col = getColorUnderCursorOrAtPos(forcedPos = xyOfQpoint(g.g_last_coord_mouse_down )) 
+            setFgColor(col)
+            log("g_virtual_fg_color_rgb pickingcolor")
+            g.g_virtual_fg_color_rgb  = col
+            g.g_picking_color = False
+            
+            app.activeDocument().activeNode().setVisible(True)
+            
+            
+            # now I have to delete the stroke just made. normally I would just clear the layer. But if I'm in single layer mode I need to DELETE the layer
+            if g.g_multi_layer_mode:  # altrimenti non ho creato un nuovo layer
+                app.action('clear').trigger()
+                app.activeDocument().waitForDone () # action needs to finish before continuing  
+            else:
+                app.activeDocument().activeNode().remove()
+                
+                
+            
+            
+            g.g_btn_pick_color.setChecked(False)
+            
+            
+            # todo update layer opacity
+            
+            
+            
+            # set color label
+            update_label_from_virtual_color()
+            
+            #lblActiveColor.setStyleSheet("background-color: blue")
+            
+            
+
+            if g.g_diminishing_opacity:
+                g.g_auto_mix__how_much_canvas_to_pick = 1.0
+                
+                val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+                g.g_dial_auto_mix_level.setValue(val099)
+
+            return True # annulla l'evento, ma non funziona
+            
+            
+        
+        g.g_last_coord_mouse_up = get_cursor_in_document_coords()
+        
+        
+        
+        # remember layer is dirty
+        
+        g.g_layer_is_dirty[ Krita.instance().activeDocument().activeNode().uniqueId()] = True
+        #log(f"setting layer dirty {Krita.instance().activeDocument().activeNode().uniqueId()}")
+        
+        
+        if g.g_auto_dry_each_stroke and g.g_multi_layer_mode:
+            newLa = dryPaper(showMessage = False)
+        
+        
+        
+            
+        
+        
+        
+        if g.g_diminishing_opacity:
+            g.g_auto_mix__how_much_canvas_to_pick = g.g_auto_mix__how_much_canvas_to_pick * 0.9
+            
+            val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+            g.g_dial_auto_mix_level.setValue(val099)
+    
+            
+            # if g.g_auto_mix__how_much_canvas_to_pick > 1.0:
+                # g.g_auto_mix__how_much_canvas_to_pick = 1.0
+        
+                                                
+                            
+        
+        if g.g_dirty_brush_currently_on and g.g_dirty_brush_overall_enabled:
+            application = Krita.instance()
+            win = application.activeWindow()
+            if win is not None:
+                view = win.activeView()
+                if g.g_color_on_down_dirty_brush is None:
+                    log("g_color_on_down_dirty_brush is none. skippo logica dirty")
+
+
+                if  view is not None and g.g_color_on_down_dirty_brush is not None:
+                
+                
+                    
+                    g.g_virtual_fg_color_rgb_previous_when_dirty_brush_on = g.g_virtual_fg_color_rgb.clone()
+                    
+                    
+                    
+                    
+                    fg = view.foregroundColor() #tipo ManagedColor, valori da 0 a 1
+                        # log(f"fg  = {fg}")
+                        
+                    # fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
+                    
+                    # global g.g_virtual_fg_color_rgb
+                    # g.g_virtual_fg_color_rgb = fg2
+                    
+                    # non riesco aprendere il colore precedente
+                    #bgColor = getColorUnderCursorOrAtPos(True) # skippo current layer altrimenti prende il fg attuale
+                    
+                    # average between color when mouse down and color when mouse up
+                    
+                    bgColorAverage =  g.g_color_on_down_dirty_brush # bgColor.average( g.g_color_on_down_dirty_brush)
+                    
+                    
+                    
+                    comp = fg.components() 
+                    
+                    canv = 0.12 # 0.18 troppo difficile fare contorni scuri
+                
+                    fgMul = 1.0 - canv
+                    comp[0] = comp[0] * fgMul + (bgColorAverage.r / 255.0)  * canv
+                    comp[1] = comp[1] * fgMul + (bgColorAverage.g / 255.0)  * canv
+                    comp[2] = comp[2] * fgMul + (bgColorAverage.b  / 255.0)  * canv
+                    
+                
+                    
+                    fg.setComponents(comp)
+                    
+                    view.setForeGroundColor(fg)
+                    
+            
+                    log("g_virtual_fg_color_rgb dirty")
+                    g.g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
+                    update_label_from_virtual_color()
+                        
+                        
+                        
+                    print (f"dirty brush: adding a bit of {bgColorAverage.toString()} setting {g.g_virtual_fg_color_rgb.toString()}")
+    
     else:
         log(f"Rilascio 2 su: {widget}")
 
