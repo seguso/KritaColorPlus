@@ -3026,7 +3026,7 @@ class MyExtension(Extension):
                                                 pixelC = imageData.pixelColor(0,0)
                                                 
                                                 #e ora da colore qt a colore mio 
-                                                mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255.0)
+                                                mergedColor = rgb(float(pixelC.red()),  float(pixelC.green()),  float(pixelC.blue()), 255.0)
                                                 
                                                 
                                                 # for pos in positions:
