@@ -78,6 +78,7 @@ g_auto_mix_color_to_ignore = None
 g_dirty_brush_overall_enabled = False
 g_dirty_brush_currently_on = True
 g_dirty_brush_color_to_ignore  = None
+g_dirty_brush_level = None # value is ignored: will be read from settings --- range from 0.04 to 0.5
 
 g_color_on_down_dirty_brush = None
 g_last_coord_mouse_down = None

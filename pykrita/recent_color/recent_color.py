@@ -283,6 +283,23 @@ def toggleAutoMixing():
         g.g_actionAutoMix.setChecked(True)
 
 
+def toggleDirtyBrush():
+
+    if g.g_dirty_brush_overall_enabled:
+
+        g.g_dirty_brush_overall_enabled = False
+        g.g_actionDirtyBrush.setChecked(False)
+
+        quickMessage("Disabled dirty brush")
+
+        g.g_btn_dirty_brush.setChecked(False)
+    else:
+        quickMessage("Enabled dirty brush")
+        g.g_dirty_brush_overall_enabled = True
+        g.g_btn_dirty_brush.setChecked(True)
+        g.g_actionDirtyBrush.setChecked(True)
+
+
 def log(s):
     g.printCount += 1
     print(f"{g.printCount}: {s}\n\n")
@@ -402,6 +419,34 @@ class HelloDocker(DockWidget):
         g.g_dial_auto_mix_level.valueChanged.connect(
             self.autoMixLevelValueChanged)
 
+        # dirty brush layout
+        layoutHorizDirtyBrush = QHBoxLayout()
+        mainLayout.addLayout(layoutHorizDirtyBrush)
+
+        # dirty brush button
+        g.g_btn_dirty_brush = QPushButton("Dirty brush", mainWidget)
+        g.g_btn_dirty_brush.setCheckable(True)
+        layoutHorizDirtyBrush.addWidget(g.g_btn_dirty_brush)
+        g.g_btn_dirty_brush.clicked.connect(toggleDirtyBrush)
+        g.g_btn_dirty_brush.setMinimumHeight(60)
+
+        font = g.g_btn_dirty_brush.font()
+        font.setPixelSize(15)
+        g.g_btn_dirty_brush.setFont(font)
+
+        # dirty brush level
+        g.g_dial_dirty_brush_level = QDial(mainWidget)
+        g.g_dial_dirty_brush_level.setToolTip("Dirty brush level")
+        layoutHorizDirtyBrush.addWidget(g.g_dial_dirty_brush_level)
+        g.g_dial_dirty_brush_level.setWrapping(False)
+        g.g_dial_dirty_brush_level.setMinimumHeight(60)
+
+        val099 = round((g.g_dirty_brush_level - 0.04) * 100.0 / 0.46)
+        g.g_dial_dirty_brush_level.setValue(val099)
+
+        g.g_dial_dirty_brush_level.valueChanged.connect(
+            self.dirtyBrushLevelValueChanged)
+
         # pick color button
         self.buttonPickColor = QPushButton("Pick color", mainWidget)
 
@@ -436,6 +481,16 @@ class HelloDocker(DockWidget):
 
         quickMessage(
             f"Changed auto-mixing to {round(g.g_auto_mix__how_much_canvas_to_pick * 100.0)} %")
+            
+    def dirtyBrushLevelValueChanged(self, level):
+        # Converto il valore del dial (0-100) nel range desiderato (0.04-0.5)
+        g.g_dirty_brush_level = 0.04 + (level / 100.0) * 0.46
+        
+        Krita.instance().writeSetting("colorPlus", "g.g_dirty_brush_level",
+                                      str(g.g_dirty_brush_level))
+        
+        quickMessage(
+            f"Changed dirty brush level to {round(g.g_dirty_brush_level * 100.0)} %")
 
     def manualMixColorButtonClicked(self):
 
@@ -1896,6 +1951,9 @@ class MyExtension(Extension):
 
         g.g_auto_opacity_max_distance = int(Krita.instance().readSetting(
             "colorPlus", "g.g_auto_opacity_max_distance", "40"))
+            
+        g.g_dirty_brush_level = float(Krita.instance().readSetting(
+            "colorPlus", "g.g_dirty_brush_level", "0.12"))
 
         # dev values , only read when timer is active
         g.g_virtual_fg_color_rgb = None  # di tipo rgb
@@ -3741,6 +3799,13 @@ class MyExtension(Extension):
         g.g_actionAutoMix.setCheckable(True)
         g.g_actionAutoMix.setShortcut("r")
         g.g_actionAutoMix.triggered.connect(toggleAutoMixing)
+        
+        g.g_dirty_brush_overall_enabled = False
+        g.g_actionDirtyBrush = window.createAction(
+            "toggleDirtyBrush", "Dirty brush (simulates a brush that gets dirty with previous colors)")
+        g.g_actionDirtyBrush.setCheckable(True)
+        g.g_actionDirtyBrush.setShortcut("d")
+        g.g_actionDirtyBrush.triggered.connect(toggleDirtyBrush)
 
         self.actionIncAutoMix = window.createAction(
             "increaseAutoMixing", "Increase auto-mixing (amount of bg color you pick at each stroke)")
@@ -3756,6 +3821,7 @@ class MyExtension(Extension):
         custom_menu.addAction(g.g_actionAutoMix)
         custom_menu.addAction(self.actionIncAutoMix)
         custom_menu.addAction(self.actionDecAutoMix)
+        custom_menu.addAction(g.g_actionDirtyBrush)
 
         custom_menu.addSeparator()
         custom_menu.addAction(actionDryPaper)
