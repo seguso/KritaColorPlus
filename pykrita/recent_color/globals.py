@@ -66,6 +66,7 @@ g_auto_mix_paused = False
 g_auto_mix_enabled = False
 
 
+g_ignora_prossimo_fg_color_dirty = None
 g_dirty_brush_overall_enabled = True
 g_dirty_brush_currently_on = True
 

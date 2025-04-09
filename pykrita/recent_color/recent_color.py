@@ -48,8 +48,10 @@ from PyQt5.QtWidgets import (
                 QHBoxLayout,      # Added QHBoxLayout
                 QVBoxLayout,      # Added QVBoxLayout (already used but good to be explicit)
                 QPushButton,      # Added QPushButton (already used but good to be explicit)
-                QDial             # Added QDial (already used but good to be explicit)
-                )
+              
+                QDial)            # Added QDial (already used but good to be explicit)
+
+from typing import List, Tuple, Optional, Sequence
 
 
 # from PyQt5 import QtWidgets, QtCore, QtGui, uic
@@ -1802,7 +1804,7 @@ def handle_release(widget):
         # ********************************
         # 1)  aggiorna la color history
         #
-        if not g.g_dirty_brush_currently_on:
+        if True: # not g.g_dirty_brush_currently_on:
             # --- Check if the current tool is a brush tool using whichtool.py ---
             current_tool_id = EKritaTools.current()
 
@@ -1881,10 +1883,12 @@ def handle_release(widget):
                 # Update the absolute last color tracker (always, inside try)
                 g.g_virtual_color_used_last_rgb = stroke_color
 
-                # --- Update the Docker UI ---
-                if hasattr(g, 'g_docker_instance') and g.g_docker_instance:
-                    # log("  Calling docker update UI...")
-                    g.g_docker_instance.update_color_history_ui()
+                # aggiorna la history
+                
+                g.g_docker_instance.update_color_history_ui()
+
+                update_label_from_virtual_color()
+
                 # else:
                 #     log("  Warning: Docker instance not found in globals (g.g_docker_instance). UI not updated.")
                 # log(f"  After Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
@@ -2070,12 +2074,18 @@ def handle_release(widget):
                     
                     fg.setComponents(new_comp)
                     
-                    view.setForeGroundColor(fg)
+                    g.g_ignora_prossimo_fg_color_dirty = new_comp
+                    view.setForeGroundColor(fg)  #scatta onFgColorChanged, che ignorera questo colore
                     
             
                     log("g_virtual_fg_color_rgb dirty")
-                    g.g_virtual_fg_color_rgb = rgb( float  (new_comp[0] * 255.0), float  (new_comp[1] * 255.0), float  (new_comp[2] * 255.0), 255.0)
-                    update_label_from_virtual_color()
+
+
+                    # g.g_virtual_fg_color_rgb = rgb( float  (new_comp[0] * 255.0), float  (new_comp[1] * 255.0), float  (new_comp[2] * 255.0), 255.0)
+
+                    
+
+                    # update_label_from_virtual_color()
                         
                         
                         
@@ -2257,28 +2267,14 @@ class MyExtension(Extension):
 
         
         def onFgColorChanged(self):
-            # this is fired several times when the user changes a color via the color selector. So I can't add a layer here, because I would add hundreds of layers. So I don't do anything, but mark it dirty via g.g_color_changed_from_selector_probably.
+            # this is fired several times when the user changes a color via the color selector. 
+            # So I can't add a layer here, because I would add hundreds of layers. So I don't do anything, 
+            # but mark it dirty via g.g_color_changed_from_selector_probably.
             
             
             
             #capisci se è davvero cambiato, dato che questa callback è inaffidabile e viene chiamata anche se entro ed esco dal selector senza cliccare
-            g.g_color_changed_from_selector_probably = True
-            # if g.g_color_used_last_array is not None:
-                # view  = Krita.instance().activeWindow().activeView()
-                # if view is not None:
-                    # fg = view.foregroundColor()
-                    # if fg is not None:
-                        # comp = fg.components() 
-                        # if comp is not None:
-                            # #if listEqual(comp, g.g_color_used_last_array):  # non funziona con automix
-                            
-                            # fgCol = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
-                            # if fgCol.equals(g.g_virtual_color_used_last_rgb):
-                                # log("current color is same")
-                                # pass
-                            # else:
-                                
-                
+            g.g_color_changed_from_selector_probably = True #serve per la logica che crea new layer
                 
             
             
@@ -2290,20 +2286,32 @@ class MyExtension(Extension):
             
             
             
-            
-            if not g.g_auto_mix_enabled or g.g_auto_mix_paused:  # otherwise it is the auto-mixing timer that changed the color. ignore
+            if ( not g.g_auto_mix_enabled or g.g_auto_mix_paused):  # otherwise it is the auto-mixing timer that changed the color. ignore
                 
                 # the color has been changed manually, not by auto-mix                
                     
                 # devo settare questo colore come target per l'auto-mixing
                 view  = Krita.instance().activeWindow().activeView()
                 if view is not None:
-                    fg = view.foregroundColor()
+                    fg: Optional[QColor] = view.foregroundColor()
                     if fg is not None:
-                        comp = fg.components() 
+                        # components() likely returns Tuple[float, float, float, float] for RGBA
+                        comp: Sequence[float] = fg.components()
+
+                        # Element-wise comparison instead of direct list/tuple comparison
+                        should_ignore = False
+                        if g.g_ignora_prossimo_fg_color_dirty is not None and len(g.g_ignora_prossimo_fg_color_dirty) == len(comp):
+                            # Use a small tolerance for float comparison if needed, but direct check first
+                            # tolerance = 1e-6
+                            # if all(abs(a - b) < tolerance for a, b in zip(g.g_ignora_prossimo_fg_color_dirty, comp)):
+                            if all(a == b for a, b in zip(g.g_ignora_prossimo_fg_color_dirty, comp)):
+                                should_ignore = True
+                                
+                        if should_ignore:
+                            pass # Colors match the one to ignore
                         
-                        if len(comp) == 4:
-                            
+                        elif len(comp) == 4: # Assuming RGBA
+        
                             mergedColor = rgb(comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
                                 
 
@@ -2316,6 +2324,8 @@ class MyExtension(Extension):
                             #log(f"setting last_color_picked = {g.g_virtual_fg_color_rgb.toString()}")
                         else:
                             log("err1")
+
+                        g.g_ignora_prossimo_fg_color_dirty = None   
                     else:
                         print ("err2")
             
