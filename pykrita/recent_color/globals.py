@@ -75,7 +75,7 @@ g_auto_mix_color_to_ignore = None
 
 
 
-g_dirty_brush_overall_enabled = True
+g_dirty_brush_overall_enabled = False
 g_dirty_brush_currently_on = True
 g_dirty_brush_color_to_ignore  = None
 

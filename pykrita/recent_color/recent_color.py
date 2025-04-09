@@ -2060,7 +2060,9 @@ class MyExtension(Extension):
                                 comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
 
                             # log(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}, orig = {comp[0]}, {comp[1]}, {comp[2]}")
-                            g.g_virtual_fg_color_rgb = newColorRgb  # lo memorizzo
+
+                            # print(f"setto target per automixing {newColorRgb}")
+                            g.g_virtual_fg_color_rgb = newColorRgb  # lo memorizzo. diventa il target dell'automixing
 
                             update_label_from_virtual_color()
 
