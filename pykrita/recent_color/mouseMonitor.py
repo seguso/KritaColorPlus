@@ -44,12 +44,20 @@ class MouseMonitor(QObject):
 
     def is_krita_canvas(self, widget):
         """Verifica se il widget è il canvas di Krita"""
+
+        #print("\niskritac1\n");
         if not widget:
+            #print(f"\n return false. widget = {widget}\n");
             return False
-        if widget.metaObject().className() == 'QOpenGLWidget':
-            parent = widget.parent()
-            while parent:
-                if hasattr(parent, 'canvas') and 'KisCanvas' in str(type(parent)):
-                    return True
-                parent = parent.parent()
+        if widget.metaObject().className() == 'KisOpenGLCanvas2': # TODO potrebbe non funzionare senza opengl
+            #print("\ndetected canvas krita\n");
+            return True
+            # parent = widget.parent()
+            # while parent:
+            #     if hasattr(parent, 'canvas') and 'KisCanvas' in str(type(parent)):
+            #         return True
+            #     parent = parent.parent()
+
+        # else:
+        #     print(f"class name { widget.metaObject().className()}. widget = {widget}\n")
         return False

@@ -752,20 +752,17 @@ def dryPaper( showMessage = True):
             #activeLayer.mergeDown()
             #currentDoc.waitForDone()
             
-            g.g_is_drying_paper = True # Set flag before history-modifying actions
-            try:
-                # root = currentDoc.rootNode()
-                newLa = currentDoc.createNode("Wet_area", "paintLayer")
-                newLa.setOpacity(oldOpacity)
-                
-                
-                # backgroundLayer = parentNode.childNodes()[0]
-                
-                log("--faccio add node")
-                parentNode.addChildNode(newLa, None)
-                log("--finito add node")
-            finally:
-                g.g_is_drying_paper = False # Ensure flag is reset
+            
+            # root = currentDoc.rootNode()
+            newLa = currentDoc.createNode("Wet_area", "paintLayer")
+            newLa.setOpacity(oldOpacity)
+            
+            
+            # backgroundLayer = parentNode.childNodes()[0]
+            
+        
+            parentNode.addChildNode(newLa, None)
+        
             
 
             if g.g_set_spectral_blend_mode_when_creating_layer:
@@ -2186,9 +2183,104 @@ def handle_click(widget):
 
 def handle_release(widget):
     if monitor.is_krita_canvas(widget):
-        log("Rilascio sul canvas di Krita")
+
+
+        log("******************** on history was made - mouse released on canvas")
+        
+        # --- Check if the current tool is a brush tool using whichtool.py ---
+        current_tool_id = EKritaTools.current()
+
+        if not current_tool_id:
+            # log("Could not determine current tool ID.")
+            return # Exit if tool ID couldn't be determined
+
+        # Define the list of brush tool IDs using constants from EKritaToolsId
+        brush_tool_ids = [
+            EKritaToolsId.PAINT_BRUSH,
+            EKritaToolsId.PAINT_PENCIL,
+            # EKritaToolsId.PAINT_AIRBRUSH, # Note: Airbrush seems not defined in whichtool.py's EKritaToolsId
+            EKritaToolsId.PAINT_DYNAMIC_BRUSH,
+            EKritaToolsId.FILL_SMARTPATCH, # Smart Patch is listed under FILL but acts like a brush
+            # EKritaToolsId.PAINT_CLONE_BRUSH # Note: Clone brush seems not defined
+            EKritaToolsId.PAINT_MULTI_BRUSH,
+            # Add any other relevant IDs from EKritaToolsId if needed
+        ]
+
+        if current_tool_id not in brush_tool_ids:
+            # History changed due to another action (new layer, filter, etc.)
+            # log(f"History changed, but current tool ({current_tool_id}) is not a brush. Ignoring.")
+            return # Exit the function if it's not a brush stroke
+        # --- End of tool check ---
+
+        # If it is a brush tool, proceed with the original logic:
+        
+        # log(f"\n--- _on_history_was_made (Stroke {self.counter}, Tool: {current_tool_name}) ---")
+        try:
+            # Get globals (original code continues here)
+            # Get the actual foreground color from Krita
+            krita_fg_color = Krita.instance().activeWindow().activeView().foregroundColor()
+            # Get color components (usually [R, G, B, A] as floats 0.0-1.0)
+            components = krita_fg_color.components()
+            
+            # Convert Krita components (0-1 float, RGBA) to our rgb class format (0-255 float, BGR internally)
+            # Note: The rgb class stores B in self.r and R in self.b internally.
+            actual_color_rgb = rgb(r=components[0] * 255.0,  # Blue component (index 2) * 255 for rgb.r
+                                    g=components[1] * 255.0,  # Green component (index 1) * 255 for rgb.g
+                                    b=components[2] * 255.0,  # Red component (index 0) * 255 for rgb.b
+                                    a=components[3] * 255.0)  # Alpha component (index 3) * 255 for rgb.a
+
+            # Use the actual color for the stroke
+            stroke_color = actual_color_rgb.clone()
+            # Update the virtual color to match the actual color
+            g.g_virtual_fg_color_rgb = actual_color_rgb.clone()
+            log(f"  Stroke Color (g.g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
+            log(f"  Before Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
+
+            if stroke_color is not None:
+                stroke_color_clone = stroke_color.clone()
+                log(f"  Processing stroke color {stroke_color_clone.toString()}")
+
+                # Use a temporary list to avoid modifying while iterating if needed, though list comprehension handles this.
+                original_count = len(g.g_last_virtual_colors_used)
+                # Remove all existing instances of the color using list comprehension
+                g.g_last_virtual_colors_used = [c for c in g.g_last_virtual_colors_used if not c.equals(stroke_color_clone)]
+                removed_count = original_count - len(g.g_last_virtual_colors_used)
+                if removed_count > 0:
+                    log(f"  Removed {removed_count} existing instance(s) of {stroke_color_clone.toString()}.")
+
+                # Add the new/current color to the beginning (most recent)
+                g.g_last_virtual_colors_used.insert(0, stroke_color_clone)
+                log(f"  Added color {stroke_color_clone.toString()} to beginning. History size: {len(g.g_last_virtual_colors_used)}")
+
+                # Trim list to max_history, keeping the newest items (at the start)
+                max_history = 40 # TODO: Consider making this configurable
+                if len(g.g_last_virtual_colors_used) > max_history:
+                    g.g_last_virtual_colors_used = g.g_last_virtual_colors_used[:max_history]
+                    log(f"  History trimmed to {max_history} items.")
+
+                # Always reset the history index after a stroke adds/moves a color
+                g.g_color_history_index = 0
+                log(f"  Reset g_color_history_index to 0.")
+            
+            # Update the absolute last color tracker (always, inside try)
+            g.g_virtual_color_used_last_rgb = stroke_color
+
+            # --- Update the Docker UI ---
+            if hasattr(g, 'g_docker_instance') and g.g_docker_instance:
+                log("  Calling docker update UI...")
+                g.g_docker_instance.update_color_history_ui()
+            else:
+                log("  Warning: Docker instance not found in globals (g.g_docker_instance). UI not updated.")
+            log(f"  After Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
+
+        except Exception as e:
+            # Correctly indented except block
+            log(f"Error in _on_history_was_made: {e}")
+            import traceback
+            traceback.print_exc()
+
     else:
-        log(f"Rilascio su: {widget}")
+        log(f"Rilascio 2 su: {widget}")
 
 monitor.mouseClicked.connect(handle_click)
 monitor.mouseReleased.connect(handle_release)
@@ -2879,109 +2971,7 @@ class MyExtension(Extension):
                 
             
         # Note: Updated signature to accept arguments from currentChanged signal
-        def _on_history_was_made(self, current, previous):   # User painted, probably. ma a volte scatta anche quando faccio enter da selector a canvas
-                """Adds the color of the last stroke to the history list and resets the history index, handling A->B->Paint A case."""
-
-
-                log("******************** on history was made")
-                # --- Check if this history event was triggered by dryPaper ---
-                if hasattr(g, 'g_is_drying_paper') and g.g_is_drying_paper:
-                    # log("History change ignored because dryPaper is active.")
-                    return # Exit immediately if dryPaper is running
-                # --- End of dryPaper check ---
-
-                # --- Check if the current tool is a brush tool using whichtool.py ---
-                current_tool_id = EKritaTools.current()
-
-                if not current_tool_id:
-                    # log("Could not determine current tool ID.")
-                    return # Exit if tool ID couldn't be determined
-
-                # Define the list of brush tool IDs using constants from EKritaToolsId
-                brush_tool_ids = [
-                    EKritaToolsId.PAINT_BRUSH,
-                    EKritaToolsId.PAINT_PENCIL,
-                    # EKritaToolsId.PAINT_AIRBRUSH, # Note: Airbrush seems not defined in whichtool.py's EKritaToolsId
-                    EKritaToolsId.PAINT_DYNAMIC_BRUSH,
-                    EKritaToolsId.FILL_SMARTPATCH, # Smart Patch is listed under FILL but acts like a brush
-                    # EKritaToolsId.PAINT_CLONE_BRUSH # Note: Clone brush seems not defined
-                    EKritaToolsId.PAINT_MULTI_BRUSH,
-                    # Add any other relevant IDs from EKritaToolsId if needed
-                ]
-
-                if current_tool_id not in brush_tool_ids:
-                    # History changed due to another action (new layer, filter, etc.)
-                    # log(f"History changed, but current tool ({current_tool_id}) is not a brush. Ignoring.")
-                    return # Exit the function if it's not a brush stroke
-                # --- End of tool check ---
-
-                # If it is a brush tool, proceed with the original logic:
-                self.counter += 1
-                # log(f"\n--- _on_history_was_made (Stroke {self.counter}, Tool: {current_tool_name}) ---")
-                try:
-                    # Get globals (original code continues here)
-                    # Get the actual foreground color from Krita
-                    krita_fg_color = Krita.instance().activeWindow().activeView().foregroundColor()
-                    # Get color components (usually [R, G, B, A] as floats 0.0-1.0)
-                    components = krita_fg_color.components()
-                    
-                    # Convert Krita components (0-1 float, RGBA) to our rgb class format (0-255 float, BGR internally)
-                    # Note: The rgb class stores B in self.r and R in self.b internally.
-                    actual_color_rgb = rgb(r=components[0] * 255.0,  # Blue component (index 2) * 255 for rgb.r
-                                           g=components[1] * 255.0,  # Green component (index 1) * 255 for rgb.g
-                                           b=components[2] * 255.0,  # Red component (index 0) * 255 for rgb.b
-                                           a=components[3] * 255.0)  # Alpha component (index 3) * 255 for rgb.a
-        
-                    # Use the actual color for the stroke
-                    stroke_color = actual_color_rgb.clone()
-                    # Update the virtual color to match the actual color
-                    g.g_virtual_fg_color_rgb = actual_color_rgb.clone()
-                    log(f"  Stroke Color (g.g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
-                    log(f"  Before Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
-
-                    if stroke_color is not None:
-                        stroke_color_clone = stroke_color.clone()
-                        log(f"  Processing stroke color {stroke_color_clone.toString()}")
-
-                        # Use a temporary list to avoid modifying while iterating if needed, though list comprehension handles this.
-                        original_count = len(g.g_last_virtual_colors_used)
-                        # Remove all existing instances of the color using list comprehension
-                        g.g_last_virtual_colors_used = [c for c in g.g_last_virtual_colors_used if not c.equals(stroke_color_clone)]
-                        removed_count = original_count - len(g.g_last_virtual_colors_used)
-                        if removed_count > 0:
-                            log(f"  Removed {removed_count} existing instance(s) of {stroke_color_clone.toString()}.")
-
-                        # Add the new/current color to the beginning (most recent)
-                        g.g_last_virtual_colors_used.insert(0, stroke_color_clone)
-                        log(f"  Added color {stroke_color_clone.toString()} to beginning. History size: {len(g.g_last_virtual_colors_used)}")
-
-                        # Trim list to max_history, keeping the newest items (at the start)
-                        max_history = 40 # TODO: Consider making this configurable
-                        if len(g.g_last_virtual_colors_used) > max_history:
-                            g.g_last_virtual_colors_used = g.g_last_virtual_colors_used[:max_history]
-                            log(f"  History trimmed to {max_history} items.")
-
-                        # Always reset the history index after a stroke adds/moves a color
-                        g.g_color_history_index = 0
-                        log(f"  Reset g_color_history_index to 0.")
-                    
-                    # Update the absolute last color tracker (always, inside try)
-                    g.g_virtual_color_used_last_rgb = stroke_color
-
-                    # --- Update the Docker UI ---
-                    if hasattr(g, 'g_docker_instance') and g.g_docker_instance:
-                        log("  Calling docker update UI...")
-                        g.g_docker_instance.update_color_history_ui()
-                    else:
-                        log("  Warning: Docker instance not found in globals (g.g_docker_instance). UI not updated.")
-                    log(f"  After Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
-
-                except Exception as e:
-                    # Correctly indented except block
-                    log(f"Error in _on_history_was_made: {e}")
-                    import traceback
-                    traceback.print_exc()
-
+      
         # def mixOldSingleLayer(self):
                 # app = Krita.instance()
                 # win = app.activeWindow()
