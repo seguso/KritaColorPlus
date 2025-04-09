@@ -8,6 +8,8 @@ import pprint
 from . import globals as g
 from .whichtool import EKritaTools, EKritaToolsId # Import the necessary classes
 
+
+
 from krita import *
 
 from krita import (
@@ -2161,27 +2163,68 @@ class PluginState:
         
         
 
-# class EventFilter(QObject):
-    # def eventFilter(self, obj, event):
-        # print("event filter called on docker")
-        # if event.type() == QEvent.Leave : #and obj.objectName() == "KisAdvancedColorSelector":
-            # # Mouse left the Advanced Color Selector docker
-            # print("Mouse left the Advanced Color Selector docker")
-        # return super().eventFilter(obj, event)
-class MousePoller(QObject):
+class MouseMonitor(QObject):
+    mouseClicked = pyqtSignal(QWidget)  # Segnale con widget target
+    mouseReleased = pyqtSignal(QWidget)
+
     def __init__(self):
         super().__init__()
         self.timer = QTimer()
         self.timer.timeout.connect(self.check_mouse)
-        self.timer.start(100)  # Ogni 100ms
+        self.timer.start(50)  # 50ms per maggiore reattività
+        
+        self.left_button_pressed = False
+        self.last_widget = None
 
     def check_mouse(self):
-        if QGuiApplication.mouseButtons() & Qt.LeftButton:
-            print("Mouse premuto (via polling)")
-            # Esegui azioni qui
+        current_buttons = QApplication.mouseButtons()
+        current_widget = QApplication.widgetAt(QCursor.pos())
+        
+        # Gestione pressione
+        if current_buttons & Qt.LeftButton:
+            if not self.left_button_pressed:
+                self.left_button_pressed = True
+                self.mouseClicked.emit(current_widget)
+                self.last_widget = current_widget
+        else:
+            if self.left_button_pressed:
+                self.left_button_pressed = False
+                self.mouseReleased.emit(self.last_widget)
+                self.last_widget = None
 
-# Avvia il polling
-poller = MousePoller()
+    def is_krita_canvas(self, widget):
+        """Verifica se il widget è il canvas di Krita"""
+        if not widget:
+            return False
+            
+        # Controlla se è un QOpenGLWidget o ha un nome specifico
+        if widget.metaObject().className() == 'QOpenGLWidget':
+            # Verifica ulteriore attraverso l'albero dei widget
+            parent = widget.parent()
+            while parent:
+                if hasattr(parent, 'canvas') and 'KisCanvas' in str(type(parent)):
+                    return True
+                parent = parent.parent()
+        return False
+
+
+monitor = MouseMonitor()
+
+def handle_click(widget):
+    if monitor.is_krita_canvas(widget):
+        print("Click sul canvas di Krita!")
+        # Aggiungi qui la tua logica
+    else:
+        print(f"Click su: {widget}")
+
+def handle_release(widget):
+    if monitor.is_krita_canvas(widget):
+        print("Rilascio sul canvas di Krita")
+    else:
+        print(f"Rilascio su: {widget}")
+
+monitor.mouseClicked.connect(handle_click)
+monitor.mouseReleased.connect(handle_release)
 
 
 
