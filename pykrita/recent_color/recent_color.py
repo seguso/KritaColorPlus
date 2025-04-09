@@ -2052,21 +2052,21 @@ class MyExtension(Extension):
                         # e' un colore settato davvero dall'utente. ricordalo
                         g.g_ultimo_colore_vero_settato_dall_utente = comp
 
-                    # Element-wise comparison instead of direct list/tuple comparison
+                       # Element-wise comparison instead of direct list/tuple comparison
 
-                    if len(comp) == 4:  # Assuming RGBA
+                        if len(comp) == 4:  # Assuming RGBA
 
-                        newColorRgb = rgb(
-                            comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
+                            newColorRgb = rgb(
+                                comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
 
-                        # log(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}, orig = {comp[0]}, {comp[1]}, {comp[2]}")
-                        g.g_virtual_fg_color_rgb = newColorRgb  # lo memorizzo
+                            # log(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}, orig = {comp[0]}, {comp[1]}, {comp[2]}")
+                            g.g_virtual_fg_color_rgb = newColorRgb  # lo memorizzo
 
-                        update_label_from_virtual_color()
+                            update_label_from_virtual_color()
 
-                        # log(f"setting last_color_picked = {g.g_virtual_fg_color_rgb.toString()}")
-                    else:
-                        log("err1")
+                            # log(f"setting last_color_picked = {g.g_virtual_fg_color_rgb.toString()}")
+                        else:
+                            log("err1")
 
                 else:
                     print("err2")
