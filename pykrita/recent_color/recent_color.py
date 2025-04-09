@@ -10,6 +10,8 @@ from .whichtool import EKritaTools, EKritaToolsId # Import the necessary classes
 
 
 
+
+
 from krita import *
 
 from krita import (
@@ -2163,50 +2165,8 @@ class PluginState:
         
         
 
-class MouseMonitor(QObject):
-    mouseClicked = pyqtSignal(QWidget)  # Segnale con widget target
-    mouseReleased = pyqtSignal(QWidget)
 
-    def __init__(self):
-        super().__init__()
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.check_mouse)
-        self.timer.start(50)  # 50ms per maggiore reattività
-        
-        self.left_button_pressed = False
-        self.last_widget = None
-
-    def check_mouse(self):
-        current_buttons = QApplication.mouseButtons()
-        current_widget = QApplication.widgetAt(QCursor.pos())
-        
-        # Gestione pressione
-        if current_buttons & Qt.LeftButton:
-            if not self.left_button_pressed:
-                self.left_button_pressed = True
-                self.mouseClicked.emit(current_widget)
-                self.last_widget = current_widget
-        else:
-            if self.left_button_pressed:
-                self.left_button_pressed = False
-                self.mouseReleased.emit(self.last_widget)
-                self.last_widget = None
-
-    def is_krita_canvas(self, widget):
-        """Verifica se il widget è il canvas di Krita"""
-        if not widget:
-            return False
-            
-        # Controlla se è un QOpenGLWidget o ha un nome specifico
-        if widget.metaObject().className() == 'QOpenGLWidget':
-            # Verifica ulteriore attraverso l'albero dei widget
-            parent = widget.parent()
-            while parent:
-                if hasattr(parent, 'canvas') and 'KisCanvas' in str(type(parent)):
-                    return True
-                parent = parent.parent()
-        return False
-
+from . mouseMonitor import MouseMonitor
 
 monitor = MouseMonitor()
 
