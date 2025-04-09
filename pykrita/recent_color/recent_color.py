@@ -2741,42 +2741,7 @@ class MyExtension(Extension):
                         mergedColor = rgb(float(pixelC.red()),  float(
                             pixelC.green()),  float(pixelC.blue()), 255.0)
 
-                        # for pos in positions:
-
-                        # #costruisco colors  , uno per layer
-                        # colors = []
-                        # for curLayer in brothers:
-
-                        # # important choice: skip the fg layer or not? I f you don't skip the curent layer, if you click on the previous stroke it adds to it. The problem is that you can drag the color along.
-                        # if curLayer.uniqueId() != document.activeNode().uniqueId()  or  not g.g_auto_mix_ignore_current_layer:
-
-                        # self.pixelBytes = curLayer.pixelData(pos.x, pos.y, 1, 1)
-
-                        # self.imageData = QImage(self.pixelBytes, 1, 1, QImage.Format_RGBA8888)
-                        # self.pixelC = self.imageData.pixelColor(0,0)
-
-                        # #devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
-                        # # if curLayer.uniqueId() == document.activeNode().uniqueId():
-                        # # correzMul = 1.0
-                        # # else:
-                        # layerOpac = curLayer.opacity() # tra  0 e 255
-                        # correzMul = float(layerOpac) /  255.0
-
-                        # #log(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha()}")
-
-                        # colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha()  * correzMul))
-
-                        # mergedColorOfAllLayers = calcolaCompositeColor(colors); # tipo rgb
-                        # merged_colors.append(mergedColorOfAllLayers)
-
-                        # #creo il colore composito tra tutte le posizioni
-                        # # faccio la media di tutti i merged colors
-
-                        # media  = merged_colors[0]
-                        # for  m in merged_colors:
-                        # media = m.average(media)
-
-                        # mergedColor = media
+                     
 
                         # setto il fg color uguale a merged color mischiato con il memorizzato (non con il fg)
 
