@@ -2011,7 +2011,7 @@ def handle_release(widget):
                                                 
                             
         
-        if g.g_dirty_brush_currently_on and g.g_dirty_brush_overall_enabled:
+        if g.g_dirty_brush_currently_on and g.g_dirty_brush_overall_enabled:  # qui siamo in mousereleased
             application = Krita.instance()
             win = application.activeWindow()
             if win is not None:
@@ -2046,24 +2046,35 @@ def handle_release(widget):
                     
                     
                     
-                    comp = fg.components() 
+                    # Mix using spectral_mix instead of linear interpolation
+                    canv = 0.12 # Amount of background color to mix in
+
+                    # Get components (assuming 0.0-1.0 range from Krita API)
+                    fg_comp_orig = fg.components()
                     
-                    canv = 0.12 # 0.18 troppo difficile fare contorni scuri
-                
-                    fgMul = 1.0 - canv
-                    comp[0] = comp[0] * fgMul + (bgColorAverage.r / 255.0)  * canv
-                    comp[1] = comp[1] * fgMul + (bgColorAverage.g / 255.0)  * canv
-                    comp[2] = comp[2] * fgMul + (bgColorAverage.b  / 255.0)  * canv
+                    # Prepare colors for spectral_mix (expects 0-255 integer lists)
+                    fg_rgb_255 = [int(c * 255) for c in fg_comp_orig[0:3]]
+                    bg_rgb_255 = [bgColorAverage.r, bgColorAverage.g, bgColorAverage.b] # Assuming .r, .g, .b are 0-255
+
+                    # Perform spectral mixing
+                    mixed_rgb_255 = spectral_mix(fg_rgb_255, bg_rgb_255, canv)
+
+                    # Convert result back to 0.0-1.0 for setComponents
+                    mixed_comp_float = [c / 255.0 for c in mixed_rgb_255]
+
+                    # Create new component list, preserving original alpha if present
+                    new_comp = list(fg_comp_orig) # Create a mutable copy
+                    new_comp[0] = mixed_comp_float[0]
+                    new_comp[1] = mixed_comp_float[1]
+                    new_comp[2] = mixed_comp_float[2]
                     
-                
-                    
-                    fg.setComponents(comp)
+                    fg.setComponents(new_comp)
                     
                     view.setForeGroundColor(fg)
                     
             
                     log("g_virtual_fg_color_rgb dirty")
-                    g.g_virtual_fg_color_rgb = rgb( float  (comp[0] * 255.0), float  (comp[1] * 255.0), float  (comp[2] * 255.0), 255.0)
+                    g.g_virtual_fg_color_rgb = rgb( float  (new_comp[0] * 255.0), float  (new_comp[1] * 255.0), float  (new_comp[2] * 255.0), 255.0)
                     update_label_from_virtual_color()
                         
                         
