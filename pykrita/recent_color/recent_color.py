@@ -1001,15 +1001,16 @@ class AutoFocusSetter(QObject):
         
         if event.type() == QEvent.Paint: # QEvent.MouseButtonRelease non è affidabile, a volte smette di scattare:
             
-            log("- paint event detected ma ignorato, non scatta sempre");
-            # log(f"debug mouse buttonreleased. cur layer ={ Krita.instance().activeDocument().activeNode().uniqueId()}")
-            # log(">>>>>>>>> paint event detected");
+            #log("- paint event detected ma ignorato, non scatta sempre");
             
+            pass
             
         if event.type() == QEvent.MouseButtonRelease:
+            # non scatta piu
             log(">>>>>>>>>mouse button release")
 
         if event.type() == QEvent.MouseButtonPress:
+            # non scatta piu
             log(">>>>>>>>mouse buttonpress")
             
                
