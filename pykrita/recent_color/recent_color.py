@@ -1046,7 +1046,7 @@ class AutoFocusSetter(QObject):
         if event.type() == QEvent.Paint: # QEvent.MouseButtonRelease non è affidabile, a volte smette di scattare:
             
             # print(f"debug mouse buttonreleased. cur layer ={ Krita.instance().activeDocument().activeNode().uniqueId()}")
-            
+            print(">>>>>>>>> paint event detected");
             
             
             if g.g_mixing_color:
@@ -1258,9 +1258,11 @@ class AutoFocusSetter(QObject):
                             
                         print (f"dirty brush: adding a bit of {bgColorAverage.toString()} setting {g.g_virtual_fg_color_rgb.toString()}")
         
-        
+        if event.type() == QEvent.MouseButtonRelease:
+            print(">>>>>>>>>mouse button release")
+
         if event.type() == QEvent.MouseButtonPress:
-            # print("mouse buttonpress")
+            print(">>>>>>>>mouse buttonpress")
             
                 
                 # col = getColorUnderCursorOrAtPos()
@@ -2166,7 +2168,22 @@ class PluginState:
             # # Mouse left the Advanced Color Selector docker
             # print("Mouse left the Advanced Color Selector docker")
         # return super().eventFilter(obj, event)
-        
+class MousePoller(QObject):
+    def __init__(self):
+        super().__init__()
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.check_mouse)
+        self.timer.start(100)  # Ogni 100ms
+
+    def check_mouse(self):
+        if QGuiApplication.mouseButtons() & Qt.LeftButton:
+            print("Mouse premuto (via polling)")
+            # Esegui azioni qui
+
+# Avvia il polling
+poller = MousePoller()
+
+
 
 class MyExtension(Extension):
 
@@ -2386,7 +2403,7 @@ class MyExtension(Extension):
                             mergedColor = rgb(comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
                                 
 
-                            print(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}, orig = {comp[0]}, {comp[1]}, {comp[2]}")
+                            #print(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}, orig = {comp[0]}, {comp[1]}, {comp[2]}")
                             g.g_virtual_fg_color_rgb = mergedColor #lo memorizzo
                             
                             update_label_from_virtual_color()
@@ -2423,7 +2440,7 @@ class MyExtension(Extension):
                 history_docker = next((d for d in app.dockers() if d.objectName() == 'History'), None)
                 kis_undo_view = next((v for v in history_docker.findChildren(QListView) if v.metaObject().className() == 'KisUndoView'), None)
                 s_model = kis_undo_view.selectionModel()
-                s_model.currentChanged.connect(self._on_history_was_made)
+                # s_model.currentChanged.connect(self._on_history_was_made)
                 
                 
                 
