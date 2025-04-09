@@ -70,6 +70,7 @@ g_is_drying_paper = False # Flag to prevent history update during dryPaper
 
 g_auto_mix_paused = False
 g_auto_mix_enabled = False
+g_auto_mix_color_to_ignore = None
 
 
 

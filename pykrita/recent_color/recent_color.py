@@ -1144,29 +1144,29 @@ def setFgColorEqualToColorOfLastStrokeAfterOpacityAdjust():
         
     
 def resetForegroundColorToLastColorPicked():
-                
-                if g.g_virtual_fg_color_rgb is not None:
-                    setFgColor(g.g_virtual_fg_color_rgb)
+    
+    if g.g_virtual_fg_color_rgb is not None:
+        setFgColor(g.g_virtual_fg_color_rgb)
+        
+        # app = Krita.instance()
+        # win = app.activeWindow()
+        # if win is not None:
+                # view = win.activeView()
+                # if view is not None:
+                    # fg = view.foregroundColor() 
+                    # comp = fg.components() 
+                    # # log(f"fg color = {comp}")
+                            
+                            
                     
-                    # app = Krita.instance()
-                    # win = app.activeWindow()
-                    # if win is not None:
-                            # view = win.activeView()
-                            # if view is not None:
-                                # fg = view.foregroundColor() 
-                                # comp = fg.components() 
-                                # # log(f"fg color = {comp}")
-                                     
-                                     
-                                
-                                # comp[0] = (g.g_virtual_fg_color_rgb.r/255.0) 
-                                # comp[1] = (g.g_virtual_fg_color_rgb.g / 255.0)
-                                # comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0) 
-                                
-                                # fg.setComponents(comp)
-                                
-                                # view.setForeGroundColor(fg)
-                                # #log(f"color reset to {g.g_virtual_fg_color_rgb.toString()}")
+                    # comp[0] = (g.g_virtual_fg_color_rgb.r/255.0) 
+                    # comp[1] = (g.g_virtual_fg_color_rgb.g / 255.0)
+                    # comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0) 
+                    
+                    # fg.setComponents(comp)
+                    
+                    # view.setForeGroundColor(fg)
+                    # #log(f"color reset to {g.g_virtual_fg_color_rgb.toString()}")
         
 class Dict2Class(object):
       
@@ -1253,23 +1253,23 @@ def get_q_view(view):
 
 
 def calcolaCompositeColor(colors):
-        mergedColor = None
-        for col in colors:
-                        #col.log("cur color")
-                        if mergedColor is None:
-                                mergedColor = col
-                                #mergedColor.log("setto merged color")
-                        else:
-                                a = float(col.a) / 255.0
-                                #print (f"a = {a}")
-                                invA = (1.0 - a) 
-                                #print (f"invA = {invA}")
-                                mergedColor = rgb( mergedColor.r * invA + col.r * a,
-                                                                                mergedColor.g * invA + col.g * a,
-                                                                                mergedColor.b* invA + col.b * a,
-                                                                                255.0)
-                                #mergedColor.log("merged color")
-        return mergedColor
+    mergedColor = None
+    for col in colors:
+        #col.log("cur color")
+        if mergedColor is None:
+                mergedColor = col
+                #mergedColor.log("setto merged color")
+        else:
+                a = float(col.a) / 255.0
+                #print (f"a = {a}")
+                invA = (1.0 - a) 
+                #print (f"invA = {invA}")
+                mergedColor = rgb( mergedColor.r * invA + col.r * a,
+                                                                mergedColor.g * invA + col.g * a,
+                                                                mergedColor.b* invA + col.b * a,
+                                                                255.0)
+                #mergedColor.log("merged color")
+    return mergedColor
         
 def get_q_canvas(q_view):
         if q_view is None:
@@ -1283,208 +1283,208 @@ def get_q_canvas(q_view):
                         return child
 
 def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = False, deleteCurLayer = False):
-                
-                app = Krita.instance()
-                win = app.activeWindow()
-                if win is not None:
-                        view = win.activeView()
-                        if view is not None:
-                                document = view.document()
-                                if document:
-                                        center = QPointF(0.5 * document.width(), 0.5 * document.height())
-                                        p = get_cursor_in_document_coords()
+    
+    app = Krita.instance()
+    win = app.activeWindow()
+    if win is not None:
+            view = win.activeView()
+            if view is not None:
+                    document = view.document()
+                    if document:
+                            center = QPointF(0.5 * document.width(), 0.5 * document.height())
+                            p = get_cursor_in_document_coords()
+                            
+                            doc_pos = p + center # float
+                            log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
+                            
+                            
+                            #parentNode = document.activeNode().parentNode()
+                            
+                            
+                            if True: #parentNode is not None:
+                            
+                                    #brothers = parentNode.childNodes()
+                                    #colors = []
+                                    
+                                    
+                                            
+                            
+                            
+                                    pixBytes= document.pixelData(int(doc_pos.x()), int(doc_pos.y()), 1,1)  # 3 or 6 bytes depending on the image format
+                                    
+                                    
+                                    # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
+                                    # concatenated_string = '-'.join(byte_values)
+                                    
+                                    # log(f'Dati letti: {concatenated_string}')
+                                    
+                                    
+                                    
+                                    # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
+                                    if len(pixBytes) == 4:
+                                        imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA8888)  
+                                    elif len(pixBytes) == 8:
+                                        imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA64)  
+                                    else:
+                                        raise f"unsupported len {len(pixBytes)}"
                                         
-                                        doc_pos = p + center # float
-                                        log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
+                                    pixelC = imageData.pixelColor(0,0)
+                                    
+                                    #e ora da colore qt a colore mio 
+                                    mergedColor = rgb(float(pixelC.red()),  float(pixelC.green()),  float(pixelC.blue()), 255.0)
+                                    
+                                    #log(f'pixel risulta: {mergedColor.r}  {mergedColor.g} {mergedColor.b}')
+                                    
+                                    
+                                    
+                                    
+                                    # # I build colors[]
+                                    # for curLayer in brothers:
+                                        # # If this is the current layer and it is transparent, I skip this layer, because I only want to pick from layers below it.  Why? Because you typically use the mix shortcut when the stroke you just made is wrong, and it needs to be more similar to the background layer. But then, you want to be able to click on the stroke you just did and pick the color BELOW it. 
+                                        # # the exception is if I've switched to single-layer mode, aka temp_switched_to_100_previous_opac
+                                        # if curLayer.uniqueId() != document.activeNode().uniqueId() or curLayer.opacity() == 255 or g.g_temp_switched_to_100_previous_opac is not None: 
                                         
+                                            # pixelBytes = curLayer.pixelData( int(round(doc_pos.x())), int(round(doc_pos.y())), 1, 1)
+                                            
+                                            # imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA8888)
+                                            # pixelC = imageData.pixelColor(0,0)
+                                            
+                                            # # if this is the current layer and it is trasparent, this means you are mixing from a stroke you just did. Then consider it not transparent. So the next stroke will be almost identical to the previous stroke
+                                            # if curLayer.uniqueId() == document.activeNode().uniqueId():
+                                                # correzMul = 1.0
+                                            # else:
+                                                # layerOpac = curLayer.opacity() # between 0 and 255
+                                                # correzMul = float(layerOpac) /  255.0
                                         
-                                        #parentNode = document.activeNode().parentNode()
-                                        
-                                        
-                                        if True: #parentNode is not None:
-                                        
-                                                #brothers = parentNode.childNodes()
-                                                #colors = []
-                                                
-                                                
-                                                       
-                                        
-                                        
-                                                pixBytes= document.pixelData(int(doc_pos.x()), int(doc_pos.y()), 1,1)  # 3 or 6 bytes depending on the image format
-                                                
-                                                
-                                                # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
-                                                # concatenated_string = '-'.join(byte_values)
-                                                
-                                                # log(f'Dati letti: {concatenated_string}')
-                                                
-                                                
-                                                
-                                                # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
-                                                if len(pixBytes) == 4:
-                                                    imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA8888)  
-                                                elif len(pixBytes) == 8:
-                                                    imageData = QImage(pixBytes, 1,1, QImage.Format_RGBA64)  
-                                                else:
-                                                    raise f"unsupported len {len(pixBytes)}"
-                                                    
-                                                pixelC = imageData.pixelColor(0,0)
-                                                
-                                                #e ora da colore qt a colore mio 
-                                                mergedColor = rgb(float(pixelC.red()),  float(pixelC.green()),  float(pixelC.blue()), 255.0)
-                                                
-                                                #log(f'pixel risulta: {mergedColor.r}  {mergedColor.g} {mergedColor.b}')
-                                                
-                                                
-                                                
-                                                
-                                                # # I build colors[]
-                                                # for curLayer in brothers:
-                                                    # # If this is the current layer and it is transparent, I skip this layer, because I only want to pick from layers below it.  Why? Because you typically use the mix shortcut when the stroke you just made is wrong, and it needs to be more similar to the background layer. But then, you want to be able to click on the stroke you just did and pick the color BELOW it. 
-                                                    # # the exception is if I've switched to single-layer mode, aka temp_switched_to_100_previous_opac
-                                                    # if curLayer.uniqueId() != document.activeNode().uniqueId() or curLayer.opacity() == 255 or g.g_temp_switched_to_100_previous_opac is not None: 
-                                                    
-                                                        # pixelBytes = curLayer.pixelData( int(round(doc_pos.x())), int(round(doc_pos.y())), 1, 1)
-                                                        
-                                                        # imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA8888)
-                                                        # pixelC = imageData.pixelColor(0,0)
-                                                        
-                                                        # # if this is the current layer and it is trasparent, this means you are mixing from a stroke you just did. Then consider it not transparent. So the next stroke will be almost identical to the previous stroke
-                                                        # if curLayer.uniqueId() == document.activeNode().uniqueId():
-                                                            # correzMul = 1.0
-                                                        # else:
-                                                            # layerOpac = curLayer.opacity() # between 0 and 255
-                                                            # correzMul = float(layerOpac) /  255.0
-                                                    
 
-                                                        # #log(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
+                                            # #log(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
+                                            
+                                            # colors.append(  rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(),  pixelC.alpha() * correzMul ))
+                                    
+                                    
+                                    if False: # len(colors) == 0: # there was only the fg layer
+                                        quickMessage(f"Cannot mix: could not find background layers to pick from. ")
+                                    else:
+                                        #creo il colore composito dei layer. questo è il bgcolor                                                
+                                        bgColor =  mergedColor # calcolaCompositeColor(colors)
+                                        bgColor.log("bgColor")
                                                         
-                                                        # colors.append(  rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(),  pixelC.alpha() * correzMul ))
+                                        
+                                        fg = view.foregroundColor() 
+                                        comp = fg.components() 
+                                        
+                                        if len(comp ) == 4:    
+                                            
+                                            canv = g.g_how_much_canvas_to_pick
+                                            
+                                            
+                                            # BEGIN mix color the old way (non spectral) 
+                                            
+                                            # fgMul = 1.0 - canv
+                                            # comp[0] = comp[0] * fgMul + (bgColor.r / 255.0)  * canv
+                                            # comp[1] = comp[1] * fgMul + (bgColor.g / 255.0)  * canv
+                                            # comp[2] = comp[2] * fgMul + (bgColor.b  / 255.0)  * canv
+                                            # end
+                                        
+                                        
+                                            #begin mix colors spectral, bgr
+                                            fgMul = 1.0 - canv
+                                            sb = comp[0] * 255.0
+                                            sg = comp[1] * 255.0
+                                            sr = comp[2] * 255.0
+                                            
+                                            
+                                            db = bgColor.r 
+                                            dg = bgColor.g 
+                                            dr = bgColor.b 
+                                            
+                                            
+                                            resultColor = spectral_mix( [ sr, sg, sb], [ dr, dg, db], fgMul)
+                                            # resultColor is [r,g,b]. copy back to bgr:
+                                            
+                                            comp[0] = resultColor[2] / 255.0
+                                            comp[1] = resultColor[1] / 255.0
+                                            comp[2] = resultColor[0] / 255.0
+                                            
+                                            # END
+                                        
+                                        
+                                            # begin mix colors spectral, rgb
+                                            # fgMul = 1.0 - canv
+                                            # sr = comp[0] 
+                                            # sg = comp[1]
+                                            # sb = comp[2]
+                                            
+                                            
+                                            # dr = bgColor.r / 255.0
+                                            # dg = bgColor.g / 255.0
+                                            # db = bgColor.b / 255.0
+                                            
+                                            
+                                            # resultColor = mixRGB(sr, sg, sb, fgMul, dr, dg, db)
+                                            
+                                            # comp[0] = resultColor[0]
+                                            # comp[1] = resultColor[1]
+                                            # comp[2] = resultColor[2]
+                                            
+                                            # END
+                                        
+                                            fg.setComponents(comp)
+                                            
+                                            view.setForeGroundColor(fg)
+                                            
+                                            
+                                            # setto anche il virtual fg color al result del mix
+                                            
+                                            log("g_virtual_fg_color_rgb = mix 2")
+                                            g.g_virtual_fg_color_rgb = rgb( comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
+                                            update_label_from_virtual_color()
+                                            
+                                            
+                                            if g.g_diminishing_opacity:
+                                                g.g_auto_mix__how_much_canvas_to_pick = 1.0
+                                                
+                                                val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+                                                g.g_dial_auto_mix_level.setValue(val099)
+                                            
+                                            quickMessage(f"Picked {round(canv * 100)}%  color from the canvas.")
+                                            
+                                            # 1) if I mixed because the color is wrong, i.e. I made a mistake, then erase the mistake                                                        
+                                            if clearCurLayer :
+                                            
+                                                if g.g_multi_layer_mode:
+                                                
+                                                        app.action('selectopaque').trigger()
+                                                        document.waitForDone () # action needs to finish before continuing
+                                                        app.action('fill_selection_foreground_color').trigger()
+                                                        app.action('deselect').trigger()
+                                                        
+                                            if deleteCurLayer:
+                                                    document.activeNode().remove()
+                                                        
+                                                        
+                                            # 2) if I didn't make a mistake, I just want to fade the current color, then create a new layer
+                                            if createLayer and g.g_multi_layer_mode:
+                                                if  g.g_temp_switched_to_100_previous_opac is None: # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
+                                                    newLa = dryPaper(showMessage = False)
+                                                    
+                                                    # if active layer opacity < 70, set to 70
+                                                    
+                                                    if g.g_auto_reset_opacity_on_pick == 1 and  document is not None :
+                                                        newLa.setOpacity(int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) 
+                                                        
+                                                        document.refreshProjection()
                                                 
                                                 
-                                                if False: # len(colors) == 0: # there was only the fg layer
-                                                    quickMessage(f"Cannot mix: could not find background layers to pick from. ")
-                                                else:
-                                                    #creo il colore composito dei layer. questo è il bgcolor                                                
-                                                    bgColor =  mergedColor # calcolaCompositeColor(colors)
-                                                    bgColor.log("bgColor")
-                                                                    
-                                                    
-                                                    fg = view.foregroundColor() 
-                                                    comp = fg.components() 
-                                                    
-                                                    if len(comp ) == 4:    
-                                                        
-                                                        canv = g.g_how_much_canvas_to_pick
-                                                        
-                                                        
-                                                        # BEGIN mix color the old way (non spectral) 
-                                                        
-                                                        # fgMul = 1.0 - canv
-                                                        # comp[0] = comp[0] * fgMul + (bgColor.r / 255.0)  * canv
-                                                        # comp[1] = comp[1] * fgMul + (bgColor.g / 255.0)  * canv
-                                                        # comp[2] = comp[2] * fgMul + (bgColor.b  / 255.0)  * canv
-                                                        # end
-                                                    
-                                                    
-                                                        #begin mix colors spectral, bgr
-                                                        fgMul = 1.0 - canv
-                                                        sb = comp[0] * 255.0
-                                                        sg = comp[1] * 255.0
-                                                        sr = comp[2] * 255.0
-                                                        
-                                                       
-                                                        db = bgColor.r 
-                                                        dg = bgColor.g 
-                                                        dr = bgColor.b 
-                                                       
-                                                       
-                                                        resultColor = spectral_mix( [ sr, sg, sb], [ dr, dg, db], fgMul)
-                                                        # resultColor is [r,g,b]. copy back to bgr:
-                                                        
-                                                        comp[0] = resultColor[2] / 255.0
-                                                        comp[1] = resultColor[1] / 255.0
-                                                        comp[2] = resultColor[0] / 255.0
-                                                        
-                                                        # END
-                                                  
-                                                  
-                                                        # begin mix colors spectral, rgb
-                                                        # fgMul = 1.0 - canv
-                                                        # sr = comp[0] 
-                                                        # sg = comp[1]
-                                                        # sb = comp[2]
-                                                        
-                                                       
-                                                        # dr = bgColor.r / 255.0
-                                                        # dg = bgColor.g / 255.0
-                                                        # db = bgColor.b / 255.0
-                                                       
-                                                       
-                                                        # resultColor = mixRGB(sr, sg, sb, fgMul, dr, dg, db)
-                                                        
-                                                        # comp[0] = resultColor[0]
-                                                        # comp[1] = resultColor[1]
-                                                        # comp[2] = resultColor[2]
-                                                        
-                                                        # END
-                                                  
-                                                        fg.setComponents(comp)
-                                                        
-                                                        view.setForeGroundColor(fg)
-                                                        
-                                                        
-                                                        # setto anche il virtual fg color al result del mix
-                                                        
-                                                        log("g_virtual_fg_color_rgb = mix 2")
-                                                        g.g_virtual_fg_color_rgb = rgb( comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
-                                                        update_label_from_virtual_color()
-                                                        
-                                                        
-                                                        if g.g_diminishing_opacity:
-                                                            g.g_auto_mix__how_much_canvas_to_pick = 1.0
-                                                            
-                                                            val099 =  round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                                                            g.g_dial_auto_mix_level.setValue(val099)
-                                                        
-                                                        quickMessage(f"Picked {round(canv * 100)}%  color from the canvas.")
-                                                        
-                                                        # 1) if I mixed because the color is wrong, i.e. I made a mistake, then erase the mistake                                                        
-                                                        if clearCurLayer :
-                                                        
-                                                            if g.g_multi_layer_mode:
-                                                            
-                                                                    app.action('selectopaque').trigger()
-                                                                    document.waitForDone () # action needs to finish before continuing
-                                                                    app.action('fill_selection_foreground_color').trigger()
-                                                                    app.action('deselect').trigger()
-                                                                    
-                                                        if deleteCurLayer:
-                                                                document.activeNode().remove()
-                                                                    
-                                                                    
-                                                        # 2) if I didn't make a mistake, I just want to fade the current color, then create a new layer
-                                                        if createLayer and g.g_multi_layer_mode:
-                                                            if  g.g_temp_switched_to_100_previous_opac is None: # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
-                                                                newLa = dryPaper(showMessage = False)
-                                                                
-                                                                # if active layer opacity < 70, set to 70
-                                                                
-                                                                if g.g_auto_reset_opacity_on_pick == 1 and  document is not None :
-                                                                    newLa.setOpacity(int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)) 
-                                                                    
-                                                                    document.refreshProjection()
-                                                            
-                                                            
-                                                        # messaggio
-                                                        
-                                                        
-                                                    elif len(comp ) == 2:
-                                                        messageBox(" Your foreground color is currently grayscale. In order to use \"Mix\", please set your foreground color to an RGB color first.")
-                                                    else:
-                                                        messageBox("In order to use \"Mix\", please set your foreground color to an RGB color first.")
-            
-        
+                                            # messaggio
+                                            
+                                            
+                                        elif len(comp ) == 2:
+                                            messageBox(" Your foreground color is currently grayscale. In order to use \"Mix\", please set your foreground color to an RGB color first.")
+                                        else:
+                                            messageBox("In order to use \"Mix\", please set your foreground color to an RGB color first.")
+
+
         
 def get_transform(view):
         def _offset(scroller):
