@@ -2050,6 +2050,7 @@ def handle_release(widget):
                     
                     
                     
+                    
                     # Mix using spectral_mix instead of linear interpolation
                     canv = 0.12 # Amount of background color to mix in
 
@@ -2074,11 +2075,11 @@ def handle_release(widget):
                     
                     fg.setComponents(new_comp)
                     
-                    g.g_ignora_prossimo_fg_color_dirty = new_comp
-                    view.setForeGroundColor(fg)  #scatta onFgColorChanged, che ignorera questo colore
+                    log(f"dico di ignorare {new_comp}");
+                    view.setForeGroundColor(fg)  
                     
             
-                    log("g_virtual_fg_color_rgb dirty")
+                    # log("g_virtual_fg_color_rgb dirty")
 
 
                     # g.g_virtual_fg_color_rgb = rgb( float  (new_comp[0] * 255.0), float  (new_comp[1] * 255.0), float  (new_comp[2] * 255.0), 255.0)
@@ -2089,7 +2090,7 @@ def handle_release(widget):
                         
                         
                         
-                    print (f"dirty brush: adding a bit of {bgColorAverage.toString()} setting {g.g_virtual_fg_color_rgb.toString()}")
+                    
     
     else:
         log(f"Rilascio 2 su: {widget}")
@@ -2299,19 +2300,9 @@ class MyExtension(Extension):
                         comp: Sequence[float] = fg.components()
 
                         # Element-wise comparison instead of direct list/tuple comparison
-                        should_ignore = False
-                        if g.g_ignora_prossimo_fg_color_dirty is not None and len(g.g_ignora_prossimo_fg_color_dirty) == len(comp):
-                            # Use a small tolerance for float comparison if needed, but direct check first
-                            # tolerance = 1e-6
-                            # if all(abs(a - b) < tolerance for a, b in zip(g.g_ignora_prossimo_fg_color_dirty, comp)):
-                            if all(a == b for a, b in zip(g.g_ignora_prossimo_fg_color_dirty, comp)):
-                                should_ignore = True
-                                
-                        if should_ignore:
-                            pass # Colors match the one to ignore
                         
-                        elif len(comp) == 4: # Assuming RGBA
-        
+                        if len(comp) == 4: # Assuming RGBA
+                            
                             mergedColor = rgb(comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
                                 
 
@@ -2325,7 +2316,7 @@ class MyExtension(Extension):
                         else:
                             log("err1")
 
-                        g.g_ignora_prossimo_fg_color_dirty = None   
+                        
                     else:
                         print ("err2")
             
