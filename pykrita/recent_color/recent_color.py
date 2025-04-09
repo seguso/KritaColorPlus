@@ -252,7 +252,12 @@ def toggleAutoMixing():
                 g.g_auto_mix_enabled = True
                 g.g_btn_auto_mix.setChecked(True)
                 g.g_actionAutoMix.setChecked(True)
-        
+
+
+def log(s):
+     g.printCount += 1
+     print(f"{g.printCount}: {s}\n\n")
+
 # --- Custom Widget for Clickable Color Squares ---
 class ClickableColorLabel(QLabel):
     """ A QLabel that displays a color and emits a signal when clicked. """
@@ -267,7 +272,7 @@ class ClickableColorLabel(QLabel):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            print(f"ClickableColorLabel clicked: emitting color {self._color.name()}")
+            log(f"ClickableColorLabel clicked: emitting color {self._color.name()}")
             self.clicked.emit(self._color)
         super().mousePressEvent(event)
 
@@ -450,7 +455,7 @@ class HelloDocker(DockWidget):
                 widget.deleteLater()
 
         # Add new color squares
-        print(f"Updating color history UI with {len(g.g_last_virtual_colors_used)} colors.")
+        log(f"Updating color history UI with {len(g.g_last_virtual_colors_used)} colors.")
         for item in g.g_last_virtual_colors_used:
             qcolor_to_display = None
             if isinstance(item, rgb): # Check if it's our custom rgb class
@@ -465,11 +470,11 @@ class HelloDocker(DockWidget):
                     b_val = max(0, min(255, b_val))
                     qcolor_to_display = QColor(r_val, g_val, b_val)
                 except Exception as e:
-                    print(f"Error converting rgb to QColor: {e}, rgb values: r={item.r}, g={item.g}, b={item.b}")
+                    log(f"Error converting rgb to QColor: {e}, rgb values: r={item.r}, g={item.g}, b={item.b}")
             elif isinstance(item, QColor): # Handle if it's already a QColor (less likely now)
                  qcolor_to_display = item
             else:
-                print(f"Warning: Item in g_last_virtual_colors_used is not an rgb or QColor object: {type(item)}")
+                log(f"Warning: Item in g_last_virtual_colors_used is not an rgb or QColor object: {type(item)}")
 
             if qcolor_to_display:
                 color_square = ClickableColorLabel(qcolor_to_display) # Pass the QColor
@@ -479,7 +484,7 @@ class HelloDocker(DockWidget):
     # --- Slot for Color Square Clicks ---
     def _on_color_square_clicked(self, color):
         """ Handles clicks on the color history squares. """
-        print(f"Color square clicked: {color.name()}")
+        log(f"Color square clicked: {color.name()}")
         # TODO: Implement desired action, e.g., set foreground color
         # g.g_virtual_fg_color_rgb = color.clone()
         # Krita.instance().activeWindow().activeView().setForegroundColor(color)
@@ -487,14 +492,14 @@ class HelloDocker(DockWidget):
         
     def leaveEvent(self, event):
         pass
-         #print("Mouse left the dock widget")
+         #log("Mouse left the dock widget")
         
         # label = QLabel("Hello", self)
         # self.setWidget(label)
         # self.label = label
  
     def autoMixLevelValueChanged(self, level):
-        #print(f"autoMixLevelValueChanged {level}")
+        #log(f"autoMixLevelValueChanged {level}")
         
         
         g.g_auto_mix__how_much_canvas_to_pick = ( level  + 1.0) / 100.0
@@ -551,9 +556,9 @@ class HelloDocker(DockWidget):
             application = Krita.instance()
             document = application.activeDocument()
             
-            print(f"color profile = {document.colorProfile()}")
-            print(f"color depth = {document.colorDepth()}")  #   U16  or U8
-            print(f"color model  = {document.colorModel()}")  #     RGBA
+            log(f"color profile = {document.colorProfile()}")
+            log(f"color depth = {document.colorDepth()}")  #   U16  or U8
+            log(f"color model  = {document.colorModel()}")  #     RGBA
             
             if document is not None:
                 if  g.g_temp_switched_to_100_previous_opac is None and g.g_multi_layer_mode: # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
@@ -608,7 +613,7 @@ def getColorUnderCursorOrAtPos( forcedPos = None):
                 doc_posxy = xy(forcedPos.x + int(round(center.x())), forcedPos.y + int(round(center.y())))
             
             
-            #print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
+            #log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
             
             
             
@@ -647,7 +652,7 @@ def getColorUnderCursorOrAtPos( forcedPos = None):
                                     # layerOpac = curLayer.opacity() # tra  0 e 255
                                     
                                     # paintingOp01 = win.activeView().paintingOpacity()  
-                                    # # print(f"opacity = {paintingOp}")
+                                    # # log(f"opacity = {paintingOp}")
                                     # colors.append( rgb(fgCol.r, fgCol.g, fgCol.b, int(layerOpac * paintingOp01)))
                                     
                                 
@@ -666,7 +671,7 @@ def getColorUnderCursorOrAtPos( forcedPos = None):
                                 # correzMul = float(layerOpac) /  255.0
                             
 
-                                # #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
+                                # #log(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
                                 
                                 # colors.append(  rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(),  pixelC.alpha() * correzMul ))
                     
@@ -682,7 +687,7 @@ def getColorUnderCursorOrAtPos( forcedPos = None):
                     # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
                     # concatenated_string = '-'.join(byte_values)
                     
-                    # print(f'Dati letti: {concatenated_string}')
+                    # log(f'Dati letti: {concatenated_string}')
                     
                     
                     
@@ -702,7 +707,7 @@ def getColorUnderCursorOrAtPos( forcedPos = None):
                     bgColor = mergedColor
                     
                     
-                    #print(f"color under cursor  = {bgColor.toString()}")
+                    #log(f"color under cursor  = {bgColor.toString()}")
                     return bgColor
             else:
                 return None
@@ -715,7 +720,7 @@ def dryPaper( showMessage = True):
                 
                 
     
-    #print(f"dry paper called showMessage = {showMessage}")
+    #log(f"dry paper called showMessage = {showMessage}")
     application = Krita.instance()
     currentDoc = application.activeDocument()
     if currentDoc is  None:
@@ -740,7 +745,7 @@ def dryPaper( showMessage = True):
     
             
     
-            print("dry paper called")
+            log("dry paper called")
             oldOpacity = activeLayer.opacity()
             
             #activeLayer.mergeDown()
@@ -755,22 +760,22 @@ def dryPaper( showMessage = True):
                 
                 # backgroundLayer = parentNode.childNodes()[0]
                 
-                print("--faccio add node")
+                log("--faccio add node")
                 parentNode.addChildNode(newLa, None)
-                print("--finito add node")
+                log("--finito add node")
             finally:
                 g.g_is_drying_paper = False # Ensure flag is reset
             
 
             if g.g_set_spectral_blend_mode_when_creating_layer:
-                #print("setting over spectral")
+                #log("setting over spectral")
                 newLa.setBlendingMode("over spectral");
             
             if g.g_blur_on_dry:
                 # al layer precedente ad activeLayer, applica il blur
                 for layerPrima in parentNode.childNodes()[ : -2]:
                     
-                    print(f"applicando blur a  {layerPrima.name()}:{selectionStroke.x()}, {selectionStroke.y()}, {selectionStroke.width()},{selectionStroke.height()}")
+                    log(f"applicando blur a  {layerPrima.name()}:{selectionStroke.x()}, {selectionStroke.y()}, {selectionStroke.width()},{selectionStroke.height()}")
                     
                     selFuori = Selection()
                     selFuori.select(selectionStroke.x(), selectionStroke.y(), selectionStroke.width(), selectionStroke.height(), 255)
@@ -821,7 +826,7 @@ def dryPaper( showMessage = True):
         #test blur        
         
         if showMessage:
-            print("dry paper called message")
+            log("dry paper called message")
             quickMessage("Dry paper")
             #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
                 
@@ -876,21 +881,21 @@ class AutoFocusSetter(QObject):
         
         
         
-        # print(f"event {g.event_lookup.get(str(event.type()), 'sconosciuto')}")
+        # log(f"event {g.event_lookup.get(str(event.type()), 'sconosciuto')}")
         
         
         
         if event.type() == QEvent.Enter:
-            # print(f"enter")
+            # log(f"enter")
             # if obj.objectName() == "KisAdvancedColorSelector":
-                # print(f"enter color selector ")
+                # log(f"enter color selector ")
             
             # if isinstance(obj, QDockWidget):
-                # print(f"enter dock widget {obj.objectName()} ")
+                # log(f"enter dock widget {obj.objectName()} ")
                         
             #if obj.type() == QMdiSubWindow:
             if isinstance(obj, QMdiSubWindow):
-                # print(f"debug - enter subwindow")
+                # log(f"debug - enter subwindow")
                 
                 wi = Krita.instance().activeWindow()
                 q_win = wi.qwindow()
@@ -919,7 +924,7 @@ class AutoFocusSetter(QObject):
                 
                     curLayerId = Krita.instance().activeDocument().activeNode().uniqueId()
                     # print (f"debug - color changed probably. curnode =  {curLayerId}")
-                    # pprint.pprint(g.g_layer_is_dirty)
+                    # pprint.plog(g.g_layer_is_dirty)
                     
                     if(curLayerId in g.g_layer_is_dirty ):  # if cur layer is dirty
                         l_color_changed_from_selector = True
@@ -987,12 +992,12 @@ class AutoFocusSetter(QObject):
         
         
         if event.type() == QEvent.Leave:
-            #print(f"leave")
+            #log(f"leave")
             
             # logic: if the mouse leaver an always-on-top window, focus the first window that's not always on top. 
-            # print(f"leave event ")
+            # log(f"leave event ")
             if isinstance(obj, QMdiSubWindow):
-                #print(f"leave {obj} ")
+                #log(f"leave {obj} ")
                 
                 wi = Krita.instance().activeWindow()
                 
@@ -1023,11 +1028,11 @@ class AutoFocusSetter(QObject):
                     
                     if g.g_auto_mix_enabled:
                         g.g_auto_mix_paused = True
-                        #print("pausing automix")
+                        #log("pausing automix")
                         resetForegroundColorToLastColorPicked()
                     else:
                         pass
-                        #print("leave, doing nothing, auto mix disabled")
+                        #log("leave, doing nothing, auto mix disabled")
                 
         # if event.type() == QEvent.MouseMove:
             # print (f"mousemove")
@@ -1049,8 +1054,9 @@ class AutoFocusSetter(QObject):
         
         if event.type() == QEvent.Paint: # QEvent.MouseButtonRelease non è affidabile, a volte smette di scattare:
             
-            # print(f"debug mouse buttonreleased. cur layer ={ Krita.instance().activeDocument().activeNode().uniqueId()}")
-            print(">>>>>>>>> paint event detected");
+            log("- paint event detected ma ignorato, non scatta sempre");
+            # log(f"debug mouse buttonreleased. cur layer ={ Krita.instance().activeDocument().activeNode().uniqueId()}")
+            log(">>>>>>>>> paint event detected");
             
             
             if g.g_mixing_color:
@@ -1090,7 +1096,7 @@ class AutoFocusSetter(QObject):
                 # now,  pick color ignoring stroke just made (which is on its own layer) 
                 col = getColorUnderCursorOrAtPos(forcedPos = xyOfQpoint(g.g_last_coord_mouse_down )) 
                 setFgColor(col)
-                print("g_virtual_fg_color_rgb pickingcolor")
+                log("g_virtual_fg_color_rgb pickingcolor")
                 g.g_virtual_fg_color_rgb  = col
                 g.g_picking_color = False
                 
@@ -1138,7 +1144,7 @@ class AutoFocusSetter(QObject):
             # remember layer is dirty
             
             g.g_layer_is_dirty[ Krita.instance().activeDocument().activeNode().uniqueId()] = True
-            #print(f"setting layer dirty {Krita.instance().activeDocument().activeNode().uniqueId()}")
+            #log(f"setting layer dirty {Krita.instance().activeDocument().activeNode().uniqueId()}")
             
             
             if g.g_auto_dry_each_stroke and g.g_multi_layer_mode:
@@ -1222,7 +1228,7 @@ class AutoFocusSetter(QObject):
                         
                         
                         fg = view.foregroundColor() #tipo ManagedColor, valori da 0 a 1
-                            # print(f"fg  = {fg}")
+                            # log(f"fg  = {fg}")
                             
                         # fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
                         
@@ -1254,7 +1260,7 @@ class AutoFocusSetter(QObject):
                         view.setForeGroundColor(fg)
                         
                
-                        print("g_virtual_fg_color_rgb dirty")
+                        log("g_virtual_fg_color_rgb dirty")
                         g.g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
                         update_label_from_virtual_color()
                             
@@ -1263,10 +1269,10 @@ class AutoFocusSetter(QObject):
                         print (f"dirty brush: adding a bit of {bgColorAverage.toString()} setting {g.g_virtual_fg_color_rgb.toString()}")
         
         if event.type() == QEvent.MouseButtonRelease:
-            print(">>>>>>>>>mouse button release")
+            log(">>>>>>>>>mouse button release")
 
         if event.type() == QEvent.MouseButtonPress:
-            print(">>>>>>>>mouse buttonpress")
+            log(">>>>>>>>mouse buttonpress")
             
                 
                 # col = getColorUnderCursorOrAtPos()
@@ -1289,7 +1295,7 @@ class AutoFocusSetter(QObject):
                     view = win.activeView()
                     if  view is not None:
                         fg = view.foregroundColor() #tipo ManagedColor, valori da 0 a 1
-                            # print(f"fg  = {fg}")
+                            # log(f"fg  = {fg}")
                             
                         # fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
                         
@@ -1335,10 +1341,10 @@ class AutoFocusSetter(QObject):
                                         
                         # # setto il fg color uguale a merged color mischiato con il fg
                         # fg = view.foregroundColor() #tipo ManagedColor, valori da 0 a 1
-                        # # print(f"fg  = {fg}")
+                        # # log(f"fg  = {fg}")
                         
                         # fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
-                        # # fg2.print("MouseButtonPress fg2 = ")
+                        # # fg2.log("MouseButtonPress fg2 = ")
                         
                         
                         
@@ -1349,10 +1355,10 @@ class AutoFocusSetter(QObject):
                             
                             
                             # comp = fg.components() 
-                            # # print(f"fg color = {comp}")
+                            # # log(f"fg color = {comp}")
 
                             # dist = fg2.distance(bgColor)
-                            # # print(f"distance = {dist}")
+                            # # log(f"distance = {dist}")
 
                             
         
@@ -1392,7 +1398,7 @@ class AutoFocusSetter(QObject):
                                                                 
                                     # curDist = curFg.distance(bgColor)
                                     
-                                    # #print(f"iterando. mul  = {curMul}, dist  tra {curFg.toString()} e {fg2.toString()} = {curDist}. ")
+                                    # #log(f"iterando. mul  = {curMul}, dist  tra {curFg.toString()} e {fg2.toString()} = {curDist}. ")
                                     
                                     # if curDist <= g.g_auto_opacity_max_distance:  
                                         # break
@@ -1470,7 +1476,7 @@ class AutoFocusSetter(QObject):
                                                                 
                                     # # curDist = curFg.distance(bgColor)
                                     
-                                    # # # print(f"iterando. mul  = {curOp01}, dist  = {curDist}. ")
+                                    # # # log(f"iterando. mul  = {curOp01}, dist  = {curDist}. ")
                                     
                                     # # if curDist <= max_distance:  
                                         # # break
@@ -1499,7 +1505,7 @@ class AutoFocusSetter(QObject):
         #return QObject.eventFilter(obj, event)
         
         # if event.type() == QEvent.KeyPress:
-            # print(f"keypress")
+            # log(f"keypress")
             # keyEvent = QKeyEvent(event)
             # qDebug("Ate key press %d", keyEvent.key())
             # return True
@@ -1507,7 +1513,7 @@ class AutoFocusSetter(QObject):
             # # standard event processing
             # return QObject.eventFilter(obj, event)
 
-#print(Krita.instance().filters())
+#log(Krita.instance().filters())
 
 def setFgColor(col):
     app = Krita.instance()
@@ -1517,7 +1523,7 @@ def setFgColor(col):
             if view is not None:
                 fg = view.foregroundColor() 
                 comp = fg.components() 
-                # print(f"fg color = {comp}")
+                # log(f"fg color = {comp}")
                      
                      
                 
@@ -1535,7 +1541,7 @@ def QPointHash(qp):
 def setFgColorEqualToColorOfLastStrokeAfterOpacityAdjust():
     
     if g.g_last_coord_mouse_up is None:
-        print("error g.g_last_coord_mouse_up is none")
+        log("error g.g_last_coord_mouse_up is none")
         
     else:
         fr = queue.Queue(0) # maxsize = means infinite
@@ -1560,7 +1566,7 @@ def setFgColorEqualToColorOfLastStrokeAfterOpacityAdjust():
             colExcludingLast = getColorUnderCursorOrAtPos(forcedPos = curPos)  # , skipCurrentLayer = True  no longer possible
             
             if not col.equals(colExcludingLast):
-                # print(f"found color at {curPos}. color is {col.toString()}, col excluding curlayer is {colExcludingLast.toString()}")
+                # log(f"found color at {curPos}. color is {col.toString()}, col excluding curlayer is {colExcludingLast.toString()}")
                 foundColors.append(col)
 
 
@@ -1593,7 +1599,7 @@ def setFgColorEqualToColorOfLastStrokeAfterOpacityAdjust():
             count += 1
             
             if count > 2500:
-                print("esco dal loop senza successo")
+                log("esco dal loop senza successo")
                 quickMessage("errore, colore non trovato")
                 break
             
@@ -1625,7 +1631,7 @@ def resetForegroundColorToLastColorPicked():
                             # if view is not None:
                                 # fg = view.foregroundColor() 
                                 # comp = fg.components() 
-                                # # print(f"fg color = {comp}")
+                                # # log(f"fg color = {comp}")
                                      
                                      
                                 
@@ -1636,7 +1642,7 @@ def resetForegroundColorToLastColorPicked():
                                 # fg.setComponents(comp)
                                 
                                 # view.setForeGroundColor(fg)
-                                # #print(f"color reset to {g.g_virtual_fg_color_rgb.toString()}")
+                                # #log(f"color reset to {g.g_virtual_fg_color_rgb.toString()}")
         
 class Dict2Class(object):
       
@@ -1704,8 +1710,8 @@ class rgb:
                 self.g = g
                 self.b = b
                 
-        def print(self, msg):
-                print(f"{msg}:   {self.toString()}")
+        def log(self, msg):
+                log(f"{msg}:   {self.toString()}")
                 
         def toString(self):
             # inverto r e b perche' in realta' siamo bgr
@@ -1737,8 +1743,8 @@ class xy:
 def xyOfQpoint(q):
             return xy( int(round(q.x())),  int(round(q.y())))
             
-        # def print(self, msg):
-                # print(f"{msg}:   r:{self.r}, g:{self.g}, b:{self.b} ,a:{self.a}")
+        # def log(self, msg):
+                # log(f"{msg}:   r:{self.r}, g:{self.g}, b:{self.b} ,a:{self.a}")
 
 
 
@@ -1755,10 +1761,10 @@ def get_q_view(view):
 def calcolaCompositeColor(colors):
         mergedColor = None
         for col in colors:
-                        #col.print("cur color")
+                        #col.log("cur color")
                         if mergedColor is None:
                                 mergedColor = col
-                                #mergedColor.print("setto merged color")
+                                #mergedColor.log("setto merged color")
                         else:
                                 a = float(col.a) / 255.0
                                 #print (f"a = {a}")
@@ -1768,7 +1774,7 @@ def calcolaCompositeColor(colors):
                                                                                 mergedColor.g * invA + col.g * a,
                                                                                 mergedColor.b* invA + col.b * a,
                                                                                 255.0)
-                                #mergedColor.print("merged color")
+                                #mergedColor.log("merged color")
         return mergedColor
         
 def get_q_canvas(q_view):
@@ -1795,7 +1801,7 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                         p = get_cursor_in_document_coords()
                                         
                                         doc_pos = p + center # float
-                                        print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
+                                        log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
                                         
                                         
                                         #parentNode = document.activeNode().parentNode()
@@ -1816,7 +1822,7 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                 # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
                                                 # concatenated_string = '-'.join(byte_values)
                                                 
-                                                # print(f'Dati letti: {concatenated_string}')
+                                                # log(f'Dati letti: {concatenated_string}')
                                                 
                                                 
                                                 
@@ -1833,7 +1839,7 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                 #e ora da colore qt a colore mio 
                                                 mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255.0)
                                                 
-                                                #print(f'pixel risulta: {mergedColor.r}  {mergedColor.g} {mergedColor.b}')
+                                                #log(f'pixel risulta: {mergedColor.r}  {mergedColor.g} {mergedColor.b}')
                                                 
                                                 
                                                 
@@ -1857,7 +1863,7 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                             # correzMul = float(layerOpac) /  255.0
                                                     
 
-                                                        # #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
+                                                        # #log(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
                                                         
                                                         # colors.append(  rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(),  pixelC.alpha() * correzMul ))
                                                 
@@ -1867,7 +1873,7 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                 else:
                                                     #creo il colore composito dei layer. questo è il bgcolor                                                
                                                     bgColor =  mergedColor # calcolaCompositeColor(colors)
-                                                    bgColor.print("bgColor")
+                                                    bgColor.log("bgColor")
                                                                     
                                                     
                                                     fg = view.foregroundColor() 
@@ -1936,7 +1942,7 @@ def mixFgColorWithBgColor_normalLogic( createLayer = False, clearCurLayer = Fals
                                                         
                                                         # setto anche il virtual fg color al result del mix
                                                         
-                                                        print("g_virtual_fg_color_rgb = mix 2")
+                                                        log("g_virtual_fg_color_rgb = mix 2")
                                                         g.g_virtual_fg_color_rgb = rgb( comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
                                                         update_label_from_virtual_color()
                                                         
@@ -2119,7 +2125,7 @@ class PluginState:
         # application = Krita.instance()
         # # currentDoc = application.activeDocument()
         # # if currentDoc is not None:
-            # # print(f"x offset: {currentDoc.xOffset()}")
+            # # log(f"x offset: {currentDoc.xOffset()}")
             
             
         # wi = Krita.instance().activeWindow()
@@ -2128,9 +2134,9 @@ class PluginState:
         
         # # fullPaths = []
         # # for wi in Krita.instance().windows():
-            # # print(f"wi = {wi}  title = {wi.qwindow().windowTitle()}")
+            # # log(f"wi = {wi}  title = {wi.qwindow().windowTitle()}")
             # # for vi in wi.views():
-                # # print(f"view filename {vi.document().fileName()}")
+                # # log(f"view filename {vi.document().fileName()}")
                 # # fullPaths.append(vi.document().fileName())
         
         
@@ -2138,11 +2144,11 @@ class PluginState:
         # windows = []
         # for su in subwins:
         
-            # print(f"parent = {su.parent()}, par par = {su.parent().parent()}")
+            # log(f"parent = {su.parent()}, par par = {su.parent().parent()}")
             # tit = su.windowTitle().replace(" *", "")
             
             # #path = [ fp for fp in fullPaths if fp.endswith(tit) ] [0]
-            # print(f"window {tit}, position {su.pos()}")
+            # log(f"window {tit}, position {su.pos()}")
             # newWin = Window()
             # newWin.x = su.pos().x()
             # newWin.y = su.pos().y()
@@ -2161,7 +2167,7 @@ class PluginState:
             
             
             
-        #print(f"dump json = {js}")
+        #log(f"dump json = {js}")
         
         
 
@@ -2172,16 +2178,16 @@ monitor = MouseMonitor()
 
 def handle_click(widget):
     if monitor.is_krita_canvas(widget):
-        print("Click sul canvas di Krita!")
+        log("Click sul canvas di Krita!")
         # Aggiungi qui la tua logica
     else:
-        print(f"Click su: {widget}")
+        log(f"Click su: {widget}")
 
 def handle_release(widget):
     if monitor.is_krita_canvas(widget):
-        print("Rilascio sul canvas di Krita")
+        log("Rilascio sul canvas di Krita")
     else:
-        print(f"Rilascio su: {widget}")
+        log(f"Rilascio su: {widget}")
 
 monitor.mouseClicked.connect(handle_click)
 monitor.mouseReleased.connect(handle_release)
@@ -2310,7 +2316,7 @@ class MyExtension(Extension):
                 
                 Application.addDockWidgetFactory(DockWidgetFactory("hello", DockWidgetFactoryBase.DockRight, HelloDocker))
                 
-                print(f"init ok. home = {home}")
+                log(f"init ok. home = {home}")
 
 
         def updateAutoFocus(self):
@@ -2323,13 +2329,13 @@ class MyExtension(Extension):
                     if g.g_auto_focus ==  "true":
                         for su in subwins:
                                 if su not in self.windows_with_autofocus:
-                                    print(f"installing autofocus for window {su}")
+                                    log(f"installing autofocus for window {su}")
                                     su.installEventFilter(self.ef_autofocus)
                                     self.windows_with_autofocus.append(su)
                     else:
                         for su in subwins:
                             if su  in self.windows_with_autofocus:
-                                print(f"uninstalling autofocus for window {su}")
+                                log(f"uninstalling autofocus for window {su}")
                                 su.removeEventFilter(self.ef_autofocus)
                                 self.windows_with_autofocus.remove(su)
                         
@@ -2337,7 +2343,7 @@ class MyExtension(Extension):
                 
         def onViewOpenedEvent(openedView):
             
-            print(f"view opened {openedView}");
+            log(f"view opened {openedView}");
             
             g.allBrushPresets = Krita.instance().resources('paintoppresets')
             # for k,v in allBrushPresets.items():
@@ -2347,10 +2353,10 @@ class MyExtension(Extension):
 
         def onDocCreated(openedDoc):
             
-            print(f"doc created{openedDoc}");
+            log(f"doc created{openedDoc}");
             
             g.allBrushPresets = Krita.instance().resources('paintoppresets')
-            #print(f"all brush presets = {allBrushPresets.size()}")
+            #log(f"all brush presets = {allBrushPresets.size()}")
                 
             #openedView.updateAutoFocus()
 
@@ -2373,7 +2379,7 @@ class MyExtension(Extension):
                             
                             # fgCol = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
                             # if fgCol.equals(g.g_virtual_color_used_last_rgb):
-                                # print("current color is same")
+                                # log("current color is same")
                                 # pass
                             # else:
                                 
@@ -2381,7 +2387,7 @@ class MyExtension(Extension):
                 
             
             
-            # print(f"fg color changed event: {g.countColorChanged}")
+            # log(f"fg color changed event: {g.countColorChanged}")
             
             g.countColorChanged += 1
             
@@ -2406,15 +2412,15 @@ class MyExtension(Extension):
                             mergedColor = rgb(comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
                                 
 
-                            #print(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}, orig = {comp[0]}, {comp[1]}, {comp[2]}")
+                            #log(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}, orig = {comp[0]}, {comp[1]}, {comp[2]}")
                             g.g_virtual_fg_color_rgb = mergedColor #lo memorizzo
                             
                             update_label_from_virtual_color()
                             
                             
-                            #print(f"setting last_color_picked = {g.g_virtual_fg_color_rgb.toString()}")
+                            #log(f"setting last_color_picked = {g.g_virtual_fg_color_rgb.toString()}")
                         else:
-                            print("err1")
+                            log("err1")
                     else:
                         print ("err2")
             
@@ -2423,7 +2429,7 @@ class MyExtension(Extension):
                     
                     pass # color changed by auto-mix
                     
-                    #print(f"fg color changed event ignored. paused = {g.g_auto_mix_paused}")
+                    #log(f"fg color changed event ignored. paused = {g.g_auto_mix_paused}")
                     
             
             
@@ -2432,7 +2438,7 @@ class MyExtension(Extension):
             
 
         def onWindowCreated(self): #called by framework
-                print("on window created  ")
+                log("on window created  ")
                 
 
                 # self.currentColor = [255,255,255,0]
@@ -2450,7 +2456,7 @@ class MyExtension(Extension):
                 
                 # start listening to color changes via color selector
                 colorSelectorNg = next((d for d  in app.dockers() if d.objectName() == 'ColorSelectorNg'), None)
-                print(f"type of color selector = {type(colorSelectorNg)}")
+                log(f"type of color selector = {type(colorSelectorNg)}")
                 for child in colorSelectorNg.findChildren(QObject):
                     meta = child.metaObject()
                     if meta.className() in {
@@ -2471,10 +2477,10 @@ class MyExtension(Extension):
                 
 
 
-                print("on window created : ok")
+                log("on window created : ok")
                 
         def setup(self): #called by framework
-            print("setup called")
+            log("setup called")
 
         def saveWindowPositions(self):
             wi = Krita.instance().activeWindow()
@@ -2483,9 +2489,9 @@ class MyExtension(Extension):
             
             fullPaths = []
             for wi in Krita.instance().windows():
-                print(f"wi = {wi}  title = {wi.qwindow().windowTitle()}")
+                log(f"wi = {wi}  title = {wi.qwindow().windowTitle()}")
                 for vi in wi.views():
-                    print(f"view filename {vi.document().fileName()}")
+                    log(f"view filename {vi.document().fileName()}")
                     fullPaths.append(vi.document().fileName())
             
             
@@ -2495,7 +2501,7 @@ class MyExtension(Extension):
                 tit = su.windowTitle().replace(" *", "")
                 
                 path = [ fp for fp in fullPaths if fp.endswith(tit) ] [0]
-                print(f"window {tit}, position {su.pos()}")
+                log(f"window {tit}, position {su.pos()}")
                 newWin = Window()
                 newWin.x = su.pos().x()
                 newWin.y = su.pos().y()
@@ -2514,7 +2520,7 @@ class MyExtension(Extension):
             
             with open(self.filePathWindowState, 'w+') as f:
                 f.write(js)
-            print(f"dump json = {js}")
+            log(f"dump json = {js}")
 
             return js
             
@@ -2523,7 +2529,7 @@ class MyExtension(Extension):
             # #restore last saved window state
             # f = open(self.filePathWindowState)
             # windows = json.load(f)
-            # print(f"roba letta: {windows}")
+            # log(f"roba letta: {windows}")
             
             
 
@@ -2535,7 +2541,7 @@ class MyExtension(Extension):
             
             # for w in windows:
                 # w2 = Dict2Class(w)
-                # print(f"titolo = {w2.title}, x = {w2.x}")
+                # log(f"titolo = {w2.title}, x = {w2.x}")
                 
                 # for su in subwins:
                     # tit = su.windowTitle().replace(" *", "")
@@ -2561,7 +2567,7 @@ class MyExtension(Extension):
             try:
                 f = open(self.filePathWindowState)
                 windows = json.load(f)
-                print(f"roba letta: {windows}")
+                log(f"roba letta: {windows}")
                 
                 f.close()
                 
@@ -2579,7 +2585,7 @@ class MyExtension(Extension):
                         
                         
                 windows.sort(key = sortFun)
-                print(f"sorted: {windows}")    
+                log(f"sorted: {windows}")    
                 
                 
                 
@@ -2588,7 +2594,7 @@ class MyExtension(Extension):
                 # open all files in the correct order
                 for w in windows:
                     w2 = Dict2Class(w)
-                    print(f"titolo = {w2.title}, x = {w2.x}. opening document: {w2.fullPath}")
+                    log(f"titolo = {w2.title}, x = {w2.x}. opening document: {w2.fullPath}")
                 
                     alreadyOpen = False
                     for su in subwins:
@@ -2610,7 +2616,7 @@ class MyExtension(Extension):
                 
                 for w in windows:
                     w2 = Dict2Class(w)
-                    print(f"titolo = {w2.title}, x = {w2.x}")
+                    log(f"titolo = {w2.title}, x = {w2.x}")
                     
                     for su in subwins:
                         tit = su.windowTitle().replace(" *", "")
@@ -2686,7 +2692,7 @@ class MyExtension(Extension):
                 # self.previousColor = [0,0,0,0]
                 # self.inited = False
                 
-                # print("LastColor setup ok")
+                # log("LastColor setup ok")
                 
                 
                 
@@ -2694,18 +2700,18 @@ class MyExtension(Extension):
         def switchToLastColor(self):
                 """Switches color based on history, handling consecutive presses vs. first press after paint."""
                 
-                print("\n--- switchToLastColor ---")
-                print(f"Before Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
+                log("\n--- switchToLastColor ---")
+                log(f"Before Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
                 try:
                         acView = Krita.instance().activeWindow().activeView()
                         if acView is None:
-                            print("  Abort: No active view.")
+                            log("  Abort: No active view.")
                             return
 
                         num_colors = len(g.g_last_virtual_colors_used)
                         if num_colors == 0: # Need at least one color to select from
-                            print("  Abort: No colors in history.")
+                            log("  Abort: No colors in history.")
                             quickMessage("No colors in history.")
                             return
 
@@ -2713,21 +2719,21 @@ class MyExtension(Extension):
                         # g_color_history_index = 0 represents the most recent color.
                         next_index = g.g_color_history_index + 1
 
-                        print(f"  Current index: {g.g_color_history_index}. Trying next index: {next_index}")
+                        log(f"  Current index: {g.g_color_history_index}. Trying next index: {next_index}")
 
                         # Check if the next index is within the list bounds
                         if next_index < num_colors:
                             g.g_color_history_index = next_index # Update the global index
                             target_color = g.g_last_virtual_colors_used[g.g_color_history_index]
-                            print(f"g_virtual_fg_color_rgb = last color cioe' {target_color.toString()}")
+                            log(f"g_virtual_fg_color_rgb = last color cioe' {target_color.toString()}")
                             g.g_virtual_fg_color_rgb = target_color.clone() # Set the virtual foreground color
-                            print(f"  Switched to color at index {g.g_color_history_index}: {target_color.toString()}")
+                            log(f"  Switched to color at index {g.g_color_history_index}: {target_color.toString()}")
                             # Update Krita's actual foreground color (if needed, depends on plugin logic)
                             # Krita.instance().activeWindow().activeView().setForegroundColor(target_color)
                             # TODO: Ensure g.g_virtual_fg_color_rgb is used correctly elsewhere
                         else:
                             # Index is out of bounds (tried to go past the oldest color)
-                            print(f"  Reached end of history. No change. Index remains {g.g_color_history_index}")
+                            log(f"  Reached end of history. No change. Index remains {g.g_color_history_index}")
                             quickMessage("Reached oldest color in history.")
                             # Do not wrap around, do not change color
 
@@ -2742,11 +2748,11 @@ class MyExtension(Extension):
                         comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0)
                         col.setComponents(comp)
                         acView.setForeGroundColor(col)
-                        print(f"  Set FG Color to: {g.g_virtual_fg_color_rgb.toString()}")
+                        log(f"  Set FG Color to: {g.g_virtual_fg_color_rgb.toString()}")
 
                         # DO NOT reorder the list.
                         acView.showFloatingMessage(f"Switched color (History pos {g.g_color_history_index})", QIcon(), g.timeMessage, 1)
-                        print(f"After Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
+                        log(f"After Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
 
                         # --- Optional: Layer creation logic (kept from original) ---
@@ -2768,21 +2774,21 @@ class MyExtension(Extension):
                 except IndexError:
                      quickMessage("Error accessing color history (Index out of bounds).")
                      g.g_color_history_index = -1 # Reset index on error
-                     print(f"IndexError in switchToLastColor (Index was {g.g_color_history_index}), resetting index to -1.")
+                     log(f"IndexError in switchToLastColor (Index was {g.g_color_history_index}), resetting index to -1.")
                      import traceback
                      traceback.print_exc()
                 except Exception as e:
                         if 'acView' in locals() and acView is not None:
                             acView.showFloatingMessage(f"Error switching color: {e}.", QIcon(), g.timeMessage * 2, 1)
-                        print(f"Error in switchToLastColor: {e}")
+                        log(f"Error in switchToLastColor: {e}")
                         import traceback
                         traceback.print_exc()
                         g.g_color_history_index = -1 # Reset index on other errors too
-                        print("Resetting index to -1 due to exception.")
+                        log("Resetting index to -1 due to exception.")
                 except Exception as e:
                                 acView.showFloatingMessage(f"error {e}.", QIcon(), g.timeMessage * 2, 1)
-                                print("errore trovato in swap:")
-                                print(e)
+                                log("errore trovato in swap:")
+                                log(e)
                                 
                                 
 
@@ -2817,7 +2823,7 @@ class MyExtension(Extension):
                     # view  = Krita.instance().activeWindow().activeView()
                     
                     # newPaintingOp = self.temp_switched_to_100_previous_opac / 255.0
-                    # print(f"setting new painting op = {newPaintingOp}")
+                    # log(f"setting new painting op = {newPaintingOp}")
                     # view.setPaintingOpacity(newPaintingOp)
                     
                     
@@ -2874,10 +2880,10 @@ class MyExtension(Extension):
                 """Adds the color of the last stroke to the history list and resets the history index, handling A->B->Paint A case."""
 
 
-                print("********************\n on history was made\n\n")
+                log("********************\n on history was made\n\n")
                 # --- Check if this history event was triggered by dryPaper ---
                 if hasattr(g, 'g_is_drying_paper') and g.g_is_drying_paper:
-                    # print("History change ignored because dryPaper is active.")
+                    # log("History change ignored because dryPaper is active.")
                     return # Exit immediately if dryPaper is running
                 # --- End of dryPaper check ---
 
@@ -2885,7 +2891,7 @@ class MyExtension(Extension):
                 current_tool_id = EKritaTools.current()
 
                 if not current_tool_id:
-                    # print("Could not determine current tool ID.")
+                    # log("Could not determine current tool ID.")
                     return # Exit if tool ID couldn't be determined
 
                 # Define the list of brush tool IDs using constants from EKritaToolsId
@@ -2902,13 +2908,13 @@ class MyExtension(Extension):
 
                 if current_tool_id not in brush_tool_ids:
                     # History changed due to another action (new layer, filter, etc.)
-                    # print(f"History changed, but current tool ({current_tool_id}) is not a brush. Ignoring.")
+                    # log(f"History changed, but current tool ({current_tool_id}) is not a brush. Ignoring.")
                     return # Exit the function if it's not a brush stroke
                 # --- End of tool check ---
 
                 # If it is a brush tool, proceed with the original logic:
                 self.counter += 1
-                # print(f"\n--- _on_history_was_made (Stroke {self.counter}, Tool: {current_tool_name}) ---")
+                # log(f"\n--- _on_history_was_made (Stroke {self.counter}, Tool: {current_tool_name}) ---")
                 try:
                     # Get globals (original code continues here)
                     # Get the actual foreground color from Krita
@@ -2927,12 +2933,12 @@ class MyExtension(Extension):
                     stroke_color = actual_color_rgb.clone()
                     # Update the virtual color to match the actual color
                     g.g_virtual_fg_color_rgb = actual_color_rgb.clone()
-                    print(f"  Stroke Color (g.g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
-                    print(f"  Before Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
+                    log(f"  Stroke Color (g.g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
+                    log(f"  Before Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
                     if stroke_color is not None:
                         stroke_color_clone = stroke_color.clone()
-                        print(f"  Processing stroke color {stroke_color_clone.toString()}")
+                        log(f"  Processing stroke color {stroke_color_clone.toString()}")
 
                         # Use a temporary list to avoid modifying while iterating if needed, though list comprehension handles this.
                         original_count = len(g.g_last_virtual_colors_used)
@@ -2940,36 +2946,36 @@ class MyExtension(Extension):
                         g.g_last_virtual_colors_used = [c for c in g.g_last_virtual_colors_used if not c.equals(stroke_color_clone)]
                         removed_count = original_count - len(g.g_last_virtual_colors_used)
                         if removed_count > 0:
-                            print(f"  Removed {removed_count} existing instance(s) of {stroke_color_clone.toString()}.")
+                            log(f"  Removed {removed_count} existing instance(s) of {stroke_color_clone.toString()}.")
 
                         # Add the new/current color to the beginning (most recent)
                         g.g_last_virtual_colors_used.insert(0, stroke_color_clone)
-                        print(f"  Added color {stroke_color_clone.toString()} to beginning. History size: {len(g.g_last_virtual_colors_used)}")
+                        log(f"  Added color {stroke_color_clone.toString()} to beginning. History size: {len(g.g_last_virtual_colors_used)}")
 
                         # Trim list to max_history, keeping the newest items (at the start)
                         max_history = 40 # TODO: Consider making this configurable
                         if len(g.g_last_virtual_colors_used) > max_history:
                             g.g_last_virtual_colors_used = g.g_last_virtual_colors_used[:max_history]
-                            print(f"  History trimmed to {max_history} items.")
+                            log(f"  History trimmed to {max_history} items.")
 
                         # Always reset the history index after a stroke adds/moves a color
                         g.g_color_history_index = 0
-                        print(f"  Reset g_color_history_index to 0.")
+                        log(f"  Reset g_color_history_index to 0.")
                     
                     # Update the absolute last color tracker (always, inside try)
                     g.g_virtual_color_used_last_rgb = stroke_color
 
                     # --- Update the Docker UI ---
                     if hasattr(g, 'g_docker_instance') and g.g_docker_instance:
-                        print("  Calling docker update UI...")
+                        log("  Calling docker update UI...")
                         g.g_docker_instance.update_color_history_ui()
                     else:
-                        print("  Warning: Docker instance not found in globals (g.g_docker_instance). UI not updated.")
-                    print(f"  After Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
+                        log("  Warning: Docker instance not found in globals (g.g_docker_instance). UI not updated.")
+                    log(f"  After Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
                 except Exception as e:
                     # Correctly indented except block
-                    print(f"Error in _on_history_was_made: {e}")
+                    log(f"Error in _on_history_was_made: {e}")
                     import traceback
                     traceback.print_exc()
 
@@ -2985,17 +2991,17 @@ class MyExtension(Extension):
                                         # p = get_cursor_in_document_coords()
                                         # if p is not None:
                                                 # doc_pos = p + center
-                                                # print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
+                                                # log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
                                                 
                                                 # self.pixelBytes = document.activeNode().pixelData(doc_pos.x(), doc_pos.y(), 1, 1)
                                                 
                                                 # self.imageData = QImage(self.pixelBytes, 1, 1, QImage.Format_RGBA8888)
                                                 # self.pixelC = self.imageData.pixelColor(0,0)
-                                                # print(f"color under cursor = {self.pixelC.red()}, {self.pixelC.green()}, {self.pixelC.blue()}")
+                                                # log(f"color under cursor = {self.pixelC.red()}, {self.pixelC.green()}, {self.pixelC.blue()}")
                                                 
                                                 # fg = view.foregroundColor()
                                                 # comp = fg.components() 
-                                                # print(f"fg color = {comp}")
+                                                # log(f"fg color = {comp}")
                  
                  
                                                 # canv = 0.5 #I pick half color from canvas
@@ -3023,7 +3029,7 @@ class MyExtension(Extension):
                                         
                                         doc_pos = p + center
                                         
-                                        #print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
+                                        #log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
                                         
                                         
                                         parentNode = document.activeNode().parentNode()
@@ -3050,28 +3056,28 @@ class MyExtension(Extension):
                                                             correzMul = float(layerOpac) /  255.0
                                                         
 
-                                                        #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
+                                                        #log(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
                                                         
                                                         colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha() * correzMul ))
                                                 
                                                 #creo il colore composito dei layer. questo è il bgcolor                                                
                                                 bgColor = calcolaCompositeColor(colors)
-                                                bgColor.print("bgColor")
+                                                bgColor.log("bgColor")
                                                                 
                                                 
                                                                 
                                                 # setto il fg color uguale a merged color mischiato con il fg
                                                 fg = view.foregroundColor() #tipo ManagedColor, valori da 0 a 1
-                                                print(f"fg  = {fg}")
+                                                log(f"fg  = {fg}")
                                                 
                                                 fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
-                                                fg2.print("fg2")
+                                                fg2.log("fg2")
                                                 
                                                 comp = fg.components() 
-                                                print(f"fg color = {comp}")
+                                                log(f"fg color = {comp}")
                  
                                                 dist = fg2.distance(bgColor)
-                                                print(f"distance = {dist}")
+                                                log(f"distance = {dist}")
                  
                                                 
                                                 curDist = None
@@ -3103,7 +3109,7 @@ class MyExtension(Extension):
                                                                                     
                                                         curDist = curFg.distance(fg2)
                                                         
-                                                        print(f"iterando. mul  = {curMul}, dist  tra {curFg.toString()} e {fg2.toString()} = {curDist}. ")
+                                                        log(f"iterando. mul  = {curMul}, dist  tra {curFg.toString()} e {fg2.toString()} = {curDist}. ")
                                                         
                                                         if curDist <= self.mixing_target_distance:  
                                                             break
@@ -3132,7 +3138,7 @@ class MyExtension(Extension):
                                                 
                                                 
                                                 # setto anche il virtual fg color al result del mix
-                                                print("g_virtual_fg_color_rgb mixando")
+                                                log("g_virtual_fg_color_rgb mixando")
                                                 g.g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
                                                 update_label_from_virtual_color()
                                                 
@@ -3175,17 +3181,17 @@ class MyExtension(Extension):
         
 
         def updateColorUnderMouse(self):
-            #print("updateColorUnderMouse")
+            #log("updateColorUnderMouse")
             self.colorUnderMouse = getColorUnderCursorOrAtPos()
             # if col is not None:
-                # print(f"update color under mouse: {col.toString()}")
+                # log(f"update color under mouse: {col.toString()}")
             
         def enumResources(self):
-            print("enum resources")
-            #print( Krita.instance().resources('paintoppresets') )
+            log("enum resources")
+            #log( Krita.instance().resources('paintoppresets') )
             
             g.allBrushPresets = Krita.instance().resources('preset')
-            print(f"resources: {g.allBrushPresets}")
+            log(f"resources: {g.allBrushPresets}")
             
             #allBrushPresets = Krita.instance().resources('paintoppresets')
             for k,v in g.allBrushPresets.items():
@@ -3200,7 +3206,7 @@ class MyExtension(Extension):
                 if g.g_virtual_fg_color_rgb is None or not g.g_auto_mix_enabled  or g.g_auto_mix_paused or (g.g_auto_mixing_just_once_logic and not g.g_auto_mixing_just_once_now_on):
                         return
                         
-                # print("timer 2")        
+                # log("timer 2")        
                 app = Krita.instance()
                 win = app.activeWindow()
                 if win is not None:
@@ -3217,7 +3223,7 @@ class MyExtension(Extension):
                                         doc_pos = p + center
                                         
                                         #doc_pos = xyOfQpoint(doc_pos)
-                                        # print(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
+                                        # log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
                                         
                                         
                                         #parentNode = document.activeNode().parentNode()
@@ -3255,7 +3261,7 @@ class MyExtension(Extension):
                                                 # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
                                                 # concatenated_string = '-'.join(byte_values)
                                                 
-                                                # print(f'Dati letti: {concatenated_string}')
+                                                # log(f'Dati letti: {concatenated_string}')
                                                 
                                                 
                                                 
@@ -3296,7 +3302,7 @@ class MyExtension(Extension):
                                                             # correzMul = float(layerOpac) /  255.0
                                                                                                                     
                                                             
-                                                            # #print(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha()}")
+                                                            # #log(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha()}")
                                                             
                                                             # colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha()  * correzMul))
                                                     
@@ -3335,13 +3341,13 @@ class MyExtension(Extension):
                                                         # setto il fg color uguale a merged color (cioè bg color) mischiato con l'ultimo colore memorizzato
                                                         
                                                         fg2 = g.g_virtual_fg_color_rgb # rgbOfManagedColor(fg) # valori da 0 a 255
-                                                        #fg2.print("fg2")
+                                                        #fg2.log("fg2")
                                                         
                                                         comp = fg.components() 
-                                                        #print(f"fg color = {comp}")
+                                                        #log(f"fg color = {comp}")
                          
                                                         dist = fg2.distance(bgColor)
-                                                        #print(f"distance = {dist}, target distance = {self.mixing_target_distance}")
+                                                        #log(f"distance = {dist}, target distance = {self.mixing_target_distance}")
                          
                                                         
                                                         curDist = None
@@ -3377,7 +3383,7 @@ class MyExtension(Extension):
                                                                                             
                                                                 curDist = curFg.distance(bgColor)
                                                                 
-                                                                #print(f"iterando. mul  = {curMul}, dist  tra {curFg.toString()} e {fg2.toString()} = {curDist}. ")
+                                                                #log(f"iterando. mul  = {curMul}, dist  tra {curFg.toString()} e {fg2.toString()} = {curDist}. ")
                                                                 
                                                                 if curDist <= target_distance_corretta_per_layer_transp:  
                                                                     break
@@ -3431,7 +3437,7 @@ class MyExtension(Extension):
                                                         
                                                     # else:
                                                         # blending
-                                                        # print(f"fg color = {comp}")
+                                                        # log(f"fg color = {comp}")
                          
                      
                                                     
@@ -3492,17 +3498,17 @@ class MyExtension(Extension):
                                    
         def pick(self, showMessage = True):
                 
-                # print("pick called")
+                # log("pick called")
                 app = Krita.instance()
                 win = app.activeWindow()
                 if win is not None:
-                        # print("pick called 1")
+                        # log("pick called 1")
                         view = win.activeView()
                         if view is not None:
-                                # print("pick called 2")
+                                # log("pick called 2")
                                 document = view.document()
                                 if document:
-                                        # print("pick called 3")
+                                        # log("pick called 3")
                                         center = QPointF(0.5 * document.width(), 0.5 * document.height())
                                         p = get_cursor_in_document_coords()
                                         doc_pos = p + center
@@ -3515,7 +3521,7 @@ class MyExtension(Extension):
                                         # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
                                         # concatenated_string = '-'.join(byte_values)
                                         
-                                        # print(f'Dati letti: {concatenated_string}')
+                                        # log(f'Dati letti: {concatenated_string}')
                                         
                                         
                                         
@@ -3532,25 +3538,25 @@ class MyExtension(Extension):
                                         #e ora da colore qt a colore mio 
                                         mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255)
                                         
-                                        #print(f'pixel risulta: {mergedColor.r}  {mergedColor.g} {mergedColor.b}')
+                                        #log(f'pixel risulta: {mergedColor.r}  {mergedColor.g} {mergedColor.b}')
                                         
                                         
                                         #parentNode = document.activeNode().parentNode()
                                         
                                         
                                         if True: #parentNode is not None:
-                                                # print("pick called 4")
+                                                # log("pick called 4")
                                                 # brothers = parentNode.childNodes()
                                                 # colors = []
                                                 
                                                 # #costruisco colors
                                                 # for curLayer in brothers:
-                                                        # #print(f"pixel bytes = {self.pixelBytes}")
+                                                        # #log(f"pixel bytes = {self.pixelBytes}")
                                                         # self.pixelBytes = curLayer.pixelData(int (round(doc_pos.x())), int(round(doc_pos.y())), 1, 1)
                                                         
                                                         # self.imageData = QImage(self.pixelBytes, 1, 1, QImage.Format_RGBA8888)
                                                         # self.pixelC = self.imageData.pixelColor(0,0) # valori tra 0 e 255
-                                                        # #print(f"pixel color  = {self.pixelC.name()}")  # .name() lo stampa in modo leggibile
+                                                        # #log(f"pixel color  = {self.pixelC.name()}")  # .name() lo stampa in modo leggibile
 
 
                                                         # # devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
@@ -3562,7 +3568,7 @@ class MyExtension(Extension):
                                                         
                                                         
 
-                                                        # #print(f"pick: color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
+                                                        # #log(f"pick: color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
                                                         
                                                         # colors.append(  rgb(self.pixelC.red(),  self.pixelC.green(),  self.pixelC.blue(),  self.pixelC.alpha() * correzMul ))
                                                 
@@ -3582,12 +3588,12 @@ class MyExtension(Extension):
                                                     # curLayerOpac01 =  float (document.activeNode().opacity()) / 255.0  #tra 0 e 1
                                                     
                                                     # # # formula: mulA è tale che (merged.a * mulA) * curLayerOpac =  merged.a  => mul = 1 / curlayeropac
-                                                    # # print(f"  curLayerOpac01 = {curLayerOpac01}, newr = {mergedColor.r / curLayerOpac01 },    newg = {mergedColor.g / curLayerOpac01 },    newb = {mergedColor.b / curLayerOpac01}")
+                                                    # # log(f"  curLayerOpac01 = {curLayerOpac01}, newr = {mergedColor.r / curLayerOpac01 },    newg = {mergedColor.g / curLayerOpac01 },    newb = {mergedColor.b / curLayerOpac01}")
                                                     # # # newR * curLayerOpac01 = merged.r
                                                     # mergedColor = rgb(   min (255, mergedColor.r / curLayerOpac01 ),    min(255,mergedColor.g / curLayerOpac01 ),    min(255, mergedColor.b / curLayerOpac01 ),  255)
                                                                 
                                                                  
-                                                print("g_virtual_fg_color_rgb = mergedcolor")
+                                                log("g_virtual_fg_color_rgb = mergedcolor")
                                                 g.g_virtual_fg_color_rgb = mergedColor #lo memorizzo come target
                                                 update_label_from_virtual_color()
                                                 
@@ -3611,7 +3617,7 @@ class MyExtension(Extension):
                                                 comp = fg.components() 
                                                 
                                                 #wrokaround in case your fg color is [1,1], which means greyscale
-                                                print(f"fg color = {comp}")
+                                                log(f"fg color = {comp}")
                                                 
                                                 if len(comp ) == 4:    
                                                         
@@ -3621,7 +3627,7 @@ class MyExtension(Extension):
                                                     comp[1] =  (mergedColor.g / 255.0)
                                                     comp[2] = (mergedColor.b  / 255.0)
                                               
-                                                    print(f"fg color after = {comp}")
+                                                    log(f"fg color after = {comp}")
                                                     
                                                     fg.setComponents(comp)
                                                     
@@ -3935,7 +3941,7 @@ class MyExtension(Extension):
             
         def dryPaperOldWithMerge(self, showMessage = True):
                 
-                #print(f"dry paper called showMessage = {showMessage}")
+                #log(f"dry paper called showMessage = {showMessage}")
                 application = Krita.instance()
                 currentDoc = application.activeDocument()
                 activeLayer = currentDoc.activeNode()
@@ -3947,7 +3953,7 @@ class MyExtension(Extension):
                 parentNode = activeLayer.parentNode()
                 newLa = None
                 if parentNode is not None:  
-                        #print("dry paper called1")
+                        #log("dry paper called1")
                         oldOpacity = activeLayer.opacity()
                         activeLayer.mergeDown()
                         currentDoc.waitForDone()
@@ -3983,7 +3989,7 @@ class MyExtension(Extension):
                 #test blur        
                 
                 if showMessage:
-                    print("dry paper called message")
+                    log("dry paper called message")
                     quickMessage("Dry paper")
                     #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), g.timeMessage, 1)
                         
@@ -3991,7 +3997,7 @@ class MyExtension(Extension):
         
         
         def mergeOnTimer(self): # does not work. cannot set the active layer after merging down.
-                    #print(f"dry paper called showMessage = {showMessage}")
+                    #log(f"dry paper called showMessage = {showMessage}")
                 application = Krita.instance()
                 currentDoc = application.activeDocument()
                 if currentDoc is not None:
@@ -4040,7 +4046,7 @@ class MyExtension(Extension):
                                 
               
         def mergeCleanup(self):
-                #print(f"dry paper called showMessage = {showMessage}")
+                #log(f"dry paper called showMessage = {showMessage}")
                 application = Krita.instance()
                 currentDoc = application.activeDocument()
                 activeLayer = currentDoc.activeNode()
@@ -4052,7 +4058,7 @@ class MyExtension(Extension):
                 parentNode = activeLayer.parentNode()
                 newLa = None
                 if parentNode is not None:  
-                        #print("dry paper called1")
+                        #log("dry paper called1")
                         oldOpacity = activeLayer.opacity()
                         
                         
@@ -4078,7 +4084,7 @@ class MyExtension(Extension):
                             
                             
                             if g.g_set_spectral_blend_mode_when_creating_layer:
-                                #print("setting over spectral")
+                                #log("setting over spectral")
                                 newLa.setBlendingMode("over spectral");
                             
                             # backgroundLayer = parentNode.childNodes()[0]
@@ -4100,7 +4106,7 @@ class MyExtension(Extension):
                 #test blur        
                 
                 
-                print("cleanup layers called message")
+                log("cleanup layers called message")
                 quickMessage("Cleanup layers")
                  #application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
                         
@@ -4121,7 +4127,7 @@ class MyExtension(Extension):
                     quickMessage(f"Reset layer opacity to default ({round(g.g_auto_reset_opacity_on_pick_level )}%)")
         
         def dryPaperAndPick(self):
-            print("dry paper and pick")
+            log("dry paper and pick")
             
             #non funziona se inverto l'ordine... non capisco perche'
             self.pick( False)
@@ -4134,10 +4140,10 @@ class MyExtension(Extension):
             document = None
             win = app.activeWindow()
             if win is not None:
-                        # print("pick called 1")
+                        # log("pick called 1")
                         view = win.activeView()
                         if view is not None:
-                                # print("pick called 2")
+                                # log("pick called 2")
                                 document = view.document()
                                 if document:
                                         
@@ -4152,7 +4158,7 @@ class MyExtension(Extension):
                                         if parentNode is not None:
                                                 pa = parentNode.parentNode()
                                                 if pa is not None:
-                                                    print(f"has parent node. document file {document.fileName()}. parentNode = {parentNode.name()}")
+                                                    log(f"has parent node. document file {document.fileName()}. parentNode = {parentNode.name()}")
                                                     hasParentNode = True
             
             
@@ -4183,7 +4189,7 @@ class MyExtension(Extension):
                 
         
         # def dryPaperAndMix(self):
-            # print("dry paper and mix")
+            # log("dry paper and mix")
             
             # #non funziona se inverto l'ordine... non capisco perche'
             # self.mixFgColorWithBgColor_normalLogic()
@@ -4199,16 +4205,16 @@ class MyExtension(Extension):
         def minimizeOnTopAndViewFullScreen(self):
                 app = Krita.instance()
                                 
-                # print(f"windows = {app.windows()}")                
-                # print(f"active window title = {app.activeWindow().qwindow().windowTitle()}")
+                # log(f"windows = {app.windows()}")                
+                # log(f"active window title = {app.activeWindow().qwindow().windowTitle()}")
                 
                 wi = app.activeWindow()
                 
                 
                 #for wi in app.windows():
-                # print(f"---------")
-                # print(f"window title = {wi.qwindow().windowTitle()}")
-                # print(f"wi views = {wi.views()}")
+                # log(f"---------")
+                # log(f"window title = {wi.qwindow().windowTitle()}")
+                # log(f"wi views = {wi.views()}")
                 # print (f"wi subwindows = {wi.qwindow().findChild(QMdiArea).subWindowList()}")
                 
                 subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
@@ -4269,7 +4275,7 @@ class MyExtension(Extension):
                     
                     
                 
-                print(f"siamo in stato normale: {siamoInStatoNormale}")
+                log(f"siamo in stato normale: {siamoInStatoNormale}")
                 
                 if siamoInStatoNormale:
                     # devo minimizzare le on top e massimizzare la prima delle non-on-top
@@ -4336,7 +4342,7 @@ class MyExtension(Extension):
                         # else:
                             # isMinimized = False
 
-                        # print(f"subwindow title = {su.windowTitle()}, stay on top = {stayOnTop    }, minimized = {isMinimized}")
+                        # log(f"subwindow title = {su.windowTitle()}, stay on top = {stayOnTop    }, minimized = {isMinimized}")
 
                         
                         # if stayOnTop:
@@ -4378,7 +4384,7 @@ class MyExtension(Extension):
                     # else:
                         # isMinimized = False
 
-                    # print(f"subwindow title = {su.windowTitle()}, stay on top = {stayOnTop    }, minimized = {isMinimized}")
+                    # log(f"subwindow title = {su.windowTitle()}, stay on top = {stayOnTop    }, minimized = {isMinimized}")
 
                     
                     # if stayOnTop:
@@ -4433,11 +4439,11 @@ class MyExtension(Extension):
                     # # print ("swap: initialized")
                 
                 # except Exception as e:
-                    # print(f"errore trovato in setup {e}")
+                    # log(f"errore trovato in setup {e}")
                     
                                 
         def onEnter(self):
-            print(f"enter event")
+            log(f"enter event")
             
             
         def toggleAutoFocus(self):

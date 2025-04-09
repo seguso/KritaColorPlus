@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 g_blur_on_dry = False
 
 countColorChanged = 0
+printCount = 0
 
 # g_mix_auto_clears_cur_layer = "1"
 
