@@ -9,7 +9,7 @@ from . import globals as g
 from .whichtool import EKritaTools, EKritaToolsId # Import the necessary classes
 
 
-
+from .rgb import *
 
 
 from krita import *
@@ -1035,7 +1035,7 @@ class AutoFocusSetter(QObject):
 
 #log(Krita.instance().filters())
 
-def setFgColor(col):
+def setFgColor(col : rgb):
     app = Krita.instance()
     win = app.activeWindow()
     if win is not None:
@@ -1221,36 +1221,6 @@ def rgbOfManagedColor( c):
             co = c.components()
             return rgb(float( co[0] * 255.0) , float(co[1] * 255.0), float(co[2] * 255.0), 255.0)
 
-class rgb:
-        def __init__(self, r, g, b, a):
-                if not isinstance(r, float) or not isinstance(g, float) or not isinstance(b, float) or not isinstance(a, float):
-                    raise TypeError("r, g, and b and a must be float values (doubles)")
-                self.a = a
-                self.r = r
-                self.g = g
-                self.b = b
-                
-        def log(self, msg):
-                log(f"{msg}:   {self.toString()}")
-                
-        def toString(self):
-            # inverto r e b perche' in realta' siamo bgr
-            return f" b:{self.r}, g:{self.g}, r:{self.b} ,a:{self.a}"
-
-        def average(self, c):
-                return rgb((self.r + c.r) / 2.0,
-                                                        (self.g + c.g) / 2.0,
-                                                        (self.b + c.b) / 2.0,
-                                                        255.0)
-
-        def distance(self, c):
-            return math.sqrt((self.r - c.r)*(self.r - c.r) + (self.g - c.g)*(self.g - c.g) + (self.b - c.b)*(self.b - c.b) )
-            
-        def equals(self, c):
-            return c.r == self.r and c.g == self.g and c.b == self.b
-
-        def clone(self):
-            return rgb(self.r, self.g, self.b, self.a)
         
 class xy:
         def __init__(self, x,y):
@@ -1963,7 +1933,7 @@ def handle_release(widget):
                 # g.g_auto_mix__how_much_canvas_to_pick = 1.0
         
                                                 
-                            
+        # mouse released: sporca se dirty brush
         
         if g.g_dirty_brush_currently_on and g.g_dirty_brush_overall_enabled:  # qui siamo in mousereleased
             application = Krita.instance()
@@ -2022,11 +1992,15 @@ def handle_release(widget):
                     new_comp[0] = mixed_comp_float[0]
                     new_comp[1] = mixed_comp_float[1]
                     new_comp[2] = mixed_comp_float[2]
+                    new_comp[3] = 1.0
+
+                    g.g_dirty_brush_color_to_ignore = new_comp
+                    log(f"setto color to ignore = {new_comp}")
                     
                     fg.setComponents(new_comp)
                     
-                    log(f"dico di ignorare {new_comp}");
-                    view.setForeGroundColor(fg)  
+                    
+                    view.setForeGroundColor(fg)   
                     
             
                     # log("g_virtual_fg_color_rgb dirty")
@@ -2249,25 +2223,39 @@ class MyExtension(Extension):
                 # devo settare questo colore come target per l'auto-mixing
                 view  = Krita.instance().activeWindow().activeView()
                 if view is not None:
-                    fg: Optional[QColor] = view.foregroundColor()
+                    fg: Optional[ManagedColor] = view.foregroundColor()
                     if fg is not None:
                         # components() likely returns Tuple[float, float, float, float] for RGBA
-                        comp: Sequence[float] = fg.components()
+                        comp: Sequence[float] = fg.components() #il ManagedColor si usa cosi'
+
+
 
                         # Element-wise comparison instead of direct list/tuple comparison
                         
                         if len(comp) == 4: # Assuming RGBA
-                            
-                            mergedColor = rgb(comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
-                                
 
-                            #log(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}, orig = {comp[0]}, {comp[1]}, {comp[2]}")
-                            g.g_virtual_fg_color_rgb = mergedColor #lo memorizzo
-                            
-                            update_label_from_virtual_color()
-                            
-                            
-                            #log(f"setting last_color_picked = {g.g_virtual_fg_color_rgb.toString()}")
+                            def arrEqual (a1, a2 ):
+                                return (int(a1[0] * 255.0) == int(a2[0] * 255.0) and
+                                        int(a1[1] * 255.0) == int(a2[1] * 255.0) and
+                                        int(a1[2] * 255.0) == int(a2[2] * 255.0))
+
+
+                            if g.g_dirty_brush_color_to_ignore is not None and arrEqual(comp, g.g_dirty_brush_color_to_ignore):
+                                log(f"colore ignorato {comp}")
+                            else:
+                                log(f"colore non ignorato {comp}")
+
+                                newColorRgb = rgb(comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
+                                    
+
+                                #log(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}, orig = {comp[0]}, {comp[1]}, {comp[2]}")
+                                g.g_virtual_fg_color_rgb = newColorRgb #lo memorizzo
+                                
+                                update_label_from_virtual_color()
+                                
+                                g.g_dirty_brush_color_to_ignore = None # e' arrivato un colore diverso, quindi l'ha settato l'utente da picker
+
+                                #log(f"setting last_color_picked = {g.g_virtual_fg_color_rgb.toString()}")
                         else:
                             log("err1")
 
@@ -2594,11 +2582,18 @@ class MyExtension(Extension):
                         
                         update_label_from_virtual_color()
 
-                        col = acView.foregroundColor()
+                        col : ManagedColor = acView.foregroundColor()
                         comp = col.components()
+
+                        
+
                         comp[0] = (g.g_virtual_fg_color_rgb.r / 255.0)
                         comp[1] = (g.g_virtual_fg_color_rgb.g / 255.0)
                         comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0)
+                        comp[3] = 1.0
+
+                       
+
                         col.setComponents(comp)
                         acView.setForeGroundColor(col)
                         log(f"  Set FG Color to: {g.g_virtual_fg_color_rgb.toString()}")
@@ -3024,7 +3019,7 @@ class MyExtension(Extension):
                                                 else:
                                                     raise f"unsupported len {len(pixBytes)}"
                                                     
-                                                pixelC = imageData.pixelColor(0,0)
+                                                pixelC : QColor = imageData.pixelColor(0,0)
                                                 
                                                 #e ora da colore qt a colore mio 
                                                 mergedColor = rgb(float(pixelC.red()),  float(pixelC.green()),  float(pixelC.blue()), 255.0)

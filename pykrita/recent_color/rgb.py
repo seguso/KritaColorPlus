@@ -1,0 +1,33 @@
+from . globals import log
+import math
+
+class rgb:
+        def __init__(self, r, g, b, a):
+                if not isinstance(r, float) or not isinstance(g, float) or not isinstance(b, float) or not isinstance(a, float):
+                    raise TypeError("r, g, and b and a must be float values (doubles)")
+                self.a = a
+                self.r = r
+                self.g = g
+                self.b = b
+                
+        def log(self, msg):
+                log(f"{msg}:   {self.toString()}")
+                
+        def toString(self):
+            # inverto r e b perche' in realta' siamo bgr
+            return f" b:{self.r}, g:{self.g}, r:{self.b} ,a:{self.a}"
+
+        def average(self, c):
+                return rgb((self.r + c.r) / 2.0,
+                                                        (self.g + c.g) / 2.0,
+                                                        (self.b + c.b) / 2.0,
+                                                        255.0)
+
+        def distance(self, c):
+            return math.sqrt((self.r - c.r)*(self.r - c.r) + (self.g - c.g)*(self.g - c.g) + (self.b - c.b)*(self.b - c.b) )
+            
+        def equals(self, c):
+            return c.r == self.r and c.g == self.g and c.b == self.b
+
+        def clone(self):
+            return rgb(self.r, self.g, self.b, self.a)
