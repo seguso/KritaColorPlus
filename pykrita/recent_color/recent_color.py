@@ -1301,6 +1301,8 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
 
                             fg.setComponents(comp)
 
+                            g.g_ultimo_colore_vero_settato_dall_utente = comp # ricorda che questo e' un colore vero
+
                             view.setForeGroundColor(fg)
 
                             # setto anche il virtual fg color al result del mix
