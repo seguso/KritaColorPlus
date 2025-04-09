@@ -1269,7 +1269,7 @@ def quickMessage(msg, timeMessage = 360):
         
 def rgbOfManagedColor( c):
             co = c.components()
-            return rgb(co[0] * 255 , co[1] * 255, co[2] * 255, 255)
+            return rgb(float( co[0] * 255.0) , float(co[1] * 255.0), float(co[2] * 255.0), 255.0)
 
 class rgb:
         def __init__(self, r, g, b, a):
@@ -3071,7 +3071,7 @@ class MyExtension(Extension):
                                                 pixelC = imageData.pixelColor(0,0)
                                                 
                                                 #e ora da colore qt a colore mio 
-                                                mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255)
+                                                mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255.0)
                                                 
                                                 
                                                 # for pos in positions:
@@ -3331,7 +3331,7 @@ class MyExtension(Extension):
                                         pixelC = imageData.pixelColor(0,0)
                                         
                                         #e ora da colore qt a colore mio 
-                                        mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255)
+                                        mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255.0)
                                         
                                         #log(f'pixel risulta: {mergedColor.r}  {mergedColor.g} {mergedColor.b}')
                                         
