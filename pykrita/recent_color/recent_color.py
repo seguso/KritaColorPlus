@@ -1849,45 +1849,45 @@ def handle_release(widget):
                 stroke_color = actual_color_rgb.clone()
                 # Update the virtual color to match the actual color
                 g.g_virtual_fg_color_rgb = actual_color_rgb.clone()
-                log(f"  Stroke Color (g.g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
-                log(f"  Before Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
+                # log(f"  Stroke Color (g.g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
+                # log(f"  Before Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
                 if stroke_color is not None:
                     stroke_color_clone = stroke_color.clone()
-                    log(f"  Processing stroke color {stroke_color_clone.toString()}")
+                    # log(f"  Processing stroke color {stroke_color_clone.toString()}")
 
                     # Use a temporary list to avoid modifying while iterating if needed, though list comprehension handles this.
                     original_count = len(g.g_last_virtual_colors_used)
                     # Remove all existing instances of the color using list comprehension
                     g.g_last_virtual_colors_used = [c for c in g.g_last_virtual_colors_used if not c.equals(stroke_color_clone)]
                     removed_count = original_count - len(g.g_last_virtual_colors_used)
-                    if removed_count > 0:
-                        log(f"  Removed {removed_count} existing instance(s) of {stroke_color_clone.toString()}.")
+                    # if removed_count > 0:
+                    #     log(f"  Removed {removed_count} existing instance(s) of {stroke_color_clone.toString()}.")
 
                     # Add the new/current color to the beginning (most recent)
                     g.g_last_virtual_colors_used.insert(0, stroke_color_clone)
-                    log(f"  Added color {stroke_color_clone.toString()} to beginning. History size: {len(g.g_last_virtual_colors_used)}")
+                    # log(f"  Added color {stroke_color_clone.toString()} to beginning. History size: {len(g.g_last_virtual_colors_used)}")
 
                     # Trim list to max_history, keeping the newest items (at the start)
                     max_history = 40 # TODO: Consider making this configurable
                     if len(g.g_last_virtual_colors_used) > max_history:
                         g.g_last_virtual_colors_used = g.g_last_virtual_colors_used[:max_history]
-                        log(f"  History trimmed to {max_history} items.")
+                        # log(f"  History trimmed to {max_history} items.")
 
                     # Always reset the history index after a stroke adds/moves a color
                     g.g_color_history_index = 0
-                    log(f"  Reset g_color_history_index to 0.")
+                    # log(f"  Reset g_color_history_index to 0.")
                 
                 # Update the absolute last color tracker (always, inside try)
                 g.g_virtual_color_used_last_rgb = stroke_color
 
                 # --- Update the Docker UI ---
                 if hasattr(g, 'g_docker_instance') and g.g_docker_instance:
-                    log("  Calling docker update UI...")
+                    # log("  Calling docker update UI...")
                     g.g_docker_instance.update_color_history_ui()
-                else:
-                    log("  Warning: Docker instance not found in globals (g.g_docker_instance). UI not updated.")
-                log(f"  After Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
+                # else:
+                #     log("  Warning: Docker instance not found in globals (g.g_docker_instance). UI not updated.")
+                # log(f"  After Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
             except Exception as e:
                 # Correctly indented except block
