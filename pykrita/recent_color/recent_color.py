@@ -3952,295 +3952,14 @@ class MyExtension(Extension):
                 # pass
                 # #quickMessage("Picked color")
                 
-        def minimizeOnTopAndViewFullScreen(self):
-                app = Krita.instance()
-                                
-                # log(f"windows = {app.windows()}")                
-                # log(f"active window title = {app.activeWindow().qwindow().windowTitle()}")
-                
-                wi = app.activeWindow()
-                
-                
-                #for wi in app.windows():
-                # log(f"---------")
-                # log(f"window title = {wi.qwindow().windowTitle()}")
-                # log(f"wi views = {wi.views()}")
-                # print (f"wi subwindows = {wi.qwindow().findChild(QMdiArea).subWindowList()}")
-                
-                subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
-                
-                
-                
-                
-                
-                
-                
-                # vedi se c'è una finestra always on top
-                thereIsOnTop = False
-                for su in subwins:
-                    #flags = su.windowFlags()
-                    if su.windowFlags() & Qt.WindowStaysOnTopHint:
-                        thereIsOnTop = True
-
-                # vedi se c'è una finestra massimizzata
-                thereIsMaximized = False
-                for su in subwins:
-                    #flags = su.windowFlags()
-                    if su.windowState() & Qt.WindowMaximized:
-                        print (f"trovata finestra massimiz {su.windowTitle()}")
-                        thereIsMaximized = True
-
-
-                # cerca di capire in che stato siamo. 
-                
-                act = app.action('view_show_canvas_only')
-                siamoInStatoNormale = not act.isChecked()
-                
-                #old logic: se c'è una window on top non minimizzata, siamo in stato normale. altrimenti siamo in stato view full screen
-                # siamoInStatoNormale = False
-                # if thereIsOnTop :
-                    # for su in subwins:
-                        # #flags = su.windowFlags()
-                        
-                        # stayOnTop = False
-                        # if su.windowFlags() & Qt.WindowStaysOnTopHint:
-                            # stayOnTop = True
-                            
-                        # else:
-                            # stayOnTop = False
-                        
-
-                        # isMinimized = False
-                        # if su.windowState() & Qt.WindowMinimized:
-                            # isMinimized = True
-                        # else:
-                            # isMinimized = False
-
-
-                        # if stayOnTop and not isMinimized:
-                            # siamoInStatoNormale = True
-                # else:
-                    # # non ci sono finestre on top. come faccio a capire se siamo in stato normale? vediamo se non esiste una finestra massimizzata
-                    # print ( "non ci sono finestre on top")
-                    
-                    
-                
-                log(f"siamo in stato normale: {siamoInStatoNormale}")
-                
-                if siamoInStatoNormale:
-                    # devo minimizzare le on top e massimizzare la prima delle non-on-top
-                        
-                    for su in subwins:
-                        flags = su.windowFlags()
-                        
-                        stayOnTop = False
-                        if su.windowFlags() & Qt.WindowStaysOnTopHint:
-                            stayOnTop = True
-                        else:
-                            stayOnTop = False
-                        
-                        if stayOnTop:
-                            # è una finestra di reference: minimizzala
-                            su.setWindowState(su.windowState() | Qt.WindowMinimized)
-                        else:
-                            # è è una finestra normal: massimizza
-                            #su.setWindowState(su.windowState() & ~Qt.WindowMinimized)
-                            
-                            su.setWindowState(su.windowState() | Qt.WindowMaximized)  # la massimizzo
-                            
-
-                    # ora nascondo i docker
-                    app.action('view_show_canvas_only').trigger()
-                    app.activeDocument().waitForDone () # action needs to finish before continuing
-                    
-                    
-                    #workaround per mancanza di fit to page
-                    app.action('zoom_to_100pct').trigger()
-                    app.activeDocument().waitForDone () # action needs to finish before continuing
-                    
-                    app.action('toggle_zoom_to_fit').trigger()
-                    app.activeDocument().waitForDone () # action needs to finish before continuing
-                    
-                
-                else:
-                        # devo tornare in stato normale, quindi alle on top devo togliere il minimized e alle normali devo togliere il maximized
-                            
-                        for su in subwins:
-                            flags = su.windowFlags()
-                            
-                            stayOnTop = False
-                            if su.windowFlags() & Qt.WindowStaysOnTopHint:
-                                stayOnTop = True
-                            else:
-                                stayOnTop = False
-                            
-                            if stayOnTop:
-                                # è una finestra di reference: togli il minimized
-                                su.setWindowState(su.windowState() & ~Qt.WindowMinimized)
-                            else:
-                                # è è una finestra normal: togli il massimizza
-                                su.setWindowState(su.windowState() & ~Qt.WindowMaximized)  # tolgo lo stato maximixed
-                                
-                        # ora ri-mostro i docker (richiamando la stessa action)                   
-                        app.action('view_show_canvas_only').trigger()
-                        app.activeDocument().waitForDone () # action needs to finish before continuing
-                        
-
-                        # isMinimized = False
-                        # if su.windowState() & Qt.WindowMinimized:
-                            # isMinimized = True
-                        # else:
-                            # isMinimized = False
-
-                        # log(f"subwindow title = {su.windowTitle()}, stay on top = {stayOnTop    }, minimized = {isMinimized}")
-
-                        
-                        # if stayOnTop:
-                            # if isMinimized:
-                                # su.setWindowState(su.windowState() & ~Qt.WindowMinimized)
-                            # else:
-                                # su.setWindowState(su.windowState() | Qt.WindowMinimized)
-                    
-                # app.action('view_show_canvas_only').trigger()
-                # app.activeDocument().waitForDone () # action needs to finish before continuing
-                
-                
-                # #workaround per mancanza di fit to page
-                # app.action('zoom_to_100pct').trigger()
-                # app.activeDocument().waitForDone () # action needs to finish before continuing
-                
-                # app.action('toggle_zoom_to_fit').trigger()
-                # app.activeDocument().waitForDone () # action needs to finish before continuing
-                
-                
-                
-                
-                # # ordina le finestre in modo che la always on top sia per prima, altrimenti poi l'action fit to window avviene alla finestra sbagliata.
-                
-                
-                # for su in subwins:
-                    # flags = su.windowFlags()
-                    
-                    # stayOnTop = False
-                    # if su.windowFlags() & Qt.WindowStaysOnTopHint:
-                        # stayOnTop = True
-                    # else:
-                        # stayOnTop = False
-                    
-
-                    # isMinimized = False
-                    # if su.windowState() & Qt.WindowMinimized:
-                        # isMinimized = True
-                    # else:
-                        # isMinimized = False
-
-                    # log(f"subwindow title = {su.windowTitle()}, stay on top = {stayOnTop    }, minimized = {isMinimized}")
-
-                    
-                    # if stayOnTop:
-                        # if isMinimized:
-                            # su.setWindowState(su.windowState() & ~Qt.WindowMinimized)
-                        # else:
-                            # su.setWindowState(su.windowState() | Qt.WindowMinimized)
-                
-
-                # #I activate any window that is not on top and not minimized
-                # for su in subwins:
-                    # flags = su.windowFlags()
-                    
-                    # stayOnTop = False
-                    # if su.windowFlags() & Qt.WindowStaysOnTopHint:
-                        # stayOnTop = True
-                    # else:
-                        # stayOnTop = False
-                    
-
-                    # isMinimized = False
-                    # if su.windowState() & Qt.WindowMinimized:
-                        # isMinimized = True
-                    # else:
-                        # isMinimized = False
-
-
-                    # if not isMinimized and not stayOnTop:
-                        
-                        # q_win = wi.qwindow()
-                        # mdi_area = q_win.findChild(QMdiArea)
-                        # mdi_area.setActiveSubWindow(su)
-
-
-                # end for
-                
-                
                             
                           
-        # def setup(self):
-        
-                # try:
-                    # print ("swap: initializing plugin LastColor...")
-                    
-                    # # app = Krita.instance()
-                    # # history_docker = next((d for d in app.dockers() if d.objectName() == 'History'), None)
-                    # # kis_undo_view = next((v for v in history_docker.findChildren(QListView) if v.metaObject().className() == 'KisUndoView'), None)
-                    # # s_model = kis_undo_view.selectionModel()
-                    # # s_model.currentChanged.connect(self._on_history_was_made)
-                    
-                    # # self.inited = True;
-                    # # print ("swap: initialized")
-                
-                # except Exception as e:
-                    # log(f"errore trovato in setup {e}")
-                    
-                                
+                            
         def onEnter(self):
             log(f"enter event")
             
             
-        def toggleAutoFocus(self):
-            if g.g_auto_focus == "true":
-                
-                g.g_auto_focus = "false"
-            else:
-                
-                g.g_auto_focus = "true"
-                
-            Krita.instance().writeSetting("colorPlus", "g.g_auto_focus", g.g_auto_focus)
         
-
-        def toggleAutoResetOpacityOnPick(self):
-            
-            if g.g_auto_reset_opacity_on_pick == 1:
-                g.g_auto_reset_opacity_on_pick = 0
-                quickMessage("Auto reset opacity on color pick: disabled")
-            else:
-                g.g_auto_reset_opacity_on_pick = 1
-                quickMessage(f"Auto reset opacity on color pick: enabled. Will be reset to {round(g.g_auto_reset_opacity_on_pick_level)}.")
-                
-                
-            Krita.instance().writeSetting("colorPlus", "g.g_auto_reset_opacity_on_pick", str(g.g_auto_reset_opacity_on_pick))
-        
-        
-        # def toggleMixClearsCurrentLayer(self):
-            # global g.g_mix_auto_clears_cur_layer
-            # if g.g_mix_auto_clears_cur_layer == "1":
-                # g.g_mix_auto_clears_cur_layer = "0"
-                # quickMessage("Color mix will not clear current layer automatically")
-            # else:
-                # g.g_mix_auto_clears_cur_layer = "1"
-                # quickMessage("Color mix will clear current layer automatically")
-                
-                
-            # Krita.instance().writeSetting("colorPlus", "g.g_mix_auto_clears_cur_layer", g.g_mix_auto_clears_cur_layer)
-        
-        def toggleMultiLayerMode(self):
-            
-            g.g_multi_layer_mode = not g.g_multi_layer_mode
-            
-            
-            multi_layer_mode_str = "1" if g.g_multi_layer_mode else "0"
-            
-            Krita.instance().writeSetting("colorPlus", "g.g_multi_layer_mode", multi_layer_mode_str)
-                
                 
                 
         def createActions(self, window):
@@ -4277,7 +3996,7 @@ class MyExtension(Extension):
                 actionDryPaper.triggered.connect(self.dryPaperWithMessage)
 
                 actionViewFullScreen = window.createAction("ViewSingleWindow", "Hide always on top windows and go fullscreen")
-                actionViewFullScreen.triggered.connect(self.minimizeOnTopAndViewFullScreen)
+                actionViewFullScreen.triggered.connect(minimizeOnTopAndViewFullScreen)
 
                 actionIncreaseLO = window.createAction("IncreaseLayerOpacity", "Increase current layer opacity")
                 actionIncreaseLO.setShortcut("S")
@@ -4342,20 +4061,20 @@ class MyExtension(Extension):
                 self.actionAutoFocus= window.createAction("autoFocus", "Autofocus windows on mouse over")
                 self.actionAutoFocus.setCheckable(True)
                 self.actionAutoFocus.setChecked(g.g_auto_focus == "true")
-                self.actionAutoFocus.triggered.connect(self.toggleAutoFocus)
+                self.actionAutoFocus.triggered.connect(toggleAutoFocus)
                 
 
                 self.actionAutoResOpPick= window.createAction("toggleAutoResetOpacityOnPick", "Auto-reset layer opacity to default on color pick")
                 self.actionAutoResOpPick.setCheckable(True)
                 self.actionAutoResOpPick.setChecked(g.g_auto_reset_opacity_on_pick == 1)
-                self.actionAutoResOpPick.triggered.connect(self.toggleAutoResetOpacityOnPick)
+                self.actionAutoResOpPick.triggered.connect(toggleAutoResetOpacityOnPick)
                 
 
 
                 self.actionSingleLayerMode = window.createAction("toggleSingleLayerMode", "Single-layer mode (don't auto create layers for watercolor effect)")
                 self.actionSingleLayerMode.setCheckable(True)
                 self.actionSingleLayerMode.setChecked(not g.g_multi_layer_mode)
-                self.actionSingleLayerMode.triggered.connect(self.toggleMultiLayerMode)
+                self.actionSingleLayerMode.triggered.connect(toggleMultiLayerMode)
                 
 
 
@@ -4445,10 +4164,189 @@ class MyExtension(Extension):
                 
                 
 
+def minimizeOnTopAndViewFullScreen():
+    app = Krita.instance()
+                    
+    # log(f"windows = {app.windows()}")                
+    # log(f"active window title = {app.activeWindow().qwindow().windowTitle()}")
+    
+    wi = app.activeWindow()
+    
+    
+    #for wi in app.windows():
+    # log(f"---------")
+    # log(f"window title = {wi.qwindow().windowTitle()}")
+    # log(f"wi views = {wi.views()}")
+    # print (f"wi subwindows = {wi.qwindow().findChild(QMdiArea).subWindowList()}")
+    
+    subwins = wi.qwindow().findChild(QMdiArea).subWindowList()
+    
+    
+    
+    
+    
+    
+    
+    # vedi se c'è una finestra always on top
+    thereIsOnTop = False
+    for su in subwins:
+        #flags = su.windowFlags()
+        if su.windowFlags() & Qt.WindowStaysOnTopHint:
+            thereIsOnTop = True
+
+    # vedi se c'è una finestra massimizzata
+    thereIsMaximized = False
+    for su in subwins:
+        #flags = su.windowFlags()
+        if su.windowState() & Qt.WindowMaximized:
+            print (f"trovata finestra massimiz {su.windowTitle()}")
+            thereIsMaximized = True
+
+
+    # cerca di capire in che stato siamo. 
+    
+    act = app.action('view_show_canvas_only')
+    siamoInStatoNormale = not act.isChecked()
+    
+    #old logic: se c'è una window on top non minimizzata, siamo in stato normale. altrimenti siamo in stato view full screen
+    # siamoInStatoNormale = False
+    # if thereIsOnTop :
+        # for su in subwins:
+            # #flags = su.windowFlags()
             
+            # stayOnTop = False
+            # if su.windowFlags() & Qt.WindowStaysOnTopHint:
+                # stayOnTop = True
+                
+            # else:
+                # stayOnTop = False
+            
+
+            # isMinimized = False
+            # if su.windowState() & Qt.WindowMinimized:
+                # isMinimized = True
+            # else:
+                # isMinimized = False
+
+
+            # if stayOnTop and not isMinimized:
+                # siamoInStatoNormale = True
+    # else:
+        # # non ci sono finestre on top. come faccio a capire se siamo in stato normale? vediamo se non esiste una finestra massimizzata
+        # print ( "non ci sono finestre on top")
+        
+        
+    
+    log(f"siamo in stato normale: {siamoInStatoNormale}")
+    
+    if siamoInStatoNormale:
+        # devo minimizzare le on top e massimizzare la prima delle non-on-top
+            
+        for su in subwins:
+            flags = su.windowFlags()
+            
+            stayOnTop = False
+            if su.windowFlags() & Qt.WindowStaysOnTopHint:
+                stayOnTop = True
+            else:
+                stayOnTop = False
+            
+            if stayOnTop:
+                # è una finestra di reference: minimizzala
+                su.setWindowState(su.windowState() | Qt.WindowMinimized)
+            else:
+                # è è una finestra normal: massimizza
+                #su.setWindowState(su.windowState() & ~Qt.WindowMinimized)
+                
+                su.setWindowState(su.windowState() | Qt.WindowMaximized)  # la massimizzo
                 
 
+        # ora nascondo i docker
+        app.action('view_show_canvas_only').trigger()
+        app.activeDocument().waitForDone () # action needs to finish before continuing
+        
+        
+        #workaround per mancanza di fit to page
+        app.action('zoom_to_100pct').trigger()
+        app.activeDocument().waitForDone () # action needs to finish before continuing
+        
+        app.action('toggle_zoom_to_fit').trigger()
+        app.activeDocument().waitForDone () # action needs to finish before continuing
+        
+    
+    else:
+            # devo tornare in stato normale, quindi alle on top devo togliere il minimized e alle normali devo togliere il maximized
                 
+            for su in subwins:
+                flags = su.windowFlags()
+                
+                stayOnTop = False
+                if su.windowFlags() & Qt.WindowStaysOnTopHint:
+                    stayOnTop = True
+                else:
+                    stayOnTop = False
+                
+                if stayOnTop:
+                    # è una finestra di reference: togli il minimized
+                    su.setWindowState(su.windowState() & ~Qt.WindowMinimized)
+                else:
+                    # è è una finestra normal: togli il massimizza
+                    su.setWindowState(su.windowState() & ~Qt.WindowMaximized)  # tolgo lo stato maximixed
+                    
+            # ora ri-mostro i docker (richiamando la stessa action)                   
+            app.action('view_show_canvas_only').trigger()
+            app.activeDocument().waitForDone () # action needs to finish before continuing
+            
+
+    
+        
+                
+
+def toggleAutoFocus():
+    if g.g_auto_focus == "true":
+        
+        g.g_auto_focus = "false"
+    else:
+        
+        g.g_auto_focus = "true"
+        
+    Krita.instance().writeSetting("colorPlus", "g.g_auto_focus", g.g_auto_focus)
+
+
+def toggleAutoResetOpacityOnPick():
+    
+    if g.g_auto_reset_opacity_on_pick == 1:
+        g.g_auto_reset_opacity_on_pick = 0
+        quickMessage("Auto reset opacity on color pick: disabled")
+    else:
+        g.g_auto_reset_opacity_on_pick = 1
+        quickMessage(f"Auto reset opacity on color pick: enabled. Will be reset to {round(g.g_auto_reset_opacity_on_pick_level)}.")
+        
+        
+    Krita.instance().writeSetting("colorPlus", "g.g_auto_reset_opacity_on_pick", str(g.g_auto_reset_opacity_on_pick))
+
+
+# def toggleMixClearsCurrentLayer(self):
+    # global g.g_mix_auto_clears_cur_layer
+    # if g.g_mix_auto_clears_cur_layer == "1":
+        # g.g_mix_auto_clears_cur_layer = "0"
+        # quickMessage("Color mix will not clear current layer automatically")
+    # else:
+        # g.g_mix_auto_clears_cur_layer = "1"
+        # quickMessage("Color mix will clear current layer automatically")
+        
+        
+    # Krita.instance().writeSetting("colorPlus", "g.g_mix_auto_clears_cur_layer", g.g_mix_auto_clears_cur_layer)
+
+def toggleMultiLayerMode():
+    
+    g.g_multi_layer_mode = not g.g_multi_layer_mode
+    
+    
+    multi_layer_mode_str = "1" if g.g_multi_layer_mode else "0"
+    
+    Krita.instance().writeSetting("colorPlus", "g.g_multi_layer_mode", multi_layer_mode_str)
+                        
                 
 # And add the extension to Krita's list of extensions:
 Krita.instance().addExtension(MyExtension(Krita.instance()))
