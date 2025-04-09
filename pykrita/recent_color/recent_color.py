@@ -1057,7 +1057,7 @@ class AutoFocusSetter(QObject):
             
             log("- paint event detected ma ignorato, non scatta sempre");
             # log(f"debug mouse buttonreleased. cur layer ={ Krita.instance().activeDocument().activeNode().uniqueId()}")
-            log(">>>>>>>>> paint event detected");
+            # log(">>>>>>>>> paint event detected");
             
             
             if g.g_mixing_color:
@@ -2703,7 +2703,7 @@ class MyExtension(Extension):
         def switchToLastColor(self):
                 """Switches color based on history, handling consecutive presses vs. first press after paint."""
                 
-                log("\n--- switchToLastColor ---")
+                log("--- switchToLastColor ---")
                 log(f"Before Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
                 try:
@@ -2883,7 +2883,7 @@ class MyExtension(Extension):
                 """Adds the color of the last stroke to the history list and resets the history index, handling A->B->Paint A case."""
 
 
-                log("********************\n on history was made\n\n")
+                log("******************** on history was made")
                 # --- Check if this history event was triggered by dryPaper ---
                 if hasattr(g, 'g_is_drying_paper') and g.g_is_drying_paper:
                     # log("History change ignored because dryPaper is active.")
