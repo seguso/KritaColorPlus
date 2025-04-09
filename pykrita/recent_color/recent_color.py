@@ -2052,7 +2052,7 @@ class MyExtension(Extension):
                         # e' un colore settato davvero dall'utente. ricordalo
                         g.g_ultimo_colore_vero_settato_dall_utente = comp
 
-                       # Element-wise comparison instead of direct list/tuple comparison
+                       
 
                         if len(comp) == 4:  # Assuming RGBA
 
