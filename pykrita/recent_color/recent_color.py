@@ -703,7 +703,7 @@ def getColorUnderCursorOrAtPos( forcedPos = None):
                     pixelC = imageData.pixelColor(0,0)
                     
                     #e ora da colore qt a colore mio 
-                    mergedColor = rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(), 255)
+                    mergedColor = rgb( float(pixelC.red()),   float(pixelC.green()),   float(pixelC.blue()), 255.0)
                     
                     bgColor = mergedColor
                     
@@ -1063,231 +1063,12 @@ class AutoFocusSetter(QObject):
         if event.type() == QEvent.MouseButtonPress:
             log(">>>>>>>>mouse buttonpress")
             
-                
-                # col = getColorUnderCursorOrAtPos()
-                # setFgColor(col)
-                # g.g_picking_color = False
-                # return True # annulla l'evento
-            
-            
-            g.g_last_coord_mouse_down = get_cursor_in_document_coords()
-            
-            
-            if g.g_auto_mixing_just_once_logic:
-                g.g_auto_mixing_just_once_now_on = False
-            
-            
-            if g.g_dirty_brush_currently_on and g.g_dirty_brush_overall_enabled:
-                application = Krita.instance()
-                win = application.activeWindow()
-                if win is not None:
-                    view = win.activeView()
-                    if  view is not None:
-                        fg = view.foregroundColor() #tipo ManagedColor, valori da 0 a 1
-                            # log(f"fg  = {fg}")
-                            
-                        # fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
-                        
-                        # global g.g_virtual_fg_color_rgb
-                        # g.g_virtual_fg_color_rgb = fg2
-                        
-                        
-                        
-                
-                        # if g.g_dirty_brush_currently_on :
-                                                            
-                                # currentDoc = application.activeDocument()
-                                # if currentDoc is not None:
-                                    # application.action('clear').trigger()
-                                    # currentDoc.waitForDone () # action needs to finish before continuing
-                                
-                
-                        
-                        # in theory I should skip current layer because  I am deciding the correct color, so the color on the current layer is incorrect. but I can also try the other logic because then you can drag around color without getting dirty. 
-                        # kind of like auto-mixing with 100 background pick.
-                        g.g_color_on_down_dirty_brush = getColorUnderCursorOrAtPos( skipCurrentLayer = False)
-                        
-                        
-            # uncomment this to have dirty brush ===============
-                
+               
+      
             
             pass
             
-            # global g.g_opacity_decided_for_layer
-            # if not g.g_opacity_decided_for_layer:
-                # bgColor = getColorUnderCursorOrAtPosExceptCurrentLayer()
-                # application = Krita.instance()
-                # win = application.activeWindow()
-                # if win is not None:
-                    # view = win.activeView()
-                    # if bgColor  is not None and view is not None:
-                        # # print (f"MouseButtonPress. col = {bgColor.toString()}")
-                        
-                        # # I need to set current layer opacity so that the distance between fg and color under cursor is small
-                        
-                        
-
-                                        
-                        # # setto il fg color uguale a merged color mischiato con il fg
-                        # fg = view.foregroundColor() #tipo ManagedColor, valori da 0 a 1
-                        # # log(f"fg  = {fg}")
-                        
-                        # fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
-                        # # fg2.log("MouseButtonPress fg2 = ")
-                        
-                        
-                        
-                        # document = application.activeDocument()
-                        # if document:
-                        
-                            # curLayer = document.activeNode()
-                            
-                            
-                            # comp = fg.components() 
-                            # # log(f"fg color = {comp}")
-
-                            # dist = fg2.distance(bgColor)
-                            # # log(f"distance = {dist}")
-
-                            
-        
-        
-                            # curDist = None
-                            # picked50 = False
-                            
-                            
-                            # global g.g_auto_opacity_max_distance
-                            # max_distance = g.g_auto_opacity_max_distance
-                            
-                            # # calcola curFg
-                            # if dist  <= g.g_auto_opacity_max_distance:
-                                # #i colori sono molto vicini. fai 50%
-                                # quickMessage("colors very close. leaving same")
-                                # # curMul = 0.5
-                                # curFg = fg2
-                                # # curFg = rgb( fg2.r * curMul + bgColor.r * (1.0 - curMul),
-                                                                # # fg2.g * curMul + bgColor.g * (1.0 - curMul),
-                                                                # # fg2.b * curMul + bgColor.b * (1.0 - curMul),
-                                                                # # 255)
-                                # # curDist = dist
-                                # # picked50 = True
-                            # else:  # i colori sono lontani. avvicina poco a poco finché la distanza del curFg dall'origFg non diventa > target
-                            
-                                # stepMul = 0.001
-                                
-                                
-                                # curMul = 1.0
-                                
-                                # while True:
-                                    
-                                    # curFg = rgb( fg2.r * curMul + bgColor.r * (1.0 - curMul),
-                                                                # fg2.g * curMul + bgColor.g * (1.0 - curMul),
-                                                                # fg2.b * curMul + bgColor.b * (1.0 - curMul),
-                                                                # 255)
-                                                                
-                                    # curDist = curFg.distance(bgColor)
-                                    
-                                    # #log(f"iterando. mul  = {curMul}, dist  tra {curFg.toString()} e {fg2.toString()} = {curDist}. ")
-                                    
-                                    # if curDist <= g.g_auto_opacity_max_distance:  
-                                        # break
-                                        
-                                    # curMul -= stepMul   
-                                        
-                                # picked50 = False
-                                
-                                
-                                # quickMessage(f"fg color changed to {curFg.toString()}")
-                                # print (f"fg color changed to {curFg.toString()}")
-                                
-                            # #canv = howMuchCanvas # pick half color from canvas
-                            
-                            # comp[0] = curFg.r / 255.0
-                            # comp[1] = curFg.g / 255.0
-                            # comp[2] = curFg.b / 255.0
-                            
-                            
-                            # # fgMul = 1.0 - canv
-                            # # comp[0] = comp[0] * fgMul + (bgColor.r / 255.0)  * canv
-                            # # comp[1] = comp[1] * fgMul + (bgColor.g / 255.0)  * canv
-                            # # comp[2] = comp[2] * fgMul + (bgColor.b  / 255.0)  * canv
-                            
-                        
-                      
-                            # fg.setComponents(comp)
-                            
-                            # view.setForeGroundColor(fg)
-                            
-                            
-                            # # setto anche il virtual fg color al result del mix
-                            # global g.g_virtual_fg_color_rgb
-                            # g.g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
-                            
-                            
-                            # g.g_opacity_decided_for_layer = True
-                            
-                            
-                            # # messaggio
-                            # # if picked50:
-                                # # view.showFloatingMessage(f"Picked 50% because distance was small ({round(curDist)})", QIcon(), timeMessage, 1)
-                            # # else:
-                                # # view.showFloatingMessage(f"Picked a bit of color from canvas. Distance: {round(curDist)}", QIcon(), timeMessage, 1)
-                            
-                            
-                            
-                            # # old logic that sets layer opacity
-                            # # curDist = None
-                            # # picked50 = False
-                            
-                            # # global g.g_auto_opacity_max_distance
-                            # # max_distance = g.g_auto_opacity_max_distance
-                            
-                            # # # calcola curFg
-                            # # if dist  <= max_distance:
-                                # # #i colori sono molto vicini. 
-                                # # curLayer.setOpacity(25 * 255.0 / 100.0)
-                                # # document.refreshProjection()           #altrimenti non si aggiorna    
-                                
-                            # # else:  # i colori sono lontani. diminuisci l'opacita del fg finche' diventano vicini
-                            
-                                # # stepOp = 0.001
-                                
-                                
-                                # # curOp01 = 1.0
-                                
-                                # # while True:
-                                    
-                                    # # quantoBg = 1.0 - curOp01
-                                    # # curFg = rgb( fg2.r * curOp01 + bgColor.r * quantoBg,
-                                                                # # fg2.g * curOp01 + bgColor.g * quantoBg,
-                                                                # # fg2.b * curOp01 + bgColor.b * quantoBg,
-                                                                # # 255)
-                                                                
-                                    # # curDist = curFg.distance(bgColor)
-                                    
-                                    # # # log(f"iterando. mul  = {curOp01}, dist  = {curDist}. ")
-                                    
-                                    # # if curDist <= max_distance:  
-                                        # # break
-                                        
-                                    # # if curOp01 <= 0.0:
-                                        # # break
-                                        
-                                    # # curOp01  -= stepOp   
-                                
-
-                                # # # here, I am sure distance is small
-                                # # curLayer.setOpacity(curOp01 * 255)
-                                
-                                # # document.refreshProjection()           #altrimenti non si aggiorna    
-                                # # quickMessage(f"auto-opacity {round(curOp01 * 255)}")
-                                
-                            # # g.g_opacity_decided_for_layer = True
-                        
-                    
-                
-            #col = getColorUnderCursorOrAtPos()
-        
+            
         return False # non scarta l'evento
         
         
@@ -1968,7 +1749,46 @@ monitor = MouseMonitor()
 def handle_click(widget):
     if monitor.is_krita_canvas(widget):
         log("Click sul canvas di Krita!")
-        # Aggiungi qui la tua logica
+        
+        g.g_last_coord_mouse_down = get_cursor_in_document_coords()
+        
+        
+        if g.g_auto_mixing_just_once_logic:
+            g.g_auto_mixing_just_once_now_on = False
+        
+        
+        if g.g_dirty_brush_currently_on and g.g_dirty_brush_overall_enabled:
+            application = Krita.instance()
+            win = application.activeWindow()
+            if win is not None:
+                view = win.activeView()
+                if  view is not None:
+                    fg = view.foregroundColor() #tipo ManagedColor, valori da 0 a 1
+                        # log(f"fg  = {fg}")
+                        
+                    # fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
+                    
+                    # global g.g_virtual_fg_color_rgb
+                    # g.g_virtual_fg_color_rgb = fg2
+                    
+                    
+                    
+            
+                    # if g.g_dirty_brush_currently_on :
+                                                        
+                            # currentDoc = application.activeDocument()
+                            # if currentDoc is not None:
+                                # application.action('clear').trigger()
+                                # currentDoc.waitForDone () # action needs to finish before continuing
+                            
+            
+                    
+                    # in theory I should skip current layer because  I am deciding the correct color, so the color on the current layer is incorrect. but I can also try the other logic because then you can drag around color without getting dirty. 
+                    # kind of like auto-mixing with 100 background pick.
+                    g.g_color_on_down_dirty_brush = getColorUnderCursorOrAtPos() # skipCurrentLayer = False)
+                    
+                    
+            
     else:
         log(f"Click su: {widget}")
 
@@ -2242,7 +2062,7 @@ def handle_release(widget):
                     
             
                     log("g_virtual_fg_color_rgb dirty")
-                    g.g_virtual_fg_color_rgb = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
+                    g.g_virtual_fg_color_rgb = rgb( float  (comp[0] * 255.0), float  (comp[1] * 255.0), float  (comp[2] * 255.0), 255.0)
                     update_label_from_virtual_color()
                         
                         
