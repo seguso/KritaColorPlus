@@ -1756,8 +1756,8 @@ def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleas
 
             # Use the actual color for the stroke
             stroke_color = actual_color_rgb.clone()
-            # Update the virtual color to match the actual color
-            g.g_virtual_fg_color_rgb = actual_color_rgb.clone()
+
+
             # log(f"  Stroke Color (g.g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
             # log(f"  Before Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
@@ -2411,6 +2411,8 @@ class MyExtension(Extension):
                 log("  Abort: No active view.")
                 return
 
+
+            # eccezione: forse invece di andare a previous color devo fare clean brush
             if g.g_dirty_brush_color_to_ignore is not None:
                 quickMessage("Clean brush")
                 setFgColor(g.g_virtual_fg_color_rgb)
@@ -2424,11 +2426,19 @@ class MyExtension(Extension):
                 quickMessage("No colors in history.")
                 return
 
+
+
+            
+
+
             # Calculate the next index by incrementing (moving towards older colors: 0 -> 1 -> 2...)
             # g_color_history_index = 0 represents the most recent color.
             next_index = g.g_color_history_index + 1
 
             log(f"  Current index: {g.g_color_history_index}. Trying next index: {next_index}")
+
+
+            # Update virtual color and Krita's foreground color
 
             # Check if the next index is within the list bounds
             if next_index < num_colors:
@@ -2440,9 +2450,6 @@ class MyExtension(Extension):
                 g.g_virtual_fg_color_rgb = target_color.clone()
                 log(
                     f"  Switched to color at index {g.g_color_history_index}: {target_color.toString()}")
-                # Update Krita's actual foreground color (if needed, depends on plugin logic)
-                # Krita.instance().activeWindow().activeView().setForegroundColor(target_color)
-                # TODO: Ensure g.g_virtual_fg_color_rgb is used correctly elsewhere
             else:
                 # Index is out of bounds (tried to go past the oldest color)
                 log(
@@ -2450,7 +2457,7 @@ class MyExtension(Extension):
                 quickMessage("Reached oldest color in history.")
                 # Do not wrap around, do not change color
 
-            # Update virtual color and Krita's foreground color
+            
 
             update_label_from_virtual_color()
 
@@ -2463,6 +2470,9 @@ class MyExtension(Extension):
             comp[3] = 1.0
 
             col.setComponents(comp)
+            g.g_auto_mix_color_to_ignore = None
+            g.g_auto_mix_ignore_this_color_in_onfgcolorchanged = None
+            
             acView.setForeGroundColor(col)
             log(f"  Set FG Color to: {g.g_virtual_fg_color_rgb.toString()}")
 
