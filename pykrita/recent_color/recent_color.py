@@ -82,7 +82,7 @@ def arrEqual(a1, a2):
 
 # Helper function to sample a pixel and return [R, G, B] 0-255
 # Returns None if sampling fails
-def sample_pixel_rgb(document, x, y):
+def sample_pixel_rgb0255(document, x, y):
     try:
         # Ensure coordinates are integers
         ix, iy = int(x), int(y)
@@ -1658,7 +1658,7 @@ def handle_click(widget):
                                 sampled_colors_rgb = []
                                 for px, py in sample_points:
                                     # Assuming sample_pixel_rgb is defined and handles coordinates correctly
-                                    color = sample_pixel_rgb(document, px, py)
+                                    color = sample_pixel_rgb0255(document, px, py)
                                     sampled_colors_rgb.append(color) # Appends color [R,G,B] or None
 
                                 # Blend the sampled colors using the new helper (handles None values)
@@ -1669,7 +1669,7 @@ def handle_click(widget):
                                 if not final_canvas_color_rgb:
                                     log("Warning: Blending failed (e.g., all samples out of bounds/errors). Falling back to center pixel.")
                                     # Fallback: try center pixel
-                                    final_canvas_color_rgb = sample_pixel_rgb(document, cx, cy)
+                                    final_canvas_color_rgb = sample_pixel_rgb0255(document, cx, cy)
 
                                 
                               
@@ -2902,7 +2902,7 @@ class MyExtension(Extension):
                         pixelC: QColor = imageData.pixelColor(0, 0)
 
                         # e ora da colore qt a colore mio
-                        mergedColor = rgb(float(pixelC.red()),  float(
+                        bgColor255 = rgb(float(pixelC.red()),  float(
                             pixelC.green()),  float(pixelC.blue()), 255.0)
 
                      
@@ -2924,12 +2924,13 @@ class MyExtension(Extension):
                         sg = g.g_virtual_fg_color_rgb.g
                         sr = g.g_virtual_fg_color_rgb.b
 
-                        db = mergedColor.r
-                        dg = mergedColor.g
-                        dr = mergedColor.b
+                        db = bgColor255.r
+                        dg = bgColor255.g
+                        dr = bgColor255.b
 
                         resultColor = spectral_mix(
-                            [sr, sg, sb], [dr, dg, db], fgMul)
+                            [sr, sg, sb], [dr, dg, db], # sono valori 0 255
+                            fgMul)
                         # resultColor is [r,g,b]. copy back to bgr:
 
 
@@ -2971,7 +2972,7 @@ class MyExtension(Extension):
                         # Sample the colors at these points using the new helper
                         sampled_colors_rgb = []
                         for px, py in sample_points:
-                            color = sample_pixel_rgb(document, px, py)
+                            color = sample_pixel_rgb0255(document, px, py)
                             sampled_colors_rgb.append(color) # Appends color [R,G,B] or None
 
                         # Blend the sampled colors using the new helper (handles None values)
@@ -2988,7 +2989,7 @@ class MyExtension(Extension):
                              # Handle case where blending failed (e.g., all samples out of bounds/errors)
                              log("Error: Could not determine final canvas color from sampling. Falling back.")
                              # Fallback: try center pixel first
-                             final_canvas_color_rgb = sample_pixel_rgb(document, cx, cy)
+                             final_canvas_color_rgb = sample_pixel_rgb0255(document, cx, cy)
                              
                         # === End of 5-point sampling logic ===
 
