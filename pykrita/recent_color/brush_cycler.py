@@ -16,7 +16,9 @@ class BrushCycler:
     def load_settings(self):
         """Load brush cycler settings from Krita configuration"""
         app = Krita.instance()
-        self.enabled = app.readSetting("colorPlus", "brush_cycler_enabled", "false").lower() == "true"
+        
+        # non voglio che all'avvio parta il brush cycler
+        #self.enabled = app.readSetting("colorPlus", "brush_cycler_enabled", "false").lower() == "true"
         
         # Load saved brush list
         brush_list_str = app.readSetting("colorPlus", "brush_cycler_list", "")
@@ -37,7 +39,7 @@ class BrushCycler:
     def save_settings(self):
         """Save brush cycler settings to Krita configuration"""
         app = Krita.instance()
-        app.writeSetting("colorPlus", "brush_cycler_enabled", str(self.enabled).lower())
+        #app.writeSetting("colorPlus", "brush_cycler_enabled", str(self.enabled).lower())
         app.writeSetting("colorPlus", "brush_cycler_list", ",".join(self.brush_list))
         app.writeSetting("colorPlus", "brush_cycler_index", str(self.current_index))
     
