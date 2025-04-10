@@ -731,22 +731,68 @@ def dryPaper(showMessage=True):
             blurFilter.setProperty('radius', 50)
 
         parentNode = activeLayer.parentNode()
+        rootNode = currentDoc.rootNode() # Get the document root node
         newLa = None
-        if parentNode is not None:
 
-            log("dry paper called")
+        # Check if the parent is the document root
+        is_top_level = (parentNode == rootNode)
+
+        if is_top_level:
+            log("dry paper called. Layer is top-level. Creating new group.")
+            # Create a new group layer at the top level
+            newGroup = currentDoc.createGroupLayer("Dry Paper auto-group")
+            # Find the index of the active layer to insert the group above it
+            try:
+                # Insert the new group *before* the active layer
+                rootNode.addChildNode(newGroup, activeLayer)
+            except Exception as e: # Catch potential errors more broadly
+                 log(f"Error adding group before active layer: {e}. Adding to top.")
+                 # Fallback if adding before fails (e.g., activeLayer not direct child)
+                 rootNode.addChildNode(newGroup, None)
+
+            # Set the new group as the parent for the wet layer
+            parentNode = newGroup
+            # Optional: Move the active layer into the new group
+            # parentNode.addChildNode(activeLayer, None) # This changes layer structure
+        elif parentNode is not None:
+             log(f"dry paper called. parent = {parentNode}")
+        else:
+            log("dry paper called. parentNode is None. This shouldn't happen for active layers.")
+            parentNode = None # Ensure parentNode is None if it started as None
+
+        if parentNode: # Proceed if we have a valid parent (original or new group)
             oldOpacity = activeLayer.opacity()
 
-            # activeLayer.mergeDown()
+            # activeLayer.mergeDown() # Keep this commented out for now
             # currentDoc.waitForDone()
 
-            # root = currentDoc.rootNode()
             newLa = currentDoc.createNode("Wet_area", "paintLayer")
             newLa.setOpacity(oldOpacity)
 
-            # backgroundLayer = parentNode.childNodes()[0]
+            # Add the new layer *above* the active layer within the parent group
+            try:
+                children = parentNode.childNodes()
+                idx = children.index(activeLayer)
+                beforeNode = None
+                if idx + 1 < len(children):
+                    beforeNode = children[idx + 1]
+                # Insert the new layer *before* the node that was originally after activeLayer
+                parentNode.addChildNode(newLa, beforeNode)
+            except ValueError: # Handle case where activeLayer might have been moved or not found
+                 # Fallback if activeLayer not found (e.g., if moved) or parent is new group
+                 parentNode.addChildNode(newLa, None) # Add to top if index not found
 
-            parentNode.addChildNode(newLa, None)
+            currentDoc.setActiveNode(newLa) # Make the new layer active
+
+            if g.g_blur_on_dry and selectionStroke:
+                # Apply blur to the original layer *after* creating the new one
+                # Ensure the original layer is active for the filter
+                currentDoc.setActiveNode(activeLayer)
+                blurFilter.apply(selectionStroke, 0, 0)
+                currentDoc.waitForDone()
+                currentDoc.deselect()
+                # Set active node back to the new layer
+                currentDoc.setActiveNode(newLa)
 
             if g.g_set_spectral_blend_mode_when_creating_layer:
                 # log("setting over spectral")
