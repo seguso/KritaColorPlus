@@ -2728,19 +2728,7 @@ class MyExtension(Extension):
 
                     if True:  # parentNode is not None:
 
-                        # brothers = parentNode.childNodes()
-
-                        # positions = [ xy( doc_pos.x, doc_pos.y)
-
-                        # # , xy(doc_pos.x() + self.mix_radius, doc_pos.y() + self.mix_radius),
-                        # # xy(doc_pos.x() - self.mix_radius, doc_pos.y() + self.mix_radius),
-                        # # xy(doc_pos.x() + self.mix_radius, doc_pos.y() - self.mix_radius),
-                        # # xy(doc_pos.x() - self.mix_radius, doc_pos.y() - self.mix_radius)
-                        # ]
-
-                        # merged_colors = [] # lista di rgb, uno per posizione. ognuno è il risultato di un merge di ogni layer, in quella data posizione
-
-                        # pos =  xy(doc_pos.x(), doc_pos.y())
+                       
 
                         # === New 5-point sampling logic ===
                         cx = doc_pos.x()
