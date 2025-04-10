@@ -2984,7 +2984,7 @@ class MyExtension(Extension):
     # def mixBig(self):
         # return self.mix( 0.33)  #0.33 from canvas
 
-    def pick(self, showMessage=True):
+    def pickColorFun(self, showMessage=True):
 
         # log("pick called")
         app = Krita.instance()
@@ -3576,7 +3576,7 @@ class MyExtension(Extension):
         log("dry paper and pick")
 
         # non funziona se inverto l'ordine... non capisco perche'
-        self.pick(False)
+        self.pickColorFun(False)
 
         # find if there is a parent node
         hasParentNode = False
@@ -3675,7 +3675,7 @@ class MyExtension(Extension):
 
         actionPick = window.createAction(
             "PickColor", "Pick color under cursor")
-        actionPick.triggered.connect(self.pick)
+        actionPick.triggered.connect(self.pickColorFun)
 
         actionDryPaper = window.createAction(
             "LayerMergeDownAndNew", "Dry the paper (create new layer and set opacity)")
