@@ -139,7 +139,7 @@ class BrushCycler:
         # Find the brush preset
         all_presets = app.resources('preset')
 
-        self.debug_print_all_brushes()
+        # self.debug_print_all_brushes()
         
         for preset_key, preset in all_presets.items():
             if preset.name() == brush_name:
