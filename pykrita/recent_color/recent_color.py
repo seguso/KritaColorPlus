@@ -536,8 +536,22 @@ def get_layer_model():
     view = kis_layer_box.findChild(QTreeView, 'listLayers')
     return view.model(), view.selectionModel()
 
+# Helper function to recursively get all visible paint layers in top-down order
+def get_all_layers(node):
+    layers = []
+    if not node:
+        return layers
+    for child in node.childNodes():
+        # Check if child is visible
+        if child.visible():
+             if child.type() == 'paintlayer':
+                 layers.append(child)
+             elif child.type() == 'grouplayer':
+                 # Recursively add layers from the group, maintaining order.
+                 layers.extend(get_all_layers(child))
+    return layers
 
-def getColorUnderCursorOrAtPos(forcedPos=None):
+def getColorUnderCursorOrAtPos(forcedPos: Optional[xy] = None, ignore_bottom_layer: bool = False) -> Optional[rgb]:
     # forcedPos is of type xy
     application = Krita.instance()
     document = application.activeDocument()
@@ -614,10 +628,80 @@ def getColorUnderCursorOrAtPos(forcedPos=None):
             # #creo il colore composito dei layer. questo è il bgcolor
             # bgColor = calcolaCompositeColor(colors)
 
-            doc_pos = doc_posxy
+            # --- New logic block starts ---
+            if ignore_bottom_layer:
+                # Need QImage for layer pixel reading
+                try:
+                    # Import needed for QImage creation from bytes
+                    from PyQt5.QtGui import QImage
+                except ImportError:
+                    # Log error or notify user? Fallback might be best.
+                    print("KritaColorPlus Error: Could not import PyQt5.QtGui.QImage. Cannot ignore bottom layer.")
+                    # Fall through to default behavior without QImage
+                    pass
+                else: # Proceed only if import succeeded
+                    all_layers = get_all_layers(document.rootNode())
+                    # Layers are ordered top-to-bottom
+
+                    if len(all_layers) > 1: # Only proceed if there's more than one layer
+                        found_opaque_pixel_above_bottom = False
+                        # Iterate through all layers except the last one (bottom layer)
+                        for i in range(len(all_layers) - 1):
+                            curLayer = all_layers[i]
+                            try:
+                                # Ensure coordinates are integers
+                                x, y = int(doc_posxy.x), int(doc_posxy.y)
+                                # Basic bounds check using document dimensions; layer dimensions might differ
+                                if 0 <= x < document.width() and 0 <= y < document.height():
+                                    pixelBytes = curLayer.pixelData(x, y, 1, 1)
+                                    if pixelBytes: # Check if pixelData returned valid bytes
+                                        imageData = None
+                                        # Use formats consistent with later checks
+                                        if len(pixelBytes) == 4:
+                                            imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA8888)
+                                        elif len(pixelBytes) == 8:
+                                            imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA64)
+                                        # Add more formats if needed based on Krita's layer types
+
+                                        if imageData:
+                                            pixelC = imageData.pixelColor(0, 0)
+                                            # Check alpha channel (alpha() is 0-255)
+                                            if pixelC.alpha() > 0:
+                                                found_opaque_pixel_above_bottom = True
+                                                break # Found one, no need to check further layers
+                                # else: coordinate out of bounds for this layer or pixelData empty, treat as transparent
+
+                            except Exception as e:
+                                # Log error or handle cases where pixelData fails for a layer
+                                # print(f"Error reading pixel data for layer {curLayer.name()}: {e}")
+                                pass # Continue to next layer
+
+                        # After checking all layers (except bottom): if none were opaque, return None
+                        if not found_opaque_pixel_above_bottom:
+                            return None
+                    # If only 1 layer, or if an opaque pixel was found above the bottom layer,
+                    # fall through to the default composite color logic below.
+
+            # --- New logic block ends ---
+
+            doc_pos = doc_posxy # Use the calculated integer coordinates
 
             # 3 or 6 bytes depending on the image format
-            pixBytes = document.pixelData(int(doc_pos.x), int(doc_pos.y), 1, 1)
+            # Get composite pixel data (Default behavior or fallback)
+            try:
+                # Need QImage for composite pixel reading too
+                from PyQt5.QtGui import QImage
+                pixBytes = document.pixelData(int(doc_pos.x), int(doc_pos.y), 1, 1)
+            except ImportError:
+                 print("KritaColorPlus Error: Could not import PyQt5.QtGui.QImage. Cannot get pixel color.")
+                 return None
+            except Exception as e:
+                # Handle potential errors during composite pixel data retrieval
+                # print(f"Error getting composite pixel data at {doc_pos.x},{doc_pos.y}: {e}")
+                return None
+
+            if not pixBytes: # Handle case where pixelData returns empty bytes (e.g., outside canvas)
+                 return None
 
             # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
             # concatenated_string = '-'.join(byte_values)
@@ -630,13 +714,21 @@ def getColorUnderCursorOrAtPos(forcedPos=None):
             elif len(pixBytes) == 8:
                 imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA64)
             else:
-                raise f"unsupported len {len(pixBytes)}"
+                # Log warning instead of raising exception? Or return None?
+                # print(f"Warning: unsupported composite pixelData length {len(pixBytes)} at {doc_pos.x},{doc_pos.y}")
+                return None # Return None if format is unexpected
+
+            if not imageData:
+                 # This case might happen if QImage fails for some reason
+                 return None
 
             pixelC = imageData.pixelColor(0, 0)
 
             # e ora da colore qt a colore mio
-            mergedColor = rgb(float(pixelC.red()),   float(
-                pixelC.green()),   float(pixelC.blue()), 255.0)
+            # Convert QColor to internal rgb format, preserving alpha from the composite pixel
+            # Krita QColor components (red, green, blue, alpha) are int 0-255
+            # Assuming the rgb class expects floats 0-255 for r,g,b and alpha.
+            mergedColor = rgb(float(pixelC.red()), float(pixelC.green()), float(pixelC.blue()), float(pixelC.alpha()))
 
             bgColor = mergedColor
 
@@ -2823,6 +2915,8 @@ class MyExtension(Extension):
                     doc_pos = p + center
 
 
+                    maybeColorRgb : Optional[rgb] = getColorUnderCursorOrAtPos(ignore_bottom_layer=True)
+                    colorRgb: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb is None else maybeColorRgb
                       
                     # doc_pos = xyOfQpoint(doc_pos)
                     # log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
@@ -2831,29 +2925,30 @@ class MyExtension(Extension):
 
                     if not g.g_mix_radius_enabled:
 
-                        pixBytes = document.pixelData(
-                            int(doc_pos.x()), int(doc_pos.y()), 1, 1)
+                        # pixBytes = document.pixelData(
+                        #     int(doc_pos.x()), int(doc_pos.y()), 1, 1)
 
-                        # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
-                        # concatenated_string = '-'.join(byte_values)
+                        # # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
+                        # # concatenated_string = '-'.join(byte_values)
 
-                        # log(f'Dati letti: {concatenated_string}')
+                        # # log(f'Dati letti: {concatenated_string}')
 
-                        # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
-                        if len(pixBytes) == 4:
-                            imageData = QImage(
-                                pixBytes, 1, 1, QImage.Format_RGBA8888)
-                        elif len(pixBytes) == 8:
-                            imageData = QImage(
-                                pixBytes, 1, 1, QImage.Format_RGBA64)
-                        else:
-                            raise f"unsupported len {len(pixBytes)}"
+                        # # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
+                        # if len(pixBytes) == 4:
+                        #     imageData = QImage(
+                        #         pixBytes, 1, 1, QImage.Format_RGBA8888)
+                        # elif len(pixBytes) == 8:
+                        #     imageData = QImage(
+                        #         pixBytes, 1, 1, QImage.Format_RGBA64)
+                        # else:
+                        #     raise f"unsupported len {len(pixBytes)}"
 
-                        pixelC: QColor = imageData.pixelColor(0, 0)
+                        # pixelC: QColor = imageData.pixelColor(0, 0)
 
                         # e ora da colore qt a colore mio
-                        bgColor255 = rgb(float(pixelC.red()),  float(
-                            pixelC.green()),  float(pixelC.blue()), 255.0)
+                        bgColor255 = maybeColorRgb
+                        # rgb(float(pixelC.red()),  float(
+                        #     pixelC.green()),  float(pixelC.blue()), 255.0)
 
                      
                         # vecchia logia senza radius
