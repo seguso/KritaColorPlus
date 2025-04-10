@@ -2802,30 +2802,54 @@ class MyExtension(Extension):
 
                         # pos =  xy(doc_pos.x(), doc_pos.y())
 
-                        # 3 or 6 bytes depending on the image format
-                        pixBytes = document.pixelData(
-                            int(doc_pos.x()), int(doc_pos.y()), 1, 1)
+                        # === New 5-point sampling logic ===
+                        cx = doc_pos.x()
+                        cy = doc_pos.y()
+                        radius = float(g.g_mix_radius) # Ensure radius is float, read from globals
 
-                        # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
-                        # concatenated_string = '-'.join(byte_values)
+                        # Define the 5 sample points
+                        sample_points = [
+                            (cx, cy),             # Center
+                            (cx, cy - radius),    # Up
+                            (cx, cy + radius),    # Down
+                            (cx - radius, cy),    # Left
+                            (cx + radius, cy)     # Right
+                        ]
 
-                        # log(f'Dati letti: {concatenated_string}')
+                        # Sample the colors at these points using the new helper
+                        sampled_colors_rgb = []
+                        for px, py in sample_points:
+                            color = sample_pixel_rgb(document, px, py)
+                            sampled_colors_rgb.append(color) # Appends color [R,G,B] or None
 
-                        # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
-                        if len(pixBytes) == 4:
-                            imageData = QImage(
-                                pixBytes, 1, 1, QImage.Format_RGBA8888)
-                        elif len(pixBytes) == 8:
-                            imageData = QImage(
-                                pixBytes, 1, 1, QImage.Format_RGBA64)
+                        # Blend the sampled colors using the new helper (handles None values)
+                        # Result is [R, G, B] 0-255
+                        final_canvas_color_rgb = blend_colors_spectral(sampled_colors_rgb)
+
+                        # We no longer need the single 'mergedColor' object for the primary mixing path.
+                        # The final mixing logic later will use final_canvas_color_rgb directly.
+                        # However, some other code paths might still expect mergedColor.
+                        # Let's create an rgb object from the final blend for potential compatibility.
+                        # Note: spectral_mix returns [R, G, B], rgb expects R, G, B args.
+                        # Also, rgb uses 0-255 range, which matches final_canvas_color_rgb.
+                        if final_canvas_color_rgb:
+                             # Use the blended color
+                             mergedColor = rgb(final_canvas_color_rgb[0], final_canvas_color_rgb[1], final_canvas_color_rgb[2], 255.0)
                         else:
-                            raise f"unsupported len {len(pixBytes)}"
+                             # Handle case where blending failed (e.g., all samples out of bounds/errors)
+                             log("Error: Could not determine final canvas color from sampling. Falling back.")
+                             # Fallback: try center pixel first
+                             center_color = sample_pixel_rgb(document, cx, cy)
+                             if center_color:
+                                 mergedColor = rgb(center_color[0], center_color[1], center_color[2], 255.0)
+                                 final_canvas_color_rgb = center_color # Use this for mixing
+                                 log("Fallback: Using center pixel color.")
+                             else:
+                                 mergedColor = rgb(0, 0, 0, 255.0) # Black fallback if center also fails
+                                 final_canvas_color_rgb = [0.0, 0.0, 0.0] # Use black for mixing
+                                 log("Fallback: Using black color.")
 
-                        pixelC: QColor = imageData.pixelColor(0, 0)
-
-                        # e ora da colore qt a colore mio
-                        mergedColor = rgb(float(pixelC.red()),  float(
-                            pixelC.green()),  float(pixelC.blue()), 255.0)
+                        # === End of 5-point sampling logic ===
 
                      
 
@@ -2940,25 +2964,51 @@ class MyExtension(Extension):
 
                             # END
 
-                            # begin mix colors spectral, bgr
-                            fgMul = 1.0 - canv
-                            sb = g.g_virtual_fg_color_rgb.r
-                            sg = g.g_virtual_fg_color_rgb.g
-                            sr = g.g_virtual_fg_color_rgb.b
+                            # begin mix colors spectral: Foreground vs Blended Canvas Color
+                            # 'canv' (g.g_auto_mix__how_much_canvas_to_pick) is the weight of the canvas color (color2)
+                            # spectral_mix's 't' parameter is the weight of color2.
+                            t_mix = canv # Weight of the blended canvas color in the final mix
 
-                            db = mergedColor.r
-                            dg = mergedColor.g
-                            dr = mergedColor.b
+                            # Foreground color (color1) - Ensure it's [R, G, B] 0-255 list
+                            # g.g_virtual_fg_color_rgb stores R, G, B as floats 0-255
+                            fg_color_rgb = [
+                                float(g.g_virtual_fg_color_rgb.r),
+                                float(g.g_virtual_fg_color_rgb.g),
+                                float(g.g_virtual_fg_color_rgb.b)
+                            ]
 
-                            resultColor = spectral_mix( 
-                                [sr, sg, sb], [dr, dg, db], fgMul)
-                            # resultColor is [r,g,b]. copy back to bgr:
+                            # Blended canvas color (color2) - Already [R, G, B] 0-255 list
+                            # from final_canvas_color_rgb calculated earlier (or fallback)
+                            canvas_blend_rgb = final_canvas_color_rgb # This is guaranteed to be a list [R,G,B]
 
-                            comp[0] = resultColor[2] / 255.0
-                            comp[1] = resultColor[1] / 255.0
-                            comp[2] = resultColor[0] / 255.0
+                            # Perform the final spectral mix
+                            # spectral_mix(color1, color2, t) where t is weight of color2
+                            try:
+                                final_mixed_color_rgb = spectral_mix(
+                                    fg_color_rgb, canvas_blend_rgb, t_mix)
+                            except Exception as e:
+                                log(f"Error during final spectral mix: {e}")
+                                # Fallback if final mix fails: use original fg color
+                                final_mixed_color_rgb = fg_color_rgb
 
-                            # END
+
+                            # final_mixed_color_rgb is [R, G, B] 0-255.
+                            # Convert back to Krita's component format (0.0-1.0)
+                            # Assuming 'comp' expects BGR order based on original code comp[0]=res[2]/255
+                            # Check if final_mixed_color_rgb is valid before division
+                            if isinstance(final_mixed_color_rgb, list) and len(final_mixed_color_rgb) == 3:
+                                comp[0] = final_mixed_color_rgb[2] / 255.0 # Blue
+                                comp[1] = final_mixed_color_rgb[1] / 255.0 # Green
+                                comp[2] = final_mixed_color_rgb[0] / 255.0 # Red
+                            else:
+                                # Fallback if final_mixed_color_rgb is somehow invalid
+                                log("Error: final_mixed_color_rgb was invalid after mix. Using original FG.")
+                                comp[0] = fg_color_rgb[2] / 255.0 # B
+                                comp[1] = fg_color_rgb[1] / 255.0 # G
+                                comp[2] = fg_color_rgb[0] / 255.0 # R
+
+
+                            # END spectral mix
 
                             # comp[0] =  (mergedColor.r / 255.0)
                             # comp[1] =  (mergedColor.g / 255.0)
