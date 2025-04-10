@@ -31,3 +31,13 @@ class rgb:
 
         def clone(self):
             return rgb(self.r, self.g, self.b, self.a)
+
+def rgbOfColorArray(comp):
+    """Converts a Krita color component sequence (RGBA, 0.0-1.0) to an rgb object (RGBA, 0.0-255.0)."""
+    if not isinstance(comp, (list, tuple)) or len(comp) < 3: # Check for at least RGB
+        raise ValueError("Input must be a sequence (list or tuple) with at least 3 components (R, G, B)")
+        
+    # Handle potential alpha component (use 255.0 if not present)
+    alpha = comp[3] * 255.0 if len(comp) >= 4 else 255.0
+        
+    return rgb(comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, alpha)

@@ -14,7 +14,7 @@ from .brush_cycler import brush_cycler  # Import the brush cycler instance
 from .brush_list_widget import BrushListDialog  # Import the brush list dialog
 
 
-from .rgb import *
+from .rgb import rgb, rgbOfColorArray
 
 
 from krita import *
@@ -862,7 +862,7 @@ class AutoFocusSetter(QObject):
         # log(f"event {g.event_lookup.get(str(event.type()), 'sconosciuto')}")
 
         if event.type() == QEvent.Enter:
-            # log(f"enter")
+            log(f"enter")
             # if obj.objectName() == "KisAdvancedColorSelector":
             # log(f"enter color selector ")
 
@@ -903,13 +903,13 @@ class AutoFocusSetter(QObject):
                 else:
                     l_color_changed_from_selector = False
 
-                # print ("debug 1")
+                log ("debug 1")
                 # Use the new flag to check if color changed *since last leave*
                 if ( not isAlwaysOnTop and l_color_changed_from_selector and 
                             g.g_color_changed_since_last_leave 
                             and (not g.g_auto_mix_enabled or g.g_auto_mix_paused) and g.g_multi_layer_mode):
 
-                    # print ("debug 2 creating layer")
+                    log ("debug 2 creating layer")
                     newLa = dryPaper(False)
 
                     # reenable dirty brush
@@ -943,7 +943,7 @@ class AutoFocusSetter(QObject):
                 # obj.activateWindow()
 
         if event.type() == QEvent.Leave:
-            # log(f"leave")
+            log(f"leave")
 
             # logic: if the mouse leaver an always-on-top window, focus the first window that's not always on top.
             # log(f"leave event ")
@@ -979,8 +979,20 @@ class AutoFocusSetter(QObject):
                     if g.g_auto_mix_enabled:
                         g.g_auto_mix_paused = True
                         # log("pausing automix")
-                        resetForegroundColorToLastColorPicked()
+
+                        # qui vorrei resettare il picker al colore originario. ma se lo faccio succede un meccanismo perverso. scatta setFgColor.
+                        # o meglio scatta onFgColorChanged.
+                        # quindi il motore si segna che il fg color e' cambiato DOPO che hai fatto leave. e quindi quando rifai enter ti crea un nuovo layer, 
+                        # anche se tu non hai davvero cambiato colore. lui crede che tu nel picker abbia cambiato colore. perche' hai fatto questo
+                        # setFgColor. Quindi in qualche modo devi far capire a onFgColorChanged che non conta.
+
+                        g.g_auto_mix_ignore_this_color_in_onfgcolorchanged = g.g_virtual_fg_color_rgb
+                        
+                        if g.g_virtual_fg_color_rgb is not None:
+                            setFgColor(g.g_virtual_fg_color_rgb)
+
                     else:
+                        g.g_auto_mix_ignore_this_color_in_onfgcolorchanged = None
                         pass
                         # log("leave, doing nothing, auto mix disabled")
 
@@ -1123,29 +1135,6 @@ def setFgColorEqualToColorOfLastStrokeAfterOpacityAdjust():
         if currentDoc is not None:
             currentDoc.refreshProjection()
 
-
-def resetForegroundColorToLastColorPicked():
-
-    if g.g_virtual_fg_color_rgb is not None:
-        setFgColor(g.g_virtual_fg_color_rgb)
-
-        # app = Krita.instance()
-        # win = app.activeWindow()
-        # if win is not None:
-        # view = win.activeView()
-        # if view is not None:
-        # fg = view.foregroundColor()
-        # comp = fg.components()
-        # # log(f"fg color = {comp}")
-
-        # comp[0] = (g.g_virtual_fg_color_rgb.r/255.0)
-        # comp[1] = (g.g_virtual_fg_color_rgb.g / 255.0)
-        # comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0)
-
-        # fg.setComponents(comp)
-
-        # view.setForeGroundColor(fg)
-        # #log(f"color reset to {g.g_virtual_fg_color_rgb.toString()}")
 
 
 class Dict2Class(object):
@@ -2122,41 +2111,45 @@ class MyExtension(Extension):
 
         # capisci se è davvero cambiato, dato che questa callback è inaffidabile e viene chiamata anche se entro ed esco dal selector senza cliccare
         # serve per la logica che crea new layer
-        g.g_color_changed_from_selector_probably = True
+        
 
         # log(f"fg color changed event: {g.countColorChanged}")
 
         g.countColorChanged += 1
 
         # otherwise it is the auto-mixing timer that changed the color. ignore
-        if (not g.g_auto_mix_enabled or g.g_auto_mix_paused):
+    
 
-            # the color has been changed manually, not by auto-mix
+        # the color has been changed manually, not by auto-mix
 
-            # devo settare questo colore come target per l'auto-mixing
-            view = Krita.instance().activeWindow().activeView()
-            if view is not None:
-                fg: Optional[ManagedColor] = view.foregroundColor()
-                if fg is not None:
-                    # components() likely returns Tuple[float, float, float, float] for RGBA
-                    # il ManagedColor si usa cosi'
-                    comp: Sequence[float] = fg.components()
+        # devo settare questo colore come target per l'auto-mixing
+        view = Krita.instance().activeWindow().activeView()
+        if view is not None:
+            fg: Optional[ManagedColor] = view.foregroundColor()
+            if fg is not None:
+                # components() likely returns Tuple[float, float, float, float] for RGBA
+                # il ManagedColor si usa cosi'
+                comp: Sequence[float] = fg.components()
+                if len(comp) == 4:  # Assuming RGBA
 
+                    newColorRgb = rgbOfColorArray(comp)
 
-                    if g.g_auto_mix_color_to_ignore is not None and arrEqual(g.g_auto_mix_color_to_ignore, comp):
-                        pass
-                    elif g.g_dirty_brush_color_to_ignore is not None and arrEqual(g.g_dirty_brush_color_to_ignore, comp):
-                        pass
-                    else:
-                        # e' un colore settato davvero dall'utente. ricordalo
-                        g.g_ultimo_colore_vero_settato_dall_utente = comp
+                    if (not g.g_auto_mix_enabled or g.g_auto_mix_paused):
+                        if g.g_auto_mix_color_to_ignore is not None and arrEqual(g.g_auto_mix_color_to_ignore, comp):
+                            pass
+                        elif g.g_dirty_brush_color_to_ignore is not None and arrEqual(g.g_dirty_brush_color_to_ignore, comp):
+                            pass
+                        else:
+                            # e' un colore settato davvero dall'utente. ricordalo
+                            g.g_ultimo_colore_vero_settato_dall_utente = comp
 
-                       
+                            g.g_color_changed_from_selector_probably = True
+                            
 
-                        if len(comp) == 4:  # Assuming RGBA
+                            
 
-                            newColorRgb = rgb(
-                                comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
+                            # Use the new utility function for conversion
+                            
 
                             # log(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}, orig = {comp[0]}, {comp[1]}, {comp[2]}")
 
@@ -2166,20 +2159,22 @@ class MyExtension(Extension):
                             update_label_from_virtual_color()
 
                             # log(f"setting last_color_picked = {g.g_virtual_fg_color_rgb.toString()}")
-                        else:
-                            log("err1")
+                        
 
+                    #cruciale altrimenti l'automix crea nuovi layer quando vai sul selector e torni sul canvas.
+                    if not g.g_auto_mix_ignore_this_color_in_onfgcolorchanged or not g.g_auto_mix_ignore_this_color_in_onfgcolorchanged.equals(newColorRgb):
+                        g.g_color_changed_since_last_leave = True
+                        
                 else:
-                    print("err2")
+                    log("err1")
 
-        else:
+            else:
+                log("err2")
 
-            pass  # color changed by auto-mix
         
         # Set the flag indicating color has changed since the last leave event
-        g.g_color_changed_since_last_leave = True
-            # log(f"fg color changed event ignored. paused = {g.g_auto_mix_paused}")
 
+       
     def onWindowCreated(self):  # called by framework
         log("on window created  ")
 
