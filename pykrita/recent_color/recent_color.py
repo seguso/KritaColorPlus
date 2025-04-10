@@ -904,7 +904,10 @@ class AutoFocusSetter(QObject):
                     l_color_changed_from_selector = False
 
                 # print ("debug 1")
-                if not isAlwaysOnTop and l_color_changed_from_selector and (not g.g_auto_mix_enabled or g.g_auto_mix_paused) and g.g_multi_layer_mode:
+                # Use the new flag to check if color changed *since last leave*
+                if ( not isAlwaysOnTop and l_color_changed_from_selector and 
+                            g.g_color_changed_since_last_leave 
+                            and (not g.g_auto_mix_enabled or g.g_auto_mix_paused) and g.g_multi_layer_mode):
 
                     # print ("debug 2 creating layer")
                     newLa = dryPaper(False)
@@ -923,6 +926,7 @@ class AutoFocusSetter(QObject):
 
                         document.refreshProjection()
 
+                    # Flag is now reset on Leave event, no need to reset here
                     g.g_color_changed_from_selector_probably = False
 
                     if g.g_diminishing_opacity:
@@ -944,6 +948,8 @@ class AutoFocusSetter(QObject):
             # logic: if the mouse leaver an always-on-top window, focus the first window that's not always on top.
             # log(f"leave event ")
             if isinstance(obj, QMdiSubWindow):
+                # Reset the flag when leaving the canvas
+                g.g_color_changed_since_last_leave = False
                 # log(f"leave {obj} ")
 
                 wi = Krita.instance().activeWindow()
@@ -2169,7 +2175,9 @@ class MyExtension(Extension):
         else:
 
             pass  # color changed by auto-mix
-
+        
+        # Set the flag indicating color has changed since the last leave event
+        g.g_color_changed_since_last_leave = True
             # log(f"fg color changed event ignored. paused = {g.g_auto_mix_paused}")
 
     def onWindowCreated(self):  # called by framework

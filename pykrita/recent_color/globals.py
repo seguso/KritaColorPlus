@@ -19,6 +19,7 @@ printCount = 0
 # g_mix_auto_clears_cur_layer = "1"
 
 g_color_changed_from_selector_probably = False
+g_color_changed_since_last_leave = False # Tracks if color changed after leaving canvas
 
 g_layer_is_dirty = {}
 
