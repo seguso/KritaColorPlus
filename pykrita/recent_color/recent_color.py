@@ -446,6 +446,31 @@ class HelloDocker(DockWidget):
 
         g.g_dial_dirty_brush_level.valueChanged.connect(
             self.dirtyBrushLevelValueChanged)
+            
+        # mix radius layout
+        layoutHorizMixRadius = QHBoxLayout()
+        mainLayout.addLayout(layoutHorizMixRadius)
+        
+        # mix radius label
+        mixRadiusLabel = QLabel("Mix radius", mainWidget)
+        layoutHorizMixRadius.addWidget(mixRadiusLabel)
+        font = mixRadiusLabel.font()
+        font.setPixelSize(15)
+        mixRadiusLabel.setFont(font)
+        mixRadiusLabel.setMinimumHeight(60)
+        
+        # mix radius dial
+        g.g_dial_mix_radius = QDial(mainWidget)
+        g.g_dial_mix_radius.setToolTip("Mix radius in pixels")
+        layoutHorizMixRadius.addWidget(g.g_dial_mix_radius)
+        g.g_dial_mix_radius.setWrapping(False)
+        g.g_dial_mix_radius.setMinimumHeight(60)
+        
+        # Set initial value (0-20 range mapped to 0-100 dial value)
+        val099 = round(g.g_mix_radius * 5.0) if g.g_mix_radius is not None else 0
+        g.g_dial_mix_radius.setValue(val099)
+        
+        g.g_dial_mix_radius.valueChanged.connect(self.mixRadiusValueChanged)
 
         # pick color button
         self.buttonPickColor = QPushButton("Pick color", mainWidget)
@@ -491,6 +516,16 @@ class HelloDocker(DockWidget):
         
         quickMessage(
             f"Changed dirty brush level to {round(g.g_dirty_brush_level * 100.0)} %")
+            
+    def mixRadiusValueChanged(self, level):
+        # Converto il valore del dial (0-100) nel range desiderato (0-20 pixel)
+        g.g_mix_radius = level / 5.0  # Divido per 5 per ottenere un range 0-20
+        
+        Krita.instance().writeSetting("colorPlus", "g.g_mix_radius",
+                                      str(g.g_mix_radius))
+        
+        quickMessage(
+            f"Changed mix radius to {round(g.g_mix_radius)} pixels")
 
     def manualMixColorButtonClicked(self):
 
@@ -562,16 +597,11 @@ def get_layer_model():
 
 def getColorUnderCursorOrAtPos(forcedPos=None):
     # forcedPos is of type xy
-
-    # if skipCurrentLayer and pretendLastLayerIsFgColor:
-    # raise "Makes no sense to skipCurrentLayer and pretendLastLayerIsFgColor. these are exclusive."
-
     application = Krita.instance()
     document = application.activeDocument()
 
     if document:
         win = application.activeWindow()
-
         center = QPointF(0.5 * document.width(), 0.5 * document.height())
 
         if forcedPos is None:
@@ -584,75 +614,44 @@ def getColorUnderCursorOrAtPos(forcedPos=None):
             doc_posxy = xy(forcedPos.x + int(round(center.x())),
                            forcedPos.y + int(round(center.y())))
 
-        # log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
-
-        # parentNode = document.activeNode().parentNode()
-
-        # fgCol = None
-        # if pretendLastLayerIsFgColor:
-
-            # if win is not None:
-            # view = win.activeView()
-            # if view is not None:
-            # fg = view.foregroundColor()
-            # comp = fg.components()
-
-            # fgCol = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
-            # else:
-            # return None
-
         if True:  # parentNode is not None:
-
-            # brothers = parentNode.childNodes()
-            # colors = []
-
-            # #costruisco colors
-            # for curLayer in brothers:
-
-            # if curLayer.uniqueId() == document.activeNode().uniqueId() and skipCurrentLayer:
-            # #print ("salto cur layer")
-            # continue
-
-            # if curLayer.uniqueId() == document.activeNode().uniqueId() and pretendLastLayerIsFgColor :
-
-            # layerOpac = curLayer.opacity() # tra  0 e 255
-
-            # paintingOp01 = win.activeView().paintingOpacity()
-            # # log(f"opacity = {paintingOp}")
-            # colors.append( rgb(fgCol.r, fgCol.g, fgCol.b, int(layerOpac * paintingOp01)))
-
-            # else:
-
-            # pixelBytes = curLayer.pixelData(doc_posxy.x, doc_posxy.y, 1, 1)
-
-            # imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA8888)
-            # pixelC = imageData.pixelColor(0,0)
-
-            # # devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
-            # # if curLayer.uniqueId() == document.activeNode().uniqueId():
-            # # correzMul = 1.0
-            # # else:
-            # layerOpac = curLayer.opacity() # tra  0 e 255
-            # correzMul = float(layerOpac) /  255.0
-
-            # #log(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
-
-            # colors.append(  rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(),  pixelC.alpha() * correzMul ))
-
-            # #creo il colore composito dei layer. questo è il bgcolor
-            # bgColor = calcolaCompositeColor(colors)
-
+            # Se il mix radius è attivo, campiono più punti intorno alla posizione del cursore
+            if g.g_mix_radius > 0:
+                print("algo nuovo radius 1")
+                colors = []
+                radius = int(g.g_mix_radius)
+                # Campiono punti in un'area circolare
+                for dx in range(-radius, radius + 1):
+                    for dy in range(-radius, radius + 1):
+                        # Verifico se il punto è all'interno del cerchio
+                        if dx*dx + dy*dy <= radius*radius:
+                            x = doc_posxy.x + dx
+                            y = doc_posxy.y + dy
+                            # Verifico che il punto sia all'interno dell'immagine
+                            if 0 <= x < document.width() and 0 <= y < document.height():
+                                pixBytes = document.pixelData(int(x), int(y), 1, 1)
+                                if len(pixBytes) == 4:
+                                    imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA8888)
+                                elif len(pixBytes) == 8:
+                                    imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA64)
+                                else:
+                                    continue
+                                pixelC = imageData.pixelColor(0, 0)
+                                colors.append(rgb(float(pixelC.red()), float(pixelC.green()), float(pixelC.blue()), 255.0))
+                
+                if colors:
+                    # Calcolo la media dei colori campionati
+                    r_sum = sum(c.r for c in colors)
+                    g_sum = sum(c.g for c in colors)
+                    b_sum = sum(c.b for c in colors)
+                    n_colors = len(colors)
+                    return rgb(r_sum/n_colors, g_sum/n_colors, b_sum/n_colors, 255.0)
+            
+            # Se il mix radius non è attivo o non sono stati trovati colori validi,
+            # ritorno al comportamento originale di campionamento singolo
             doc_pos = doc_posxy
-
-            # 3 or 6 bytes depending on the image format
             pixBytes = document.pixelData(int(doc_pos.x), int(doc_pos.y), 1, 1)
 
-            # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
-            # concatenated_string = '-'.join(byte_values)
-
-            # log(f'Dati letti: {concatenated_string}')
-
-            # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
             if len(pixBytes) == 4:
                 imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA8888)
             elif len(pixBytes) == 8:
@@ -661,15 +660,7 @@ def getColorUnderCursorOrAtPos(forcedPos=None):
                 raise f"unsupported len {len(pixBytes)}"
 
             pixelC = imageData.pixelColor(0, 0)
-
-            # e ora da colore qt a colore mio
-            mergedColor = rgb(float(pixelC.red()),   float(
-                pixelC.green()),   float(pixelC.blue()), 255.0)
-
-            bgColor = mergedColor
-
-            # log(f"color under cursor  = {bgColor.toString()}")
-            return bgColor
+            return rgb(float(pixelC.red()), float(pixelC.green()), float(pixelC.blue()), 255.0)
         else:
             return None
     else:
@@ -1870,7 +1861,7 @@ def handle_release(widget): # bm_released
                     bgColorAverage = g.g_color_on_down_dirty_brush
 
                     # Mix using spectral_mix instead of linear interpolation
-                    canv = 0.12  # Amount of background color to mix in
+                    #canv = 0.12  # Amount of background color to mix in
 
                     # Get components (assuming 0.0-1.0 range from Krita API)
                     fg_comp_orig = fg.components()
@@ -1882,7 +1873,7 @@ def handle_release(widget): # bm_released
                                   bgColorAverage.g, bgColorAverage.b]
 
                     # Perform spectral mixing
-                    mixed_rgb_255 = spectral_mix(fg_rgb_255, bg_rgb_255, canv)
+                    mixed_rgb_255 = spectral_mix(fg_rgb_255, bg_rgb_255, g.g_dirty_brush_level)
 
                     # Convert result back to 0.0-1.0 for setComponents
                     mixed_comp_float = [c / 255.0 for c in mixed_rgb_255]
@@ -1954,6 +1945,9 @@ class MyExtension(Extension):
             
         g.g_dirty_brush_level = float(Krita.instance().readSetting(
             "colorPlus", "g.g_dirty_brush_level", "0.12"))
+            
+        g.g_mix_radius = float(Krita.instance().readSetting(
+            "colorPlus", "g.g_mix_radius", "0.0"))
 
         # dev values , only read when timer is active
         g.g_virtual_fg_color_rgb = None  # di tipo rgb
@@ -2765,7 +2759,7 @@ class MyExtension(Extension):
         for k, v in g.allBrushPresets.items():
             print(f"key {k}")
 
-    def mixOnTimer(self):
+    def mixOnTimer(self):  #bm_automix
 
         if g.g_virtual_fg_color_rgb is None or not g.g_auto_mix_enabled or g.g_auto_mix_paused or (g.g_auto_mixing_just_once_logic and not g.g_auto_mixing_just_once_now_on):
             return
