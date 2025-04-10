@@ -90,7 +90,15 @@ class ColorHistoryDocker(DockWidget):
         g.log(f"Color square clicked: {color.name()}")
         # Set as foreground color in Krita
         from krita import Krita
-        Krita.instance().activeWindow().activeView().setForegroundColor(color)
+        view = Krita.instance().activeWindow().activeView()
+        fg = view.foregroundColor()
+        # Converti il QColor in ManagedColor
+        comp = fg.components()
+        comp[0] = color.blueF()
+        comp[1] = color.greenF()
+        comp[2] = color.redF()
+        fg.setComponents(comp)
+        view.setForeGroundColor(fg)
         
     def canvasChanged(self, canvas):
         """ Override of the abstract method from DockWidget class.
