@@ -2942,167 +2942,84 @@ class MyExtension(Extension):
                         fg = view.foregroundColor()
                         comp = fg.components()
 
-                        if g.g_auto_mixing_uses_distance_logic:
+                        # anche qui vedo la distanza, perche' se è piccola faccio snap
 
-                            bgColor = mergedColor
+                        # if dist < g.g_auto_mix_snap_distance and g.g_auto_mix__how_much_canvas_to_pick < 0.98:
+                        # #snap to destination
+                        # comp[0] = (g.g_virtual_fg_color_rgb.r/255.0)
+                        # comp[1] = (g.g_virtual_fg_color_rgb.g / 255.0)
+                        # comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0)
 
-                            # setto il fg color uguale a merged color (cioè bg color) mischiato con l'ultimo colore memorizzato
+                        # else:
+                        # blending
+                        # log(f"fg color = {comp}")
 
-                            # rgbOfManagedColor(fg) # valori da 0 a 255
-                            fg2 = g.g_virtual_fg_color_rgb
-                            # fg2.log("fg2")
+                        canv = g.g_auto_mix__how_much_canvas_to_pick
 
-                            comp = fg.components()
-                            # log(f"fg color = {comp}")
+                        
 
-                            dist = fg2.distance(bgColor)
-                            # log(f"distance = {dist}, target distance = {self.mixing_target_distance}")
+                        # BEGIN mix colors old way
+                        # comp[0] = (g.g_virtual_fg_color_rgb.r/255.0) * fgMul + (mergedColor.r / 255.0)  * canv
+                        # comp[1] = (g.g_virtual_fg_color_rgb.g / 255.0) * fgMul + (mergedColor.g / 255.0)  * canv
+                        # comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0) * fgMul + (mergedColor.b  / 255.0)  * canv
 
-                            curDist = None
-                            picked50 = False
+                        # END
 
-                            curLayerTransp01 = float(
-                                document.activeNode().opacity()) / 255.0
-                            target_distance_corretta_per_layer_transp = g.g_auto_mixing_target_distance / curLayerTransp01
+                        # begin mix colors spectral: Foreground vs Blended Canvas Color
+                        # 'canv' (g.g_auto_mix__how_much_canvas_to_pick) is the weight of the canvas color (color2)
+                        # spectral_mix's 't' parameter is the weight of color2.
+                        t_mix = canv # Weight of the blended canvas color in the final mix
 
-                            # calcola curFg
-                            if dist <= target_distance_corretta_per_layer_transp:
-                                # i colori sono molto vicini. fai 50%
-                                curMul = 0.5
-                                curFg = rgb(fg2.r * curMul + bgColor.r * (1.0 - curMul),
-                                            fg2.g * curMul + bgColor.g *
-                                            (1.0 - curMul),
-                                            fg2.b * curMul + bgColor.b *
-                                                (1.0 - curMul),
-                                            255)
-                                curDist = dist
-                                picked50 = True
-                            else:  # i colori sono lontani. avvicina poco a poco finché la distanza del curFg dall'origFg non diventa > target
+                        # Foreground color (color1) - Ensure it's [R, G, B] 0-255 list
+                        # g.g_virtual_fg_color_rgb stores R, G, B as floats 0-255
+                        fg_color_rgb = [
+                            float(g.g_virtual_fg_color_rgb.r),
+                            float(g.g_virtual_fg_color_rgb.g),
+                            float(g.g_virtual_fg_color_rgb.b)
+                        ]
 
-                                stepMul = 0.005
+                        # Blended canvas color (color2) - Already [R, G, B] 0-255 list
+                        # from final_canvas_color_rgb calculated earlier (or fallback)
+                        canvas_blend_rgb = final_canvas_color_rgb # This is guaranteed to be a list [R,G,B]
 
-                                curMul = 1.0
-
-                                while True:
-
-                                    curFg = rgb(fg2.r * curMul + bgColor.r * (1.0 - curMul),
-                                                fg2.g * curMul + bgColor.g *
-                                                (1.0 - curMul),
-                                                fg2.b * curMul + bgColor.b *
-                                                    (1.0 - curMul),
-                                                255)
-
-                                    curDist = curFg.distance(bgColor)
-
-                                    # log(f"iterando. mul  = {curMul}, dist  tra {curFg.toString()} e {fg2.toString()} = {curDist}. ")
-
-                                    if curDist <= target_distance_corretta_per_layer_transp:
-                                        break
-
-                                    if curMul <= 0:
-                                        break
-
-                                    curMul -= stepMul
-
-                                picked50 = False
-
-                            # canv = howMuchCanvas # pick half color from canvas
-
-                            comp[0] = curFg.r / 255.0
-                            comp[1] = curFg.g / 255.0
-                            comp[2] = curFg.b / 255.0
-
-                            # fgMul = 1.0 - canv
-                            # comp[0] = comp[0] * fgMul + (bgColor.r / 255.0)  * canv
-                            # comp[1] = comp[1] * fgMul + (bgColor.g / 255.0)  * canv
-                            # comp[2] = comp[2] * fgMul + (bgColor.b  / 255.0)  * canv
-
-                            fg.setComponents(comp)
-
-                            view.setForeGroundColor(fg)
-
-                        else:  # normal logic
-
-                            # anche qui vedo la distanza, perche' se è piccola faccio snap
-                            dist = g.g_virtual_fg_color_rgb.distance(
-                                mergedColor)
-
-                            # if dist < g.g_auto_mix_snap_distance and g.g_auto_mix__how_much_canvas_to_pick < 0.98:
-                            # #snap to destination
-                            # comp[0] = (g.g_virtual_fg_color_rgb.r/255.0)
-                            # comp[1] = (g.g_virtual_fg_color_rgb.g / 255.0)
-                            # comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0)
-
-                            # else:
-                            # blending
-                            # log(f"fg color = {comp}")
-
-                            canv = g.g_auto_mix__how_much_canvas_to_pick
-
-                            
-
-                            # BEGIN mix colors old way
-                            # comp[0] = (g.g_virtual_fg_color_rgb.r/255.0) * fgMul + (mergedColor.r / 255.0)  * canv
-                            # comp[1] = (g.g_virtual_fg_color_rgb.g / 255.0) * fgMul + (mergedColor.g / 255.0)  * canv
-                            # comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0) * fgMul + (mergedColor.b  / 255.0)  * canv
-
-                            # END
-
-                            # begin mix colors spectral: Foreground vs Blended Canvas Color
-                            # 'canv' (g.g_auto_mix__how_much_canvas_to_pick) is the weight of the canvas color (color2)
-                            # spectral_mix's 't' parameter is the weight of color2.
-                            t_mix = canv # Weight of the blended canvas color in the final mix
-
-                            # Foreground color (color1) - Ensure it's [R, G, B] 0-255 list
-                            # g.g_virtual_fg_color_rgb stores R, G, B as floats 0-255
-                            fg_color_rgb = [
-                                float(g.g_virtual_fg_color_rgb.r),
-                                float(g.g_virtual_fg_color_rgb.g),
-                                float(g.g_virtual_fg_color_rgb.b)
-                            ]
-
-                            # Blended canvas color (color2) - Already [R, G, B] 0-255 list
-                            # from final_canvas_color_rgb calculated earlier (or fallback)
-                            canvas_blend_rgb = final_canvas_color_rgb # This is guaranteed to be a list [R,G,B]
-
-                            # Perform the final spectral mix
-                            # spectral_mix(color1, color2, t) where t is weight of color2
-                            try:
-                                final_mixed_color_rgb = spectral_mix(
-                                    fg_color_rgb, canvas_blend_rgb, t_mix)
-                            except Exception as e:
-                                log(f"Error during final spectral mix: {e}")
-                                # Fallback if final mix fails: use original fg color
-                                final_mixed_color_rgb = fg_color_rgb
+                        # Perform the final spectral mix
+                        # spectral_mix(color1, color2, t) where t is weight of color2
+                        try:
+                            final_mixed_color_rgb = spectral_mix(
+                                fg_color_rgb, canvas_blend_rgb, t_mix)
+                        except Exception as e:
+                            log(f"Error during final spectral mix: {e}")
+                            # Fallback if final mix fails: use original fg color
+                            final_mixed_color_rgb = fg_color_rgb
 
 
-                            # final_mixed_color_rgb is [R, G, B] 0-255.
-                            # Convert back to Krita's component format (0.0-1.0)
-                            # Assuming 'comp' expects BGR order based on original code comp[0]=res[2]/255
-                            # Check if final_mixed_color_rgb is valid before division
-                            if isinstance(final_mixed_color_rgb, list) and len(final_mixed_color_rgb) == 3:
-                                comp[0] = final_mixed_color_rgb[2] / 255.0 # Blue
-                                comp[1] = final_mixed_color_rgb[1] / 255.0 # Green
-                                comp[2] = final_mixed_color_rgb[0] / 255.0 # Red
-                            else:
-                                # Fallback if final_mixed_color_rgb is somehow invalid
-                                log("Error: final_mixed_color_rgb was invalid after mix. Using original FG.")
-                                comp[0] = fg_color_rgb[2] / 255.0 # B
-                                comp[1] = fg_color_rgb[1] / 255.0 # G
-                                comp[2] = fg_color_rgb[0] / 255.0 # R
+                        # final_mixed_color_rgb is [R, G, B] 0-255.
+                        # Convert back to Krita's component format (0.0-1.0)
+                        # Assuming 'comp' expects BGR order based on original code comp[0]=res[2]/255
+                        # Check if final_mixed_color_rgb is valid before division
+                        if isinstance(final_mixed_color_rgb, list) and len(final_mixed_color_rgb) == 3:
+                            comp[0] = final_mixed_color_rgb[2] / 255.0 # Blue
+                            comp[1] = final_mixed_color_rgb[1] / 255.0 # Green
+                            comp[2] = final_mixed_color_rgb[0] / 255.0 # Red
+                        else:
+                            # Fallback if final_mixed_color_rgb is somehow invalid
+                            log("Error: final_mixed_color_rgb was invalid after mix. Using original FG.")
+                            comp[0] = fg_color_rgb[2] / 255.0 # B
+                            comp[1] = fg_color_rgb[1] / 255.0 # G
+                            comp[2] = fg_color_rgb[0] / 255.0 # R
 
 
-                            # END spectral mix
+                        # END spectral mix
 
-                            # comp[0] =  (mergedColor.r / 255.0)
-                            # comp[1] =  (mergedColor.g / 255.0)
-                            # comp[2] = (mergedColor.b  / 255.0)
+                        # comp[0] =  (mergedColor.r / 255.0)
+                        # comp[1] =  (mergedColor.g / 255.0)
+                        # comp[2] = (mergedColor.b  / 255.0)
 
-                            fg.setComponents(comp)
+                        fg.setComponents(comp)
 
-                            g.g_auto_mix_color_to_ignore = comp
+                        g.g_auto_mix_color_to_ignore = comp
 
-                            view.setForeGroundColor(fg)
+                        view.setForeGroundColor(fg)
 
     # def mixSmall(self):
         # return self.mix(0.66)  #0.66 from canvas
