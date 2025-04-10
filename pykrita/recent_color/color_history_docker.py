@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QResizeEvent # Import QResizeEvent
 from PyQt5.QtWidgets import QDockWidget, QWidget, QGridLayout, QLabel
 from krita import DockWidget
 from . import globals as g
@@ -114,3 +114,9 @@ class ColorHistoryDocker(DockWidget):
         g.log(f"Canvas changed in ColorHistoryDocker")
         # Update the UI when canvas changes
         self.update_color_history_ui()
+
+    def resizeEvent(self, event: QResizeEvent):
+        """ Called when the docker widget is resized. """
+        g.log(f"ColorHistoryDocker resized to: {event.size().width()}x{event.size().height()}")
+        self.update_color_history_ui() # Recalculate layout
+        super().resizeEvent(event) # Call base class implementation
