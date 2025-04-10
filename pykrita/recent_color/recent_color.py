@@ -174,7 +174,11 @@ def toggleAutoMixing():
         g.g_actionAutoMix.setChecked(False)
 
         # you probably disabled auto-mixing in order to manually change the fg color (= target color). but the color selector has probably changed. so reset it to the current target
-        resetForegroundColorToLastColorPicked()
+        if g.g_virtual_fg_color_rgb is not None:
+            setFgColor(g.g_virtual_fg_color_rgb)
+        g.g_auto_mix_ignore_this_color_in_onfgcolorchanged = None
+
+
 
         quickMessage("Disabled auto-mixing")
 
