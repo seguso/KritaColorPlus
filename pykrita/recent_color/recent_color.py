@@ -698,44 +698,75 @@ def getColorUnderCursorOrAtPos(forcedPos=None):
             doc_posxy = xy(forcedPos.x + int(round(center.x())),
                            forcedPos.y + int(round(center.y())))
 
+        # log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
+
+        # parentNode = document.activeNode().parentNode()
+
+        # fgCol = None
+        # if pretendLastLayerIsFgColor:
+
+            # if win is not None:
+            # view = win.activeView()
+            # if view is not None:
+            # fg = view.foregroundColor()
+            # comp = fg.components()
+
+            # fgCol = rgb( int  (comp[0] * 255.0), int  (comp[1] * 255.0), int  (comp[2] * 255.0), 1)
+            # else:
+            # return None
+
         if True:  # parentNode is not None:
-            # Se il mix radius è attivo, campiono più punti intorno alla posizione del cursore
-            if g.g_mix_radius > 0:
-                print("algo nuovo radius 1")
-                colors = []
-                radius = int(g.g_mix_radius)
-                # Campiono punti in un'area circolare
-                for dx in range(-radius, radius + 1):
-                    for dy in range(-radius, radius + 1):
-                        # Verifico se il punto è all'interno del cerchio
-                        if dx*dx + dy*dy <= radius*radius:
-                            x = doc_posxy.x + dx
-                            y = doc_posxy.y + dy
-                            # Verifico che il punto sia all'interno dell'immagine
-                            if 0 <= x < document.width() and 0 <= y < document.height():
-                                pixBytes = document.pixelData(int(x), int(y), 1, 1)
-                                if len(pixBytes) == 4:
-                                    imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA8888)
-                                elif len(pixBytes) == 8:
-                                    imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA64)
-                                else:
-                                    continue
-                                pixelC = imageData.pixelColor(0, 0)
-                                colors.append(rgb(float(pixelC.red()), float(pixelC.green()), float(pixelC.blue()), 255.0))
-                
-                if colors:
-                    # Calcolo la media dei colori campionati
-                    r_sum = sum(c.r for c in colors)
-                    g_sum = sum(c.g for c in colors)
-                    b_sum = sum(c.b for c in colors)
-                    n_colors = len(colors)
-                    return rgb(r_sum/n_colors, g_sum/n_colors, b_sum/n_colors, 255.0)
-            
-            # Se il mix radius non è attivo o non sono stati trovati colori validi,
-            # ritorno al comportamento originale di campionamento singolo
+
+            # brothers = parentNode.childNodes()
+            # colors = []
+
+            # #costruisco colors
+            # for curLayer in brothers:
+
+            # if curLayer.uniqueId() == document.activeNode().uniqueId() and skipCurrentLayer:
+            # #print ("salto cur layer")
+            # continue
+
+            # if curLayer.uniqueId() == document.activeNode().uniqueId() and pretendLastLayerIsFgColor :
+
+            # layerOpac = curLayer.opacity() # tra  0 e 255
+
+            # paintingOp01 = win.activeView().paintingOpacity()
+            # # log(f"opacity = {paintingOp}")
+            # colors.append( rgb(fgCol.r, fgCol.g, fgCol.b, int(layerOpac * paintingOp01)))
+
+            # else:
+
+            # pixelBytes = curLayer.pixelData(doc_posxy.x, doc_posxy.y, 1, 1)
+
+            # imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA8888)
+            # pixelC = imageData.pixelColor(0,0)
+
+            # # devo correggere l'alpha del pixel con l'alpha del layer. ma non lo correggo se il layer è quello attuale, che è trasparente. così la pennellata successiva si vede uguale
+            # # if curLayer.uniqueId() == document.activeNode().uniqueId():
+            # # correzMul = 1.0
+            # # else:
+            # layerOpac = curLayer.opacity() # tra  0 e 255
+            # correzMul = float(layerOpac) /  255.0
+
+            # #log(f"color under cursor =  r:{self.pixelC.red()}, g:{self.pixelC.green()}, b:{self.pixelC.blue()} ,a:{self.pixelC.alpha() }, a corretto = {self.pixelC.alpha() * correzMul}")
+
+            # colors.append(  rgb(pixelC.red(),  pixelC.green(),  pixelC.blue(),  pixelC.alpha() * correzMul ))
+
+            # #creo il colore composito dei layer. questo è il bgcolor
+            # bgColor = calcolaCompositeColor(colors)
+
             doc_pos = doc_posxy
+
+            # 3 or 6 bytes depending on the image format
             pixBytes = document.pixelData(int(doc_pos.x), int(doc_pos.y), 1, 1)
 
+            # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
+            # concatenated_string = '-'.join(byte_values)
+
+            # log(f'Dati letti: {concatenated_string}')
+
+            # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
             if len(pixBytes) == 4:
                 imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA8888)
             elif len(pixBytes) == 8:
@@ -744,7 +775,15 @@ def getColorUnderCursorOrAtPos(forcedPos=None):
                 raise f"unsupported len {len(pixBytes)}"
 
             pixelC = imageData.pixelColor(0, 0)
-            return rgb(float(pixelC.red()), float(pixelC.green()), float(pixelC.blue()), 255.0)
+
+            # e ora da colore qt a colore mio
+            mergedColor = rgb(float(pixelC.red()),   float(
+                pixelC.green()),   float(pixelC.blue()), 255.0)
+
+            bgColor = mergedColor
+
+            # log(f"color under cursor  = {bgColor.toString()}")
+            return bgColor
         else:
             return None
     else:
