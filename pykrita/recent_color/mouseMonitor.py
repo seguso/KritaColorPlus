@@ -1,3 +1,5 @@
+from typing import Any
+
 # mousemonitor.py
 from PyQt5.QtCore import QObject
 from PyQt5.QtGui import (
@@ -5,6 +7,7 @@ from PyQt5.QtGui import (
 from PyQt5.QtWidgets import (
         QApplication,
                 QWidget,
+                QPushButton,
                 )
 
 
@@ -26,6 +29,22 @@ class MouseMonitor(QObject):
         self.left_button_pressed = False
         self.last_widget = None
 
+    def is_button_widget(self, widget):
+        """Verifica se il widget è un pulsante di qualsiasi tipo"""
+        if not widget:
+            return False
+            
+        # Verifica se è un QPushButton
+        if isinstance(widget, QPushButton):
+            return True
+            
+        # Verifica se il nome della classe contiene 'button' (case insensitive)
+        class_name = widget.metaObject().className().lower()
+        if 'button' in class_name:
+            return True
+            
+        return False
+        
     def check_mouse(self):
         current_buttons = QApplication.mouseButtons()
         current_widget = QApplication.widgetAt(QCursor.pos())
@@ -40,9 +59,8 @@ class MouseMonitor(QObject):
         else:
             if self.left_button_pressed:
                 self.left_button_pressed = False
-                # Emettiamo il segnale se abbiamo un widget valido
-                # QPushButton è già una sottoclasse di QWidget, quindi non serve un controllo specifico
-                if self.last_widget:
+                # Emettiamo il segnale solo se abbiamo un widget valido e NON è un pulsante
+                if self.last_widget and not self.is_button_widget(self.last_widget):
                     self.mouseReleased.emit(self.last_widget)
                 self.last_widget = None
 
