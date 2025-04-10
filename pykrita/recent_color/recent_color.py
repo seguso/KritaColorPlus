@@ -2931,7 +2931,7 @@ class MyExtension(Extension):
 
                             canv = g.g_auto_mix__how_much_canvas_to_pick
 
-                            fgMul = 1.0 - canv
+                            
 
                             # BEGIN mix colors old way
                             # comp[0] = (g.g_virtual_fg_color_rgb.r/255.0) * fgMul + (mergedColor.r / 255.0)  * canv
@@ -2950,7 +2950,7 @@ class MyExtension(Extension):
                             dg = mergedColor.g
                             dr = mergedColor.b
 
-                            resultColor = spectral_mix(
+                            resultColor = spectral_mix( 
                                 [sr, sg, sb], [dr, dg, db], fgMul)
                             # resultColor is [r,g,b]. copy back to bgr:
 
