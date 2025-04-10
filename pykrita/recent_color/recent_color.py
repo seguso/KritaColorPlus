@@ -10,6 +10,7 @@ from PyQt5.QtCore import Qt, QModelIndex, QItemSelectionModel
 import pprint
 from . import globals as g
 from .whichtool import EKritaTools, EKritaToolsId  # Import the necessary classes
+from .brush_cycler import brush_cycler  # Import the brush cycler instance
 
 
 from .rgb import *
@@ -373,6 +374,29 @@ class HelloDocker(DockWidget):
         
         g.g_dial_mix_radius.valueChanged.connect(self.mixRadiusValueChanged)
 
+        # Brush cycler layout
+        layoutHorizBrushCycler = QHBoxLayout()
+        mainLayout.addLayout(layoutHorizBrushCycler)
+        
+        # Brush cycler button
+        g.g_btn_brush_cycler = QPushButton("Cycle brushes", mainWidget)
+        g.g_btn_brush_cycler.setCheckable(True)
+        layoutHorizBrushCycler.addWidget(g.g_btn_brush_cycler)
+        g.g_btn_brush_cycler.clicked.connect(self.toggleBrushCycler)
+        g.g_btn_brush_cycler.setMinimumHeight(60)
+        
+        font = g.g_btn_brush_cycler.font()
+        font.setPixelSize(15)
+        g.g_btn_brush_cycler.setFont(font)
+        
+        # Button to add current brush to cycle list
+        btnAddBrush = QPushButton("+", mainWidget)
+        btnAddBrush.setToolTip("Add current brush to cycle list")
+        layoutHorizBrushCycler.addWidget(btnAddBrush)
+        btnAddBrush.clicked.connect(self.addCurrentBrushToCycleList)
+        btnAddBrush.setMinimumHeight(60)
+        btnAddBrush.setMaximumWidth(40)
+        
         # pick color button
         self.buttonPickColor = QPushButton("Pick color", mainWidget)
 
@@ -449,6 +473,31 @@ class HelloDocker(DockWidget):
         quickMessage(
             f"Changed mixing level to {round(g.g_how_much_canvas_to_pick * 100.0)} %")
 
+    def toggleBrushCycler(self):
+        """Toggle brush cycling on/off"""
+        is_enabled = brush_cycler.toggle_enabled()
+        g.g_btn_brush_cycler.setChecked(is_enabled)
+        
+        if is_enabled:
+            # Check if we have brushes in the list
+            if not brush_cycler.brush_list:
+                # Try to add current brush if list is empty
+                if brush_cycler.add_current_brush():
+                    quickMessage("Enabled brush cycling with current brush")
+                else:
+                    quickMessage("Enabled brush cycling, but no brushes in list. Add brushes with + button.")
+            else:
+                quickMessage(f"Enabled brush cycling with {len(brush_cycler.brush_list)} brushes")
+        else:
+            quickMessage("Disabled brush cycling")
+    
+    def addCurrentBrushToCycleList(self):
+        """Add the current brush to the cycle list"""
+        if brush_cycler.add_current_brush():
+            quickMessage(f"Added current brush to cycle list. Total: {len(brush_cycler.brush_list)}")
+        else:
+            quickMessage("Could not add current brush to cycle list")
+    
     def pickColorClicked(self):
 
         if self.buttonPickColor.isChecked():
@@ -1633,6 +1682,10 @@ def handle_release(widget): # bm_released
             # log(f"History changed, but current tool ({current_tool_id}) is not a brush. Ignoring.")
             return  # Exit the function if it's not a brush stroke
         # --- End of tool check ---
+        
+        # Cycle to next brush if brush cycler is enabled
+        if brush_cycler.enabled and brush_cycler.brush_list:
+            brush_cycler.cycle_to_next_brush()
 
         # If it is a brush tool, proceed with the original logic:
 
@@ -3717,6 +3770,13 @@ class MyExtension(Extension):
         g.g_actionDirtyBrush.setCheckable(True)
         g.g_actionDirtyBrush.setShortcut("d")
         g.g_actionDirtyBrush.triggered.connect(toggleDirtyBrush)
+        
+        # Add brush cycler action
+        g.g_actionBrushCycler = window.createAction(
+            "toggleBrushCycler", "Cycle brushes (automatically change brush after each stroke)")
+        g.g_actionBrushCycler.setCheckable(True)
+        g.g_actionBrushCycler.setShortcut("b")
+        g.g_actionBrushCycler.triggered.connect(lambda: g.g_docker_instance.toggleBrushCycler())
 
         self.actionIncAutoMix = window.createAction(
             "increaseAutoMixing", "Increase auto-mixing (amount of bg color you pick at each stroke)")
@@ -3733,6 +3793,7 @@ class MyExtension(Extension):
         custom_menu.addAction(self.actionIncAutoMix)
         custom_menu.addAction(self.actionDecAutoMix)
         custom_menu.addAction(g.g_actionDirtyBrush)
+        custom_menu.addAction(g.g_actionBrushCycler)
 
         custom_menu.addSeparator()
         custom_menu.addAction(actionDryPaper)

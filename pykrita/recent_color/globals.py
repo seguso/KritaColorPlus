@@ -3,6 +3,7 @@ from typing import List, TYPE_CHECKING # Import List and TYPE_CHECKING
 if TYPE_CHECKING:
     from .recent_color import rgb # Import for type hinting only
     from PyQt5.QtWidgets import QLabel # Import for type hinting only
+    from .brush_cycler import BrushCycler # Import for type hinting only
 
 # Funzione di log per il debug
 def log(s):
@@ -242,6 +243,10 @@ event_lookup = {"0": "QEvent::None",
                 "126": "QEvent::ZOrderChange", }
                 
 allBrushPresets = None # Use None instead of null
+
+# Brush cycler instance
+g_brush_cycler_instance = None # Will be set to BrushCycler instance
+g_btn_brush_cycler = None # Button for brush cycler
 
 g_docker_instance = None
 g_color_history_docker_instance = None
