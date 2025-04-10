@@ -10,6 +10,7 @@ class KritaStyleSlider(QWidget):
     - Mostra un testo personalizzabile e la percentuale con ombra rinforzata
     - Supporta la regolazione fine con la rotella del mouse
     - Implementa stato disabled con barra grigia e nessuna interazione
+    - Testo semi-trasparente quando disabilitato
     """
     valueChanged = pyqtSignal(float)
     
@@ -87,19 +88,32 @@ class KritaStyleSlider(QWidget):
         font.setBold(True)
         painter.setFont(font)
         
+        # Imposta l'opacità del testo in base allo stato
+        if self.isEnabled():
+            text_color = self._text_color
+            shadow_color = self._shadow_color
+        else:
+            # Riduce l'opacità al 50% se disabilitato
+            text_color = QColor(self._text_color)
+            text_color.setAlpha(int(self._text_color.alpha() * 0.5))
+            
+            shadow_color = QColor(self._shadow_color)
+            shadow_color.setAlpha(int(self._shadow_color.alpha() * 0.5))
+        
         # Tecnica di ombra potenziata: disegna l'ombra più volte con offset leggermente diversi
         shadow_offsets = [
             (1, 1), (1, 0), (0, 1), (-1, 1), (1, -1),
             (2, 2), (2, 1), (1, 2), (2, 0), (0, 2)
         ]
         
-        painter.setPen(self._shadow_color)
+        painter.setPen(shadow_color)
         for offset_x, offset_y in shadow_offsets:
+            # Usa la correzione fornita dall'utente
             shadow_rect = rect.adjusted(offset_x - 1, offset_y - 1, offset_x - 1, offset_y - 1)
             painter.drawText(shadow_rect, Qt.AlignCenter, text)
         
         # Disegna il testo principale
-        painter.setPen(self._text_color)
+        painter.setPen(text_color)
         painter.drawText(rect, Qt.AlignCenter, text)
         
     def mousePressEvent(self, event):
@@ -160,19 +174,4 @@ class KritaStyleSlider(QWidget):
 #     layout = QVBoxLayout()
     
 #     slider1 = KritaStyleSlider(None, "Opacity")
-#     slider1.setValue(0.7)  # Imposta un valore iniziale
-#     layout.addWidget(slider1)
-    
-#     slider2 = KritaStyleSlider(None, "Flow")
-#     slider2.setValue(0.3)  # Imposta un valore iniziale
-#     slider2.setEnabled(False)  # Questo slider è disabilitato
-#     layout.addWidget(slider2)
-    
-#     # Checkbox per abilitare/disabilitare il primo slider
-#     checkbox = QCheckBox("Abilita Opacity Slider")
-#     checkbox.setChecked(True)
-#     checkbox.stateChanged.connect(lambda state: slider1.setEnabled(state == Qt.Checked))
-#     layout.addWidget(checkbox)
-    
-#     window.setLayout(layout)
-#     window.show()
+#     slider1.setValue(0.7)  # Imposta un valor
