@@ -1635,46 +1635,48 @@ def handle_click(widget):
                         if doc_pos:
                             cx = doc_pos.x()
                             cy = doc_pos.y()
-                            radius = float(g.g_mix_radius) # Ensure radius is float, read from globals
 
-                            # Define the 5 sample points
-                            sample_points = [
-                                # (cx, cy),             # Center non lo metto piu
-                                (cx, cy - radius),    # Up
-                                (cx, cy + radius),    # Down
-                                (cx - radius, cy),    # Left
-                                (cx + radius, cy)     # Right
-                            ]
 
-                            # Sample the colors at these points using the new helper
-                            sampled_colors_rgb = []
-                            for px, py in sample_points:
-                                # Assuming sample_pixel_rgb is defined and handles coordinates correctly
-                                color = sample_pixel_rgb(document, px, py)
-                                sampled_colors_rgb.append(color) # Appends color [R,G,B] or None
-
-                            # Blend the sampled colors using the new helper (handles None values)
-                            # Result is [R, G, B] 0-255
-                            # Assuming blend_colors_spectral is defined
-                            final_canvas_color_rgb = blend_colors_spectral(sampled_colors_rgb)
-
-                            # Fallback logic if blending fails
-                            if not final_canvas_color_rgb:
-                                 log("Warning: Blending failed (e.g., all samples out of bounds/errors). Falling back to center pixel.")
-                                 # Fallback: try center pixel
-                                 final_canvas_color_rgb = sample_pixel_rgb(document, cx, cy)
-
-                            # Assign the final color (as an rgb object) to the global variable
-                            if final_canvas_color_rgb:
-                                # Assuming rgb class is defined and takes R, G, B (0-255)
-                                 
-                                # Convert R,G,B to float as per rgb class expectation
-                                g.g_color_on_down_dirty_brush = rgb(float(final_canvas_color_rgb[0]), float(final_canvas_color_rgb[1]), float(final_canvas_color_rgb[2]), 255.0)
-                                log(f"Dirty brush down color set via sampling: {g.g_color_on_down_dirty_brush}")
-                            
+                            if not g.g_mix_radius_enabled:
+                                #niente radius
+                                log ("niente mix radius per dirty")
+                                g.g_color_on_down_dirty_brush = getColorUnderCursorOrAtPos()
                             else:
-                                log("Error: Could not get any canvas color for dirty brush, even with fallback.")
-                                g.g_color_on_down_dirty_brush = None # Or a default color
+                                radius = float(g.g_mix_radius) # Ensure radius is float, read from globals
+
+                                # Define the 5 sample points
+                                sample_points = [
+                                    # (cx, cy),             # Center non lo metto piu
+                                    (cx, cy - radius),    # Up
+                                    (cx, cy + radius),    # Down
+                                    (cx - radius, cy),    # Left
+                                    (cx + radius, cy)     # Right
+                                ]
+
+                                # Sample the colors at these points using the new helper
+                                sampled_colors_rgb = []
+                                for px, py in sample_points:
+                                    # Assuming sample_pixel_rgb is defined and handles coordinates correctly
+                                    color = sample_pixel_rgb(document, px, py)
+                                    sampled_colors_rgb.append(color) # Appends color [R,G,B] or None
+
+                                # Blend the sampled colors using the new helper (handles None values)
+                                # Result is [R, G, B] 0-255
+                                # Assuming blend_colors_spectral is defined
+                                final_canvas_color_rgb = blend_colors_spectral(sampled_colors_rgb)
+                                # Fallback logic if blending fails
+                                if not final_canvas_color_rgb:
+                                    log("Warning: Blending failed (e.g., all samples out of bounds/errors). Falling back to center pixel.")
+                                    # Fallback: try center pixel
+                                    final_canvas_color_rgb = sample_pixel_rgb(document, cx, cy)
+
+                                
+                              
+                                    
+                                # Convert R,G,B to float as per rgb class expectation
+                                g.g_color_on_down_dirty_brush = rgb(float(final_canvas_color_rgb[0] * 255.0), float(final_canvas_color_rgb[1] * 255.0), float(final_canvas_color_rgb[2] * 255.0), 255.0)
+                                log(f"Dirty brush down color set via sampling: {g.g_color_on_down_dirty_brush}")
+                                
                         else:
                             log("Could not get document position for dirty brush sampling.")
                             g.g_color_on_down_dirty_brush = None # Or a default color
