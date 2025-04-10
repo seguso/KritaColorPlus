@@ -24,7 +24,7 @@ g_layer_is_dirty = {}
 
 g_diminishing_opacity = False #True to have auto-mixing with amount that auto-decreases
 
-g_btn_pick_color = None
+#g_btn_pick_color = None
 
 
 
@@ -89,8 +89,8 @@ g_color_on_down_dirty_brush = None
 g_last_coord_mouse_down = None
 g_last_coord_mouse_up = None
 
-g_picking_color = False
-g_mixing_color = False
+#g_picking_color = False
+#g_mixing_color = False
 
 g_temp_switched_to_100_previous_opac = None
 

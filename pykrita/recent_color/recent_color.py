@@ -271,14 +271,14 @@ class HelloDocker(DockWidget):
         layoutHorizMix = QHBoxLayout()
         mainLayout.addLayout(layoutHorizMix)
 
-        g.g_btn_mix = QPushButton("Mix color", mainWidget)
-        g.g_btn_mix.setCheckable(True)
-        layoutHorizMix.addWidget(g.g_btn_mix)
-        g.g_btn_mix.clicked.connect(self.manualMixColorButtonClicked)
-        g.g_btn_mix.setMinimumHeight(60)
-        font = g.g_btn_mix.font()
-        font.setPixelSize(15)
-        g.g_btn_mix.setFont(font)
+        # g.g_btn_mix = QPushButton("Mix color", mainWidget)
+        # g.g_btn_mix.setCheckable(True)
+        # layoutHorizMix.addWidget(g.g_btn_mix)
+        # g.g_btn_mix.clicked.connect(self.manualMixColorButtonClicked)
+        # g.g_btn_mix.setMinimumHeight(60)
+        # font = g.g_btn_mix.font()
+        # font.setPixelSize(15)
+        # g.g_btn_mix.setFont(font)
 
         g.g_dial_mix = QDial(mainWidget)
         g.g_dial_mix.setToolTip("Mix level")
@@ -415,18 +415,18 @@ class HelloDocker(DockWidget):
         btnEditBrushList.setMinimumHeight(60)
         
         # pick color button
-        self.buttonPickColor = QPushButton("Pick color", mainWidget)
+        # self.buttonPickColor = QPushButton("Pick color", mainWidget)
 
-        self.buttonPickColor.setMinimumHeight(50)
-        self.buttonPickColor.setCheckable(True)
-        font = self.buttonPickColor.font()
-        font.setPixelSize(20)
-        self.buttonPickColor.setFont(font)
+        # self.buttonPickColor.setMinimumHeight(50)
+        # self.buttonPickColor.setCheckable(True)
+        # font = self.buttonPickColor.font()
+        # font.setPixelSize(20)
+        # self.buttonPickColor.setFont(font)
 
-        # mainLayout.addWidget(self.buttonPickColor) # non lo voglio, prende spazio
+        # # mainLayout.addWidget(self.buttonPickColor) # non lo voglio, prende spazio
 
-        self.buttonPickColor.clicked.connect(self.pickColorClicked) # quindi non lo connetto
-        g.g_btn_pick_color = self.buttonPickColor
+        # self.buttonPickColor.clicked.connect(self.pickColorClicked) # quindi non lo connetto
+        # g.g_btn_pick_color = self.buttonPickColor
 
     # Color History functionality has been moved to ColorHistoryDocker class
 
@@ -483,17 +483,7 @@ class HelloDocker(DockWidget):
         # Mostra un messaggio all'utente
         quickMessage(f"{'Enabled' if g.g_mix_radius_enabled else 'Disabled'} mix radius")
 
-    def manualMixColorButtonClicked(self):
-
-        if g.g_btn_mix.isChecked():
-            g.g_mixing_color = True
-
-            # I create the layer even if I'm in single layer mode. Then I will either delete it or clear it
-            newLa = dryPaper(showMessage=False)
-
-        else:
-            g.g_mixing_color = False
-
+    
     def mixLevelValueChanged(self, level):
 
         g.g_how_much_canvas_to_pick = (level + 1.0) / 100.0
@@ -553,40 +543,6 @@ class HelloDocker(DockWidget):
         else:
             g.g_btn_brush_cycler.setToolTip("Cycle brushes (no brushes in list)")
     
-    def pickColorClicked(self):
-
-        if self.buttonPickColor.isChecked():
-            g.g_picking_color = True  # I start layer picking mode
-
-            # global g.g_multi_layer_mode
-            # if g.g_multi_layer_mode:
-
-            # i need to create a layer because I can then exclude the stroke just drawn and delete it.
-            # I create the layer, but if not multi-layer-mode I will then delete it when the color is actually picked
-            newLa = dryPaper(showMessage=False)
-
-            # I need to reset to default opacity
-            application = Krita.instance()
-            document = application.activeDocument()
-
-            log(f"color profile = {document.colorProfile()}")
-            log(f"color depth = {document.colorDepth()}")  # U16  or U8
-            log(f"color model  = {document.colorModel()}")  # RGBA
-
-            if document is not None:
-                # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
-                if g.g_temp_switched_to_100_previous_opac is None and g.g_multi_layer_mode:
-
-                    if g.g_auto_reset_opacity_on_pick == 1:
-                        # bm_djiwejdie
-                        newLa.setOpacity(
-                            int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
-
-                        document.refreshProjection()
-
-        else:
-            g.g_picking_color = False
-
     def canvasChanged(self, canvas):
         # self.label.setText("Hellodocker: canvas changed");
         pass
@@ -1890,73 +1846,7 @@ def handle_release(widget): # bm_released
         # ********************************
         #
 
-        if g.g_mixing_color:
-
-            app = Krita.instance()
-
-            # hide current layer, because I need to pick the color excluding the stroke just made
-            app.activeDocument().activeNode().setVisible(False)
-            app.activeDocument().refreshProjection()
-
-            if g.g_multi_layer_mode:
-                # TODO dovrei cancellare il precedente layer, non il corrente. perché è un errore
-                mixFgColorWithBgColor_normalLogic(
-                    createLayer=False, deleteCurLayer=True, clearCurLayer=False)
-
-            else:
-                mixFgColorWithBgColor_normalLogic(
-                    createLayer=False, deleteCurLayer=True, clearCurLayer=False)
-
-            app.activeDocument().activeNode().setVisible(True)
-
-            g.g_mixing_color = False
-
-            g.g_btn_mix.setChecked(False)
-
-            return True  # annulla l'evento, ma non funziona
-        elif g.g_picking_color:
-            # clear layer first, otherwise I pick the color just painted
-            app = Krita.instance()
-
-            # hide current layer, because I need to pick the color excluding the stroke just made
-            app.activeDocument().activeNode().setVisible(False)
-            app.activeDocument().refreshProjection()
-
-            # now,  pick color ignoring stroke just made (which is on its own layer)
-            col = getColorUnderCursorOrAtPos(
-                forcedPos=xyOfQpoint(g.g_last_coord_mouse_down))
-            setFgColor(col)
-            log("g_virtual_fg_color_rgb pickingcolor")
-            g.g_virtual_fg_color_rgb = col
-            g.g_picking_color = False
-
-            app.activeDocument().activeNode().setVisible(True)
-
-            # now I have to delete the stroke just made. normally I would just clear the layer. But if I'm in single layer mode I need to DELETE the layer
-            if g.g_multi_layer_mode:  # altrimenti non ho creato un nuovo layer
-                app.action('clear').trigger()
-                app.activeDocument().waitForDone()  # action needs to finish before continuing
-            else:
-                app.activeDocument().activeNode().remove()
-
-            g.g_btn_pick_color.setChecked(False)
-
-            # todo update layer opacity
-
-            # set color label
-            update_label_from_virtual_color()
-
-            # lblActiveColor.setStyleSheet("background-color: blue")
-
-            if g.g_diminishing_opacity:
-                g.g_auto_mix__how_much_canvas_to_pick = 1.0
-
-                val099 = round(
-                    g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                g.g_dial_auto_mix_level.setValue(val099)
-
-            return True  # annulla l'evento, ma non funziona
-
+        
         g.g_last_coord_mouse_up = get_cursor_in_document_coords()
 
         # remember layer is dirty
