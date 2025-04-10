@@ -12,6 +12,7 @@ from . import globals as g
 from .whichtool import EKritaTools, EKritaToolsId  # Import the necessary classes
 from .brush_cycler import brush_cycler  # Import the brush cycler instance
 from .brush_list_widget import BrushListDialog  # Import the brush list dialog
+from .slider import KritaStyleSlider # Import the new slider
 
 
 from .rgb import rgb, rgbOfColorArray
@@ -55,8 +56,8 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     # Added QPushButton (already used but good to be explicit)
     QPushButton,
-
-    QDial)            # Added QDial (already used but good to be explicit)
+    QDockWidget       # Added QDockWidget back
+    )
 
 from typing import List, Tuple, Optional, Sequence
 
@@ -284,16 +285,12 @@ class HelloDocker(DockWidget):
         # font.setPixelSize(15)
         # g.g_btn_mix.setFont(font)
 
-        g.g_dial_mix = QDial(mainWidget)
-        g.g_dial_mix.setToolTip("Mix level")
-        layoutHorizMix.addWidget(g.g_dial_mix)
-        g.g_dial_mix.setWrapping(False)
-        g.g_dial_mix.setMinimumHeight(60)
-
-        val099 = round(g.g_how_much_canvas_to_pick * 100.0) - 1
-        g.g_dial_mix.setValue(val099)
-
-        g.g_dial_mix.valueChanged.connect(self.mixLevelValueChanged)
+        g.g_slider_mix = KritaStyleSlider(mainWidget, "Mix level")
+        g.g_slider_mix.setToolTip("Mix level")
+        layoutHorizMix.addWidget(g.g_slider_mix)
+        # Set initial value (0.0-1.0 range)
+        g.g_slider_mix.setValue(g.g_how_much_canvas_to_pick)
+        g.g_slider_mix.valueChanged.connect(self.mixLevelValueChanged)
 
         # auto-mix layout
 
@@ -314,16 +311,12 @@ class HelloDocker(DockWidget):
 
         # auto-mix level
 
-        g.g_dial_auto_mix_level = QDial(mainWidget)
-        g.g_dial_auto_mix_level.setToolTip("Auto-mix level")
-        layoutHorizAutoMix.addWidget(g.g_dial_auto_mix_level)
-        g.g_dial_auto_mix_level.setWrapping(False)
-        g.g_dial_auto_mix_level.setMinimumHeight(60)
-
-        val099 = round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-        g.g_dial_auto_mix_level.setValue(val099)
-
-        g.g_dial_auto_mix_level.valueChanged.connect(
+        g.g_slider_auto_mix_level = KritaStyleSlider(mainWidget, "Auto-mix level")
+        g.g_slider_auto_mix_level.setToolTip("Auto-mix level")
+        layoutHorizAutoMix.addWidget(g.g_slider_auto_mix_level)
+        # Set initial value (0.0-1.0 range)
+        g.g_slider_auto_mix_level.setValue(g.g_auto_mix__how_much_canvas_to_pick)
+        g.g_slider_auto_mix_level.valueChanged.connect(
             self.autoMixLevelValueChanged)
 
         # dirty brush layout
@@ -342,16 +335,13 @@ class HelloDocker(DockWidget):
         g.g_btn_dirty_brush.setFont(font)
 
         # dirty brush level
-        g.g_dial_dirty_brush_level = QDial(mainWidget)
-        g.g_dial_dirty_brush_level.setToolTip("Dirty brush level")
-        layoutHorizDirtyBrush.addWidget(g.g_dial_dirty_brush_level)
-        g.g_dial_dirty_brush_level.setWrapping(False)
-        g.g_dial_dirty_brush_level.setMinimumHeight(60)
-
-        val099 = round((g.g_dirty_brush_level - 0.04) * 100.0 / 0.46)
-        g.g_dial_dirty_brush_level.setValue(val099)
-
-        g.g_dial_dirty_brush_level.valueChanged.connect(
+        g.g_slider_dirty_brush_level = KritaStyleSlider(mainWidget, "Dirty brush level")
+        g.g_slider_dirty_brush_level.setToolTip("Dirty brush level")
+        layoutHorizDirtyBrush.addWidget(g.g_slider_dirty_brush_level)
+        # Set initial value (map 0.04-0.5 range to 0.0-1.0)
+        initial_dirty_value = (g.g_dirty_brush_level - 0.04) / 0.46
+        g.g_slider_dirty_brush_level.setValue(max(0.0, min(1.0, initial_dirty_value))) # Clamp value
+        g.g_slider_dirty_brush_level.valueChanged.connect(
             self.dirtyBrushLevelValueChanged)
             
         # mix radius layout
@@ -370,17 +360,13 @@ class HelloDocker(DockWidget):
         g.g_btn_mix_radius.clicked.connect(self.toggleMixRadiusEnabled)
         
         # mix radius dial
-        g.g_dial_mix_radius = QDial(mainWidget)
-        g.g_dial_mix_radius.setToolTip("Mix radius in pixels")
-        layoutHorizMixRadius.addWidget(g.g_dial_mix_radius)
-        g.g_dial_mix_radius.setWrapping(False)
-        g.g_dial_mix_radius.setMinimumHeight(60)
-        
-        # Set initial value (0-20 range mapped to 0-100 dial value)
-        val099 = round(g.g_mix_radius * 5.0) if g.g_mix_radius is not None else 0
-        g.g_dial_mix_radius.setValue(val099)
-        
-        g.g_dial_mix_radius.valueChanged.connect(self.mixRadiusValueChanged)
+        g.g_slider_mix_radius = KritaStyleSlider(mainWidget, "Mix radius")
+        g.g_slider_mix_radius.setToolTip("Mix radius in pixels (0-20)")
+        layoutHorizMixRadius.addWidget(g.g_slider_mix_radius)
+        # Set initial value (map 0-20 range to 0.0-1.0)
+        initial_radius_value = g.g_mix_radius / 20.0 if g.g_mix_radius is not None else 0.0
+        g.g_slider_mix_radius.setValue(max(0.0, min(1.0, initial_radius_value))) # Clamp value
+        g.g_slider_mix_radius.valueChanged.connect(self.mixRadiusValueChanged)
 
         # Brush cycler layout
         layoutHorizBrushCycler = QHBoxLayout()
@@ -442,10 +428,10 @@ class HelloDocker(DockWidget):
         # self.setWidget(label)
         # self.label = label
 
-    def autoMixLevelValueChanged(self, level):
-        # log(f"autoMixLevelValueChanged {level}")
+    def autoMixLevelValueChanged(self, value): # Changed 'level' to 'value' (float 0.0-1.0)
+        # log(f"autoMixLevelValueChanged {value}")
 
-        g.g_auto_mix__how_much_canvas_to_pick = (level + 1.0) / 100.0
+        g.g_auto_mix__how_much_canvas_to_pick = value # Use the float value directly
 
         Krita.instance().writeSetting("colorPlus", "g.g_auto_mix__how_much_canvas_to_pick",
                                       str(g.g_auto_mix__how_much_canvas_to_pick))
@@ -453,9 +439,9 @@ class HelloDocker(DockWidget):
         quickMessage(
             f"Changed auto-mixing to {round(g.g_auto_mix__how_much_canvas_to_pick * 100.0)} %")
             
-    def dirtyBrushLevelValueChanged(self, level):
-        # Converto il valore del dial (0-100) nel range desiderato (0.04-0.5)
-        g.g_dirty_brush_level = 0.04 + (level / 100.0) * 0.46
+    def dirtyBrushLevelValueChanged(self, value): # Changed 'level' to 'value' (float 0.0-1.0)
+        # Convert slider value (0.0-1.0) to the desired range (0.04-0.5)
+        g.g_dirty_brush_level = 0.04 + value * 0.46
         
         Krita.instance().writeSetting("colorPlus", "g.g_dirty_brush_level",
                                       str(g.g_dirty_brush_level))
@@ -463,9 +449,9 @@ class HelloDocker(DockWidget):
         quickMessage(
             f"Changed dirty brush level to {round(g.g_dirty_brush_level * 100.0)} %")
             
-    def mixRadiusValueChanged(self, level):
-        # Converto il valore del dial (0-100) nel range desiderato (0-20 pixel)
-        g.g_mix_radius = level / 5.0  # Divido per 5 per ottenere un range 0-20
+    def mixRadiusValueChanged(self, value): # Changed 'level' to 'value' (float 0.0-1.0)
+        # Convert slider value (0.0-1.0) to the desired range (0-20 pixels)
+        g.g_mix_radius = value * 20.0
         
         Krita.instance().writeSetting("colorPlus", "g.g_mix_radius",
                                       str(g.g_mix_radius))
@@ -488,9 +474,9 @@ class HelloDocker(DockWidget):
         quickMessage(f"{'Enabled' if g.g_mix_radius_enabled else 'Disabled'} mix radius")
 
     
-    def mixLevelValueChanged(self, level):
+    def mixLevelValueChanged(self, value): # Changed 'level' to 'value' (float 0.0-1.0)
 
-        g.g_how_much_canvas_to_pick = (level + 1.0) / 100.0
+        g.g_how_much_canvas_to_pick = value # Use the float value directly
 
         Krita.instance().writeSetting("colorPlus", "g.g_how_much_canvas_to_pick",
                                       str(g.g_how_much_canvas_to_pick))
