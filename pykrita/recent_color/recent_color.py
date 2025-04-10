@@ -2986,17 +2986,11 @@ class MyExtension(Extension):
                         # Convert back to Krita's component format (0.0-1.0)
                         # Assuming 'comp' expects BGR order based on original code comp[0]=res[2]/255
                         # Check if final_mixed_color_rgb is valid before division
-                        if isinstance(final_mixed_color_rgb, list) and len(final_mixed_color_rgb) == 3:
-                            comp[0] = final_mixed_color_rgb[2] / 255.0 # Blue
-                            comp[1] = final_mixed_color_rgb[1] / 255.0 # Green
-                            comp[2] = final_mixed_color_rgb[0] / 255.0 # Red
-                        else:
-                            # Fallback if final_mixed_color_rgb is somehow invalid
-                            log("Error: final_mixed_color_rgb was invalid after mix. Using original FG.")
-                            comp[0] = fg_color_rgb[2] / 255.0 # B
-                            comp[1] = fg_color_rgb[1] / 255.0 # G
-                            comp[2] = fg_color_rgb[0] / 255.0 # R
-
+                        
+                        comp[0] = final_mixed_color_rgb[0] / 255.0 # Blue
+                        comp[1] = final_mixed_color_rgb[1] / 255.0 # Green
+                        comp[2] = final_mixed_color_rgb[2] / 255.0 # Red
+                    
 
                         # END spectral mix
 
