@@ -1,3 +1,5 @@
+
+
 DONE  con automix, se premo V, non mette il colore in cima alla history
 
 DONE cercando altro bug: non crea piu il layer nemmeno senza automix
@@ -18,3 +20,5 @@ anche se non ha cambiato colore
 
 TODO ad ogni mouse up viene rebuildata la color history. per verificarlo, scommenta qualcosa dentro 
     update_color_history_ui
+
+TODO e' inutile il brush cycling cosi', ma con shortcut puo' avere senso    
