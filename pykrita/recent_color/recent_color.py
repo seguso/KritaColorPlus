@@ -125,6 +125,90 @@ def linear_to_concentration(l1, l2, t):
 
     return t2 / (t1 + t2)
 
+# Helper function to sample a pixel and return [R, G, B] 0-255
+# Returns None if sampling fails
+def sample_pixel_rgb(document, x, y):
+    try:
+        # Ensure coordinates are integers
+        ix, iy = int(x), int(y)
+
+        # Basic boundary check (pixelData might also handle this)
+        doc_width = document.width()
+        doc_height = document.height()
+        if ix < 0 or iy < 0 or ix >= doc_width or iy >= doc_height:
+             log(f"Warning: Sample point ({ix}, {iy}) out of bounds ({doc_width}x{doc_height})")
+             # Decide how to handle out-of-bounds: return None, black, or clamp coordinates
+             # Clamping might be reasonable:
+             ix = max(0, min(ix, doc_width - 1))
+             iy = max(0, min(iy, doc_height - 1))
+             # return None # Option 1: Skip this pixel
+             # return [0.0, 0.0, 0.0] # Option 2: Treat as black
+
+        pixBytes = document.pixelData(ix, iy, 1, 1)
+        if not pixBytes:
+            log(f"Warning: pixelData returned empty for ({ix}, {iy})")
+            return None # Or return a default color like black [0, 0, 0]
+
+        # Convert bytes to QColor
+        # Assuming RGBA8888 or RGBA64 based on previous code context
+        # Note: Krita's internal format might vary, adjust if needed
+        if len(pixBytes) == 4: # Assuming RGBA8888
+            imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA8888)
+        elif len(pixBytes) == 8: # Assuming RGBA64
+             imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA64)
+        # Add handling for other formats if necessary, e.g., grayscale
+        # elif len(pixBytes) == 1: # Example: Grayscale
+        #     imageData = QImage(pixBytes, 1, 1, QImage.Format_Grayscale8)
+        #     gray_val = imageData.pixelColor(0, 0).blackF() * 255.0
+        #     return [gray_val, gray_val, gray_val]
+        else:
+            log(f"Warning: unsupported pixelData len {len(pixBytes)} at ({ix}, {iy})")
+            return None # Or return a default color
+
+        pixelC: QColor = imageData.pixelColor(0, 0)
+        # Return as [R, G, B] list (Note: QColor uses RGB order)
+        # Ensure values are floats 0-255 for spectral_mix
+        return [float(pixelC.red()), float(pixelC.green()), float(pixelC.blue())]
+    except Exception as e:
+        log(f"Error sampling pixel at ({x}, {y}): {e}")
+        return None # Return None on any error
+
+
+# Helper function to blend a list of colors [[R,G,B], ...] using spectral_mix
+# Assumes colors are lists of floats [0-255]
+def blend_colors_spectral(colors):
+    # Filter out None values resulting from sampling errors
+    valid_colors = [c for c in colors if c is not None and isinstance(c, list) and len(c) == 3]
+
+    if not valid_colors:
+        log("Warning: No valid colors to blend.")
+        # Return a default color, e.g., black, or raise an error
+        return [0.0, 0.0, 0.0]
+
+    if len(valid_colors) == 1:
+        # If only one valid color, return it directly
+        return valid_colors[0]
+
+    # Start with the first valid color
+    blended_color = valid_colors[0]
+
+    # Sequentially mix in the remaining valid colors
+    for i in range(1, len(valid_colors)):
+        # The weight 't' for spectral_mix represents the proportion of the *new* color
+        # being added to the current blend. For the (i+1)-th color overall (index i),
+        # its weight in the final mix should be 1/(i+1).
+        t = 1.0 / (float(i) + 1.0)
+        try:
+            blended_color = spectral_mix(blended_color, valid_colors[i], t)
+        except Exception as e:
+            log(f"Error during spectral_mix step {i}: {e}")
+            # Handle error: skip this color, return current blend, or return error state
+            # For robustness, let's just log and continue with the current blend
+            pass # Continue with the blend as it was before this step
+
+    # The final blended_color is already in [R, G, B] format (0-255)
+    return blended_color
+
 
 def spectral_mix(color1, color2, t):
     lrgb1 = srgb_to_linear(color1)
@@ -2834,14 +2918,14 @@ class MyExtension(Extension):
                         # Also, rgb uses 0-255 range, which matches final_canvas_color_rgb.
                         if final_canvas_color_rgb:
                              # Use the blended color
-                             mergedColor = rgb(final_canvas_color_rgb[0], final_canvas_color_rgb[1], final_canvas_color_rgb[2], 255.0)
+                             mergedColor = rgb(float(final_canvas_color_rgb[0]), float(final_canvas_color_rgb[1]), float(final_canvas_color_rgb[2]), 255.0)
                         else:
                              # Handle case where blending failed (e.g., all samples out of bounds/errors)
                              log("Error: Could not determine final canvas color from sampling. Falling back.")
                              # Fallback: try center pixel first
                              center_color = sample_pixel_rgb(document, cx, cy)
                              if center_color:
-                                 mergedColor = rgb(center_color[0], center_color[1], center_color[2], 255.0)
+                                 mergedColor = rgb(float(center_color[0]), float(center_color[1]), float(center_color[2]), 255.0)
                                  final_canvas_color_rgb = center_color # Use this for mixing
                                  log("Fallback: Using center pixel color.")
                              else:
