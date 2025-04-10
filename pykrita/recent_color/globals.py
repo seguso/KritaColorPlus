@@ -29,6 +29,8 @@ g_btn_pick_color = None
 
 
 #g_virtual_color_used_last_rgb  = None
+
+# questo colore e' il target per l'automix, e se c'e' dirty brush e' il colore originale prima di sporcarsi
 g_virtual_fg_color_rgb = None
 
 g_last_virtual_colors_used: List['rgb'] = [] # Add type hint using forward reference

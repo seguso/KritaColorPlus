@@ -2444,7 +2444,7 @@ class MyExtension(Extension):
 
             # log("LastColor setup ok")
 
-    def switchToLastColor(self):
+    def switchToLastColor(self):  # bm_previouscolor
         """Switches color based on history, handling consecutive presses vs. first press after paint."""
 
         log("--- switchToLastColor ---")
@@ -2456,6 +2456,13 @@ class MyExtension(Extension):
             if acView is None:
                 log("  Abort: No active view.")
                 return
+
+            if g.g_dirty_brush_color_to_ignore is not None:
+                quickMessage("Clean brush")
+                setFgColor(g.g_virtual_fg_color_rgb)
+                g.g_dirty_brush_color_to_ignore = None
+                return
+
 
             num_colors = len(g.g_last_virtual_colors_used)
             if num_colors == 0:  # Need at least one color to select from
@@ -2984,7 +2991,7 @@ class MyExtension(Extension):
     # def mixBig(self):
         # return self.mix( 0.33)  #0.33 from canvas
 
-    def pickColorFun(self, showMessage=True):
+    def pickColorFun(self, showMessage=True): #bm_pick
 
         # log("pick called")
         app = Krita.instance()
