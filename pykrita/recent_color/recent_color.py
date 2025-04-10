@@ -551,7 +551,7 @@ def get_all_layers(node):
                  layers.extend(get_all_layers(child))
     return layers
 
-def getColorUnderCursorOrAtPos(forcedPos: Optional[xy] = None, ignore_bottom_layer: bool = False) -> Optional[rgb]:
+def getColorUnderCursorOrAtPos(forcedPos: Optional['xy'] = None, ignore_bottom_layer: bool = False) -> Optional[rgb]:
     # forcedPos is of type xy
     application = Krita.instance()
     document = application.activeDocument()
@@ -641,12 +641,15 @@ def getColorUnderCursorOrAtPos(forcedPos: Optional[xy] = None, ignore_bottom_lay
                     pass
                 else: # Proceed only if import succeeded
                     all_layers = get_all_layers(document.rootNode())
+                    # log(f"trovati {len(all_layers)} layer") # Revert logging
                     # Layers are ordered top-to-bottom
 
                     if len(all_layers) > 1: # Only proceed if there's more than one layer
                         found_opaque_pixel_above_bottom = False
                         # Iterate through all layers except the last one (bottom layer)
-                        for i in range(len(all_layers) - 1):
+                        # Iterate from index 1 (skip background at 0) to the end
+                        # se volessi il pixel di quello topmost, dovrei iterare in ordine inverso. ma qui voglio solo sapere se ce n'e' uno opaco a parte il bg.
+                        for i in range(1, len(all_layers)): 
                             curLayer = all_layers[i]
                             try:
                                 # Ensure coordinates are integers
@@ -668,6 +671,7 @@ def getColorUnderCursorOrAtPos(forcedPos: Optional[xy] = None, ignore_bottom_lay
                                             # Check alpha channel (alpha() is 0-255)
                                             if pixelC.alpha() > 0:
                                                 found_opaque_pixel_above_bottom = True
+                                                # log(f"trovato opaco sul layer: {curLayer.name()}")
                                                 break # Found one, no need to check further layers
                                 # else: coordinate out of bounds for this layer or pixelData empty, treat as transparent
 
@@ -2946,7 +2950,7 @@ class MyExtension(Extension):
                         # pixelC: QColor = imageData.pixelColor(0, 0)
 
                         # e ora da colore qt a colore mio
-                        bgColor255 = maybeColorRgb
+                        bgColor255 = colorRgb
                         # rgb(float(pixelC.red()),  float(
                         #     pixelC.green()),  float(pixelC.blue()), 255.0)
 
