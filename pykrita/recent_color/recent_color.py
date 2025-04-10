@@ -423,9 +423,9 @@ class HelloDocker(DockWidget):
         font.setPixelSize(20)
         self.buttonPickColor.setFont(font)
 
-        mainLayout.addWidget(self.buttonPickColor)
+        # mainLayout.addWidget(self.buttonPickColor) # non lo voglio, prende spazio
 
-        self.buttonPickColor.clicked.connect(self.pickColorClicked)
+        self.buttonPickColor.clicked.connect(self.pickColorClicked) # quindi non lo connetto
         g.g_btn_pick_color = self.buttonPickColor
 
     # Color History functionality has been moved to ColorHistoryDocker class
