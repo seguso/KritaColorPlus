@@ -1639,8 +1639,9 @@ def handle_click(widget):
 
                             if not g.g_mix_radius_enabled:
                                 #niente radius
-                                log ("niente mix radius per dirty")
+                                
                                 g.g_color_on_down_dirty_brush = getColorUnderCursorOrAtPos()
+                                log (f"niente mix radius per dirty. color on down = {g.g_color_on_down_dirty_brush.toString()}")
                             else:
                                 radius = float(g.g_mix_radius) # Ensure radius is float, read from globals
 
@@ -2871,12 +2872,85 @@ class MyExtension(Extension):
 
                     doc_pos = p + center
 
+
+                      
                     # doc_pos = xyOfQpoint(doc_pos)
                     # log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
 
                     # parentNode = document.activeNode().parentNode()
 
-                    if True:  # parentNode is not None:
+                    if not g.g_mix_radius_enabled:
+
+                        pixBytes = document.pixelData(
+                            int(doc_pos.x()), int(doc_pos.y()), 1, 1)
+
+                        # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
+                        # concatenated_string = '-'.join(byte_values)
+
+                        # log(f'Dati letti: {concatenated_string}')
+
+                        # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
+                        if len(pixBytes) == 4:
+                            imageData = QImage(
+                                pixBytes, 1, 1, QImage.Format_RGBA8888)
+                        elif len(pixBytes) == 8:
+                            imageData = QImage(
+                                pixBytes, 1, 1, QImage.Format_RGBA64)
+                        else:
+                            raise f"unsupported len {len(pixBytes)}"
+
+                        pixelC: QColor = imageData.pixelColor(0, 0)
+
+                        # e ora da colore qt a colore mio
+                        mergedColor = rgb(float(pixelC.red()),  float(
+                            pixelC.green()),  float(pixelC.blue()), 255.0)
+
+                     
+                        # vecchia logia senza radius
+                        canv = g.g_auto_mix__how_much_canvas_to_pick
+
+                        fgMul = 1.0 - canv
+
+                        # BEGIN mix colors old way
+                        # comp[0] = (g.g_virtual_fg_color_rgb.r/255.0) * fgMul + (mergedColor.r / 255.0)  * canv
+                        # comp[1] = (g.g_virtual_fg_color_rgb.g / 255.0) * fgMul + (mergedColor.g / 255.0)  * canv
+                        # comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0) * fgMul + (mergedColor.b  / 255.0)  * canv
+
+                        # END
+
+                        # begin mix colors spectral, bgr
+                        fgMul = 1.0 - canv
+                        sb = g.g_virtual_fg_color_rgb.r
+                        sg = g.g_virtual_fg_color_rgb.g
+                        sr = g.g_virtual_fg_color_rgb.b
+
+                        db = mergedColor.r
+                        dg = mergedColor.g
+                        dr = mergedColor.b
+
+                        resultColor = spectral_mix(
+                            [sr, sg, sb], [dr, dg, db], fgMul)
+                        # resultColor is [r,g,b]. copy back to bgr:
+
+
+                        fg = view.foregroundColor()
+                        comp = fg.components()
+
+                        comp[0] = resultColor[2] / 255.0
+                        comp[1] = resultColor[1] / 255.0
+                        comp[2] = resultColor[0] / 255.0
+
+                        # END
+
+
+                        fg.setComponents(comp)
+
+                        g.g_auto_mix_color_to_ignore = comp
+
+                        view.setForeGroundColor(fg)
+
+
+                    else:  # parentNode is not None:
 
                        
 
