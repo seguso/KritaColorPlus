@@ -354,13 +354,16 @@ class HelloDocker(DockWidget):
         layoutHorizMixRadius = QHBoxLayout()
         mainLayout.addLayout(layoutHorizMixRadius)
         
-        # mix radius label
-        mixRadiusLabel = QLabel("Mix radius", mainWidget)
-        layoutHorizMixRadius.addWidget(mixRadiusLabel)
-        font = mixRadiusLabel.font()
+        # mix radius button (replacing static label)
+        g.g_btn_mix_radius = QPushButton("Mix radius", mainWidget)
+        g.g_btn_mix_radius.setCheckable(True)
+        g.g_btn_mix_radius.setChecked(g.g_mix_radius_enabled)
+        layoutHorizMixRadius.addWidget(g.g_btn_mix_radius)
+        font = g.g_btn_mix_radius.font()
         font.setPixelSize(15)
-        mixRadiusLabel.setFont(font)
-        mixRadiusLabel.setMinimumHeight(60)
+        g.g_btn_mix_radius.setFont(font)
+        g.g_btn_mix_radius.setMinimumHeight(60)
+        g.g_btn_mix_radius.clicked.connect(self.toggleMixRadiusEnabled)
         
         # mix radius dial
         g.g_dial_mix_radius = QDial(mainWidget)
@@ -465,6 +468,20 @@ class HelloDocker(DockWidget):
         
         quickMessage(
             f"Changed mix radius to {round(g.g_mix_radius)} pixels")
+            
+    def toggleMixRadiusEnabled(self):
+        # Inverte lo stato della variabile g_mix_radius_enabled
+        g.g_mix_radius_enabled = not g.g_mix_radius_enabled
+        
+        # Aggiorna lo stato del pulsante
+        g.g_btn_mix_radius.setChecked(g.g_mix_radius_enabled)
+        
+        # Salva lo stato nelle impostazioni di Krita per renderlo persistente
+        Krita.instance().writeSetting("colorPlus", "g.g_mix_radius_enabled",
+                                     "1" if g.g_mix_radius_enabled else "0")
+        
+        # Mostra un messaggio all'utente
+        quickMessage(f"{'Enabled' if g.g_mix_radius_enabled else 'Disabled'} mix radius")
 
     def manualMixColorButtonClicked(self):
 
@@ -2032,6 +2049,10 @@ class MyExtension(Extension):
             
         g.g_mix_radius = float(Krita.instance().readSetting(
             "colorPlus", "g.g_mix_radius", "0.0"))
+            
+        # Carica lo stato di g_mix_radius_enabled dalle impostazioni
+        g.g_mix_radius_enabled = Krita.instance().readSetting(
+            "colorPlus", "g.g_mix_radius_enabled", "0") == "1"
 
         # dev values , only read when timer is active
         g.g_virtual_fg_color_rgb = None  # di tipo rgb
