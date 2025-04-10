@@ -57,7 +57,7 @@ g_auto_mixing_just_once_now_on = False
 
 g_auto_mix_ignore_this_color_in_onfgcolorchanged = None
 
-g_ultimo_colore_vero_settato_dall_utente = None
+#g_ultimo_colore_vero_settato_dall_utente = None
 
 #when distance logic is active
 g_auto_mixing_target_distance = None  # value is ignored, will be read from settings.

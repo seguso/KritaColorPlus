@@ -41,3 +41,19 @@ def rgbOfColorArray(comp):
     alpha = comp[3] * 255.0 if len(comp) >= 4 else 255.0
         
     return rgb(comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, alpha)
+
+from typing import List # Add List import for type hinting
+
+def colorArrayOfRgb(rgb_color: rgb) -> List[float]:
+    """Converts an rgb object (RGBA, 0.0-255.0) to a Krita color component array (RGBA, 0.0-1.0), with alpha forced to 1.0."""
+    if not isinstance(rgb_color, rgb):
+        raise TypeError("Input must be an rgb object")
+        
+    # Convert R, G, B from 0-255 range to 0.0-1.0 range
+    # Clamp values to ensure they are within [0.0, 1.0] after division
+    r_comp = max(0.0, min(1.0, rgb_color.r / 255.0))
+    g_comp = max(0.0, min(1.0, rgb_color.g / 255.0))
+    b_comp = max(0.0, min(1.0, rgb_color.b / 255.0))
+    
+    # Return as a list [R, G, B, A] with alpha = 1.0
+    return [r_comp, g_comp, b_comp, 1.0]

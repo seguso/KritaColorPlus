@@ -15,7 +15,7 @@ from .brush_list_widget import BrushListDialog  # Import the brush list dialog
 from .slider import KritaStyleSlider # Import the new slider
 
 
-from .rgb import rgb, rgbOfColorArray
+from .rgb import rgb, rgbOfColorArray,colorArrayOfRgb
 
 
 from krita import *
@@ -1380,7 +1380,7 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
 
                             fg.setComponents(comp)
 
-                            g.g_ultimo_colore_vero_settato_dall_utente = comp # ricorda che questo e' un colore vero
+                            # g.g_ultimo_colore_vero_settato_dall_utente = comp # ricorda che questo e' un colore vero
 
                             view.setForeGroundColor(fg)
 
@@ -1695,7 +1695,7 @@ def handle_click(widget):
         log(f"Click su: {widget}")
 
 
-def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleased
+def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleased bm_mouseup
     if monitor.is_krita_canvas(widget):
 
         log("mouse released on canvas")
@@ -1810,9 +1810,10 @@ def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleas
             log(f"aggiorna history : colore ignorato , generato da automix {components}")
 
             # non aggiungo alla history il colore fasullo dell'automixing, ma devo aggiungere quello vero selezionato dall'utente
-            if g.g_ultimo_colore_vero_settato_dall_utente is not None:
-                log(f"automixing: aggiungo alla history il colore vero:  {g.g_ultimo_colore_vero_settato_dall_utente}")
-                aggiorna_history_aggiungendo(g.g_ultimo_colore_vero_settato_dall_utente)
+            # che e' sicuramente il virtual color! in pratica devo solo riportarlo in testa alla history.
+            # if g.g_ultimo_colore_vero_settato_dall_utente is not None:
+            # log(f"automixing: aggiungo alla history il colore vero:  {g.g_ultimo_colore_vero_settato_dall_utente}")
+            aggiorna_history_aggiungendo(colorArrayOfRgb( g.g_virtual_fg_color_rgb))
                         
         else:
             log(f"colore non ignorato {components}")
@@ -2132,7 +2133,7 @@ class MyExtension(Extension):
                             pass
                         else:
                             # e' un colore settato davvero dall'utente. ricordalo
-                            g.g_ultimo_colore_vero_settato_dall_utente = comp
+                            # g.g_ultimo_colore_vero_settato_dall_utente = comp
 
                             g.g_color_changed_from_selector_probably = True
                             
@@ -2470,8 +2471,6 @@ class MyExtension(Extension):
             comp[3] = 1.0
 
             col.setComponents(comp)
-            g.g_auto_mix_color_to_ignore = None
-            g.g_auto_mix_ignore_this_color_in_onfgcolorchanged = None
             
             acView.setForeGroundColor(col)
             log(f"  Set FG Color to: {g.g_virtual_fg_color_rgb.toString()}")
@@ -3152,7 +3151,7 @@ class MyExtension(Extension):
 
                             fg.setComponents(comp)
 
-                            g.g_ultimo_colore_vero_settato_dall_utente = comp # ricorda che questo e' un colore vero
+                            # g.g_ultimo_colore_vero_settato_dall_utente = comp # ricorda che questo e' un colore vero
 
                             view.setForeGroundColor(fg)
 

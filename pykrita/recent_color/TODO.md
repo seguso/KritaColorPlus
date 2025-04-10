@@ -1,7 +1,11 @@
-TODO automix: se premo V per andare al colore precedente, dopo il
+DONE  con automix, se premo V, non mette il colore in cima alla history
+
+DONE cercando altro bug: non crea piu il layer nemmeno senza automix
+
+DONE automix: se premo V per andare al colore precedente, dopo il
 primo stroke appena lascio mi rimette l'altro
 
-TODO ritesta layer opacity
+DONE ritesta layer opacity
 
 TODO ritesta full screen preview
 
