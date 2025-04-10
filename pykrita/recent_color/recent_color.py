@@ -275,15 +275,7 @@ class HelloDocker(DockWidget):
         layoutHorizMix = QHBoxLayout()
         mainLayout.addLayout(layoutHorizMix)
 
-        # g.g_btn_mix = QPushButton("Mix color", mainWidget)
-        # g.g_btn_mix.setCheckable(True)
-        # layoutHorizMix.addWidget(g.g_btn_mix)
-        # g.g_btn_mix.clicked.connect(self.manualMixColorButtonClicked)
-        # g.g_btn_mix.setMinimumHeight(60)
-        # font = g.g_btn_mix.font()
-        # font.setPixelSize(15)
-        # g.g_btn_mix.setFont(font)
-
+   
         g.g_slider_mix = KritaStyleSlider(mainWidget, "Mix level")
         g.g_slider_mix.setToolTip("Mix level")
         layoutHorizMix.addWidget(g.g_slider_mix)
@@ -302,7 +294,7 @@ class HelloDocker(DockWidget):
         g.g_btn_auto_mix.setCheckable(True)
         layoutHorizAutoMix.addWidget(g.g_btn_auto_mix)
         g.g_btn_auto_mix.clicked.connect(toggleAutoMixing)
-        g.g_btn_auto_mix.setMinimumHeight(60)
+        # g.g_btn_auto_mix.setMinimumHeight(60)
 
         font = g.g_btn_auto_mix.font()
         font.setPixelSize(15)
@@ -327,7 +319,7 @@ class HelloDocker(DockWidget):
         g.g_btn_dirty_brush.setCheckable(True)
         layoutHorizDirtyBrush.addWidget(g.g_btn_dirty_brush)
         g.g_btn_dirty_brush.clicked.connect(toggleDirtyBrush)
-        g.g_btn_dirty_brush.setMinimumHeight(60)
+        # g.g_btn_dirty_brush.setMinimumHeight(60)
 
         font = g.g_btn_dirty_brush.font()
         font.setPixelSize(15)
@@ -355,7 +347,7 @@ class HelloDocker(DockWidget):
         font = g.g_btn_mix_radius.font()
         font.setPixelSize(15)
         g.g_btn_mix_radius.setFont(font)
-        g.g_btn_mix_radius.setMinimumHeight(60)
+        # g.g_btn_mix_radius.setMinimumHeight(60)
         g.g_btn_mix_radius.clicked.connect(self.toggleMixRadiusEnabled)
         
         # mix radius dial
@@ -376,7 +368,7 @@ class HelloDocker(DockWidget):
         g.g_btn_brush_cycler.setCheckable(True)
         layoutHorizBrushCycler.addWidget(g.g_btn_brush_cycler)
         g.g_btn_brush_cycler.clicked.connect(self.toggleBrushCycler)
-        g.g_btn_brush_cycler.setMinimumHeight(60)
+        # g.g_btn_brush_cycler.setMinimumHeight(60)
         
         # Set initial tooltip
         if brush_cycler.brush_list:
@@ -384,16 +376,16 @@ class HelloDocker(DockWidget):
         else:
             g.g_btn_brush_cycler.setToolTip("Cycle brushes (no brushes in list)")
         
-        font = g.g_btn_brush_cycler.font()
-        font.setPixelSize(15)
-        g.g_btn_brush_cycler.setFont(font)
+        # font = g.g_btn_brush_cycler.font()
+        # # font.setPixelSize(14)
+        # g.g_btn_brush_cycler.setFont(font)
         
         # Button to add current brush to cycle list
         btnAddBrush = QPushButton("+", mainWidget)
         btnAddBrush.setToolTip("Add current brush to cycle list")
         layoutHorizBrushCycler.addWidget(btnAddBrush)
         btnAddBrush.clicked.connect(self.addCurrentBrushToCycleList)
-        btnAddBrush.setMinimumHeight(60)
+        # btnAddBrush.setMinimumHeight(60)
         btnAddBrush.setMaximumWidth(40)
         
         # Button to edit brush list
@@ -401,7 +393,7 @@ class HelloDocker(DockWidget):
         btnEditBrushList.setToolTip("View and edit brush cycle list")
         layoutHorizBrushCycler.addWidget(btnEditBrushList)
         btnEditBrushList.clicked.connect(self.showBrushListEditor)
-        btnEditBrushList.setMinimumHeight(60)
+        # btnEditBrushList.setMinimumHeight(60)
         
         # pick color button
         # self.buttonPickColor = QPushButton("Pick color", mainWidget)
