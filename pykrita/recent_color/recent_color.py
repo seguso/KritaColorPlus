@@ -2749,7 +2749,7 @@ class MyExtension(Extension):
 
                         # Define the 5 sample points
                         sample_points = [
-                            (cx, cy),             # Center
+                            # (cx, cy),             # Center non lo metto piu
                             (cx, cy - radius),    # Up
                             (cx, cy + radius),    # Down
                             (cx - radius, cy),    # Left
@@ -2772,23 +2772,12 @@ class MyExtension(Extension):
                         # Let's create an rgb object from the final blend for potential compatibility.
                         # Note: spectral_mix returns [R, G, B], rgb expects R, G, B args.
                         # Also, rgb uses 0-255 range, which matches final_canvas_color_rgb.
-                        if final_canvas_color_rgb:
-                             # Use the blended color
-                             mergedColor = rgb(float(final_canvas_color_rgb[0]), float(final_canvas_color_rgb[1]), float(final_canvas_color_rgb[2]), 255.0)
-                        else:
+                        if not final_canvas_color_rgb:
                              # Handle case where blending failed (e.g., all samples out of bounds/errors)
                              log("Error: Could not determine final canvas color from sampling. Falling back.")
                              # Fallback: try center pixel first
-                             center_color = sample_pixel_rgb(document, cx, cy)
-                             if center_color:
-                                 mergedColor = rgb(float(center_color[0]), float(center_color[1]), float(center_color[2]), 255.0)
-                                 final_canvas_color_rgb = center_color # Use this for mixing
-                                 log("Fallback: Using center pixel color.")
-                             else:
-                                 mergedColor = rgb(0, 0, 0, 255.0) # Black fallback if center also fails
-                                 final_canvas_color_rgb = [0.0, 0.0, 0.0] # Use black for mixing
-                                 log("Fallback: Using black color.")
-
+                             final_canvas_color_rgb = sample_pixel_rgb(document, cx, cy)
+                             
                         # === End of 5-point sampling logic ===
 
                      
