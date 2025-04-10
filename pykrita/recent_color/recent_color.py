@@ -11,6 +11,7 @@ import pprint
 from . import globals as g
 from .whichtool import EKritaTools, EKritaToolsId  # Import the necessary classes
 from .brush_cycler import brush_cycler  # Import the brush cycler instance
+from .brush_list_widget import BrushListDialog  # Import the brush list dialog
 
 
 from .rgb import *
@@ -385,6 +386,12 @@ class HelloDocker(DockWidget):
         g.g_btn_brush_cycler.clicked.connect(self.toggleBrushCycler)
         g.g_btn_brush_cycler.setMinimumHeight(60)
         
+        # Set initial tooltip
+        if brush_cycler.brush_list:
+            g.g_btn_brush_cycler.setToolTip(f"Cycle brushes (enabled: {brush_cycler.enabled}, {len(brush_cycler.brush_list)} brushes)")
+        else:
+            g.g_btn_brush_cycler.setToolTip("Cycle brushes (no brushes in list)")
+        
         font = g.g_btn_brush_cycler.font()
         font.setPixelSize(15)
         g.g_btn_brush_cycler.setFont(font)
@@ -396,6 +403,13 @@ class HelloDocker(DockWidget):
         btnAddBrush.clicked.connect(self.addCurrentBrushToCycleList)
         btnAddBrush.setMinimumHeight(60)
         btnAddBrush.setMaximumWidth(40)
+        
+        # Button to edit brush list
+        btnEditBrushList = QPushButton("Edit List", mainWidget)
+        btnEditBrushList.setToolTip("View and edit brush cycle list")
+        layoutHorizBrushCycler.addWidget(btnEditBrushList)
+        btnEditBrushList.clicked.connect(self.showBrushListEditor)
+        btnEditBrushList.setMinimumHeight(60)
         
         # pick color button
         self.buttonPickColor = QPushButton("Pick color", mainWidget)
@@ -478,12 +492,17 @@ class HelloDocker(DockWidget):
         is_enabled = brush_cycler.toggle_enabled()
         g.g_btn_brush_cycler.setChecked(is_enabled)
         
+        # Update the tooltip
+        self.updateBrushCyclerButton()
+        
         if is_enabled:
             # Check if we have brushes in the list
             if not brush_cycler.brush_list:
                 # Try to add current brush if list is empty
                 if brush_cycler.add_current_brush():
                     quickMessage("Enabled brush cycling with current brush")
+                    # Update tooltip again since brush list changed
+                    self.updateBrushCyclerButton()
                 else:
                     quickMessage("Enabled brush cycling, but no brushes in list. Add brushes with + button.")
             else:
@@ -495,8 +514,27 @@ class HelloDocker(DockWidget):
         """Add the current brush to the cycle list"""
         if brush_cycler.add_current_brush():
             quickMessage(f"Added current brush to cycle list. Total: {len(brush_cycler.brush_list)}")
+            # Update the tooltip to reflect the new brush count
+            self.updateBrushCyclerButton()
         else:
             quickMessage("Could not add current brush to cycle list")
+    
+    def showBrushListEditor(self):
+        """Show the brush list editor dialog"""
+        dialog = BrushListDialog(Krita.instance().activeWindow().qwindow())
+        dialog.brush_list_widget.brushListChanged.connect(self.updateBrushCyclerButton)
+        dialog.exec_()
+    
+    def updateBrushCyclerButton(self):
+        """Update the brush cycler button state based on the current brush list"""
+        # Update the button state based on whether cycling is enabled and brushes exist
+        g.g_btn_brush_cycler.setChecked(brush_cycler.enabled)
+        
+        # Update the tooltip to show the number of brushes
+        if brush_cycler.brush_list:
+            g.g_btn_brush_cycler.setToolTip(f"Cycle brushes (enabled: {brush_cycler.enabled}, {len(brush_cycler.brush_list)} brushes)")
+        else:
+            g.g_btn_brush_cycler.setToolTip("Cycle brushes (no brushes in list)")
     
     def pickColorClicked(self):
 
