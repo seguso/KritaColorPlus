@@ -50,7 +50,7 @@ class ColorHistoryDocker(DockWidget):
                 widget.deleteLater()
 
         # Add new color squares in a grid layout
-        g.log(f"Updating color history UI with {len(g.g_last_virtual_colors_used)} colors.")
+        # g.log(f"Updating color history UI with {len(g.g_last_virtual_colors_used)} colors.")
         
         # Calculate how many color squares can fit in the current width
         docker_width = self.width()
@@ -61,7 +61,7 @@ class ColorHistoryDocker(DockWidget):
         # Calculate available width and how many squares can fit
         available_width = docker_width - margins
         colors_per_row = max(1, available_width // (square_size + spacing))
-        g.log(f"Docker width: {docker_width}px, can fit {colors_per_row} color squares per row")
+        # g.log(f"Docker width: {docker_width}px, can fit {colors_per_row} color squares per row")
         
         for i, item in enumerate(g.g_last_virtual_colors_used):
             qcolor_to_display = None
@@ -111,9 +111,9 @@ class ColorHistoryDocker(DockWidget):
     def canvasChanged(self, canvas):
         """ Override of the abstract method from DockWidget class.
         Called when the canvas changes in Krita. """
-        g.log(f"Canvas changed in ColorHistoryDocker")
+        # g.log(f"Canvas changed in ColorHistoryDocker")
         # Update the UI when canvas changes
-        self.update_color_history_ui()
+        # self.update_color_history_ui()  # commentato perche lo fa ad ogni stroke
 
     def resizeEvent(self, event: QResizeEvent):
         """ Called when the docker widget is resized. """

@@ -229,8 +229,7 @@ class ClickableColorLabel(QLabel):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            log(
-                f"ClickableColorLabel clicked: emitting color {self._color.name()}")
+            # log(f"ClickableColorLabel clicked: emitting color {self._color.name()}")
             self.clicked.emit(self._color)
         super().mousePressEvent(event)
 
@@ -684,7 +683,7 @@ def dryPaper(showMessage=True):
         is_top_level = (parentNode == rootNode)
 
         if is_top_level:
-            log("dry paper called. Layer is top-level. Creating new group.")
+            # log("dry paper called. Layer is top-level. Creating new group.")
             # Create a new group layer at the top level
             newGroup = currentDoc.createGroupLayer("Dry Paper auto-group")
             # Find the index of the active layer to insert the group above it
@@ -701,9 +700,10 @@ def dryPaper(showMessage=True):
             # Optional: Move the active layer into the new group
             # parentNode.addChildNode(activeLayer, None) # This changes layer structure
         elif parentNode is not None:
-             log(f"dry paper called. parent = {parentNode}")
+            # log(f"dry paper called. parent = {parentNode}")
+            pass
         else:
-            log("dry paper called. parentNode is None. This shouldn't happen for active layers.")
+            # log("dry paper called. parentNode is None. This shouldn't happen for active layers.")
             parentNode = None # Ensure parentNode is None if it started as None
 
         if parentNode: # Proceed if we have a valid parent (original or new group)
@@ -748,7 +748,7 @@ def dryPaper(showMessage=True):
                 # al layer precedente ad activeLayer, applica il blur
                 for layerPrima in parentNode.childNodes()[: -2]:
 
-                    log(f"applicando blur a  {layerPrima.name()}:{selectionStroke.x()}, {selectionStroke.y()}, {selectionStroke.width()},{selectionStroke.height()}")
+                    # log(f"applicando blur a  {layerPrima.name()}:{selectionStroke.x()}, {selectionStroke.y()}, {selectionStroke.width()},{selectionStroke.height()}")
 
                     selFuori = Selection()
                     selFuori.select(selectionStroke.x(), selectionStroke.y(
@@ -793,7 +793,7 @@ def dryPaper(showMessage=True):
         # test blur
 
         if showMessage:
-            log("dry paper called message")
+            # log("dry paper called message")
             quickMessage("Dry paper")
             # application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
 
@@ -852,8 +852,7 @@ class AutoFocusSetter(QObject):
         # log(f"event {g.event_lookup.get(str(event.type()), 'sconosciuto')}")
 
         if event.type() == QEvent.Enter:
-            log(f"enter")
-            # if obj.objectName() == "KisAdvancedColorSelector":
+            # log(f"enter")
             # log(f"enter color selector ")
 
             # if isinstance(obj, QDockWidget):
@@ -893,13 +892,14 @@ class AutoFocusSetter(QObject):
                 else:
                     l_color_changed_from_selector = False
 
-                log ("debug 1")
+                # log ("debug 1")
+
                 # Use the new flag to check if color changed *since last leave*
                 if ( not isAlwaysOnTop and l_color_changed_from_selector and 
                             g.g_color_changed_since_last_leave 
                             and (not g.g_auto_mix_enabled or g.g_auto_mix_paused) and g.g_multi_layer_mode):
 
-                    log ("debug 2 creating layer")
+                    # log ("debug 2 creating layer")
                     newLa = dryPaper(False)
 
                     # reenable dirty brush
@@ -933,10 +933,9 @@ class AutoFocusSetter(QObject):
                 # obj.activateWindow()
 
         if event.type() == QEvent.Leave:
-            log(f"leave")
+            # log(f"leave")
 
             # logic: if the mouse leaver an always-on-top window, focus the first window that's not always on top.
-            # log(f"leave event ")
             if isinstance(obj, QMdiSubWindow):
                 # Reset the flag when leaving the canvas
                 g.g_color_changed_since_last_leave = False
@@ -1011,11 +1010,12 @@ class AutoFocusSetter(QObject):
 
         if event.type() == QEvent.MouseButtonRelease:
             # non scatta piu
-            log(">>>>>>>>>mouse button release")
+            # log(">>>>>>>>>mouse button release")
+            pass
 
         if event.type() == QEvent.MouseButtonPress:
             # non scatta piu
-            log(">>>>>>>>mouse buttonpress")
+            # log(">>>>>>>>mouse buttonpress")
 
             pass
 
@@ -1036,7 +1036,7 @@ class AutoFocusSetter(QObject):
 
 
 def setFgColor(col: rgb):
-    log("setFgColor")
+    # log("setFgColor")
 
     app = Krita.instance()
     win = app.activeWindow()
@@ -1259,7 +1259,7 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
                 p = get_cursor_in_document_coords()
 
                 doc_pos = p + center  # float
-                log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
+                # log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
 
                 # parentNode = document.activeNode().parentNode()
 
@@ -1323,7 +1323,7 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
                     else:
                         # creo il colore composito dei layer. questo è il bgcolor
                         bgColor = mergedColor  # calcolaCompositeColor(colors)
-                        bgColor.log("bgColor")
+                        # bgColor.log("bgColor")
 
                         fg = view.foregroundColor()
                         comp = fg.components()
@@ -1386,7 +1386,7 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
 
                             # setto anche il virtual fg color al result del mix
 
-                            log("g_virtual_fg_color_rgb = mix 2")
+                            # log("g_virtual_fg_color_rgb = mix 2")
                             g.g_virtual_fg_color_rgb = rgb(
                                 comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
                             update_label_from_virtual_color()
@@ -1605,7 +1605,7 @@ monitor = MouseMonitor()
 
 def handle_click(widget):
     if monitor.is_krita_canvas(widget):
-        log("Click sul canvas di Krita!")
+        # log("Click sul canvas di Krita!")
 
         g.g_last_coord_mouse_down = get_cursor_in_document_coords()
 
@@ -1647,7 +1647,7 @@ def handle_click(widget):
                                 #niente radius
                                 
                                 g.g_color_on_down_dirty_brush = getColorUnderCursorOrAtPos()
-                                log (f"niente mix radius per dirty. color on down = {g.g_color_on_down_dirty_brush.toString()}")
+                                # log (f"niente mix radius per dirty. color on down = {g.g_color_on_down_dirty_brush.toString()}")
                             else:
                                 radius = float(g.g_mix_radius) # Ensure radius is float, read from globals
 
@@ -1682,7 +1682,7 @@ def handle_click(widget):
                                     
                                 # Convert R,G,B to float as per rgb class expectation
                                 g.g_color_on_down_dirty_brush = rgb(float(final_canvas_color_rgb[0] * 255.0), float(final_canvas_color_rgb[1] * 255.0), float(final_canvas_color_rgb[2] * 255.0), 255.0)
-                                log(f"Dirty brush down color set via sampling: {g.g_color_on_down_dirty_brush}")
+                                # log(f"Dirty brush down color set via sampling: {g.g_color_on_down_dirty_brush}")
                                 
                         else:
                             log("Could not get document position for dirty brush sampling.")
@@ -1692,13 +1692,14 @@ def handle_click(widget):
                         g.g_color_on_down_dirty_brush = None # Or a default color
 
     else:
-        log(f"Click su: {widget}")
+        # log(f"Click su: {widget}")
+        pass
 
 
 def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleased bm_mouseup
     if monitor.is_krita_canvas(widget):
 
-        log("mouse released on canvas")
+        # log("mouse released on canvas")
 
         # ********************************
         # 1)  aggiorna la color history
@@ -1766,12 +1767,13 @@ def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleas
                 # log(f"  Processing stroke color {stroke_color_clone.toString()}")
 
                 # Use a temporary list to avoid modifying while iterating if needed, though list comprehension handles this.
-                original_count = len(g.g_last_virtual_colors_used)
+                # original_count = len(g.g_last_virtual_colors_used)
+
                 # Remove all existing instances of the color using list comprehension
                 g.g_last_virtual_colors_used = [
                     c for c in g.g_last_virtual_colors_used if not c.equals(stroke_color_clone)]
-                removed_count = original_count - \
-                    len(g.g_last_virtual_colors_used)
+                
+                # removed_count = original_count - len(g.g_last_virtual_colors_used)
                 # if removed_count > 0:
                 #     log(f"  Removed {removed_count} existing instance(s) of {stroke_color_clone.toString()}.")
 
@@ -1803,20 +1805,21 @@ def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleas
 
         if g.g_dirty_brush_color_to_ignore is not None and arrEqual(components, g.g_dirty_brush_color_to_ignore):
             # non aggiorno la history visuale, perche' e' un colore generato dal dirty brush
-            log(f"colore ignorato {components}")
+            # log(f"colore ignorato {components}")
+            pass
 
         elif g.g_auto_mix_color_to_ignore is not None and arrEqual(components, g.g_auto_mix_color_to_ignore):
             # non aggiorno la history visuale, perche' e' un colore generato dall'automix
-            log(f"aggiorna history : colore ignorato , generato da automix {components}")
+            # log(f"aggiorna history : colore ignorato , generato da automix {components}")
 
             # non aggiungo alla history il colore fasullo dell'automixing, ma devo aggiungere quello vero selezionato dall'utente
-            # che e' sicuramente il virtual color! in pratica devo solo riportarlo in testa alla history.
+            # che e' sicuramente il virtual color! perche' devo riportarlo in testa alla history.
             # if g.g_ultimo_colore_vero_settato_dall_utente is not None:
-            # log(f"automixing: aggiungo alla history il colore vero:  {g.g_ultimo_colore_vero_settato_dall_utente}")
+            log(f"automixing: aggiungo alla history il colore vero:  {g.g_ultimo_colore_vero_settato_dall_utente}")
             aggiorna_history_aggiungendo(colorArrayOfRgb( g.g_virtual_fg_color_rgb))
                         
         else:
-            log(f"colore non ignorato {components}")
+            # log(f"mouse release : colore non ignorato {components} : aggiungo alla history")
 
             # e' arrivato un colore diverso, quindi l'ha settato l'utente da picker
             g.g_dirty_brush_color_to_ignore = None
@@ -1862,7 +1865,8 @@ def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleas
             if win is not None:
                 view = win.activeView()
                 if g.g_color_on_down_dirty_brush is None:
-                    log("g_color_on_down_dirty_brush is none. skippo logica dirty")
+                    # log("g_color_on_down_dirty_brush is none. skippo logica dirty")
+                    pass
 
                 if view is not None and g.g_color_on_down_dirty_brush is not None:
 
@@ -1910,7 +1914,7 @@ def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleas
                     new_comp[3] = 1.0
 
                     g.g_dirty_brush_color_to_ignore = new_comp
-                    log(f"setto color to ignore = {new_comp}")
+                    # log(f"setto color to ignore = {new_comp}")
 
                     fg.setComponents(new_comp)
 
@@ -1923,7 +1927,8 @@ def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleas
                     # update_label_from_virtual_color()
 
     else:
-        log(f"Rilascio 2 su: {widget}")
+        # log(f"Rilascio 2 su: {widget}")
+        pass
 
 
 monitor.mouseClicked.connect(handle_click)
@@ -2065,19 +2070,19 @@ class MyExtension(Extension):
             if g.g_auto_focus == "true":
                 for su in subwins:
                     if su not in self.windows_with_autofocus:
-                        log(f"installing autofocus for window {su}")
+                        # log(f"installing autofocus for window {su}")
                         su.installEventFilter(self.ef_autofocus)
                         self.windows_with_autofocus.append(su)
             else:
                 for su in subwins:
                     if su in self.windows_with_autofocus:
-                        log(f"uninstalling autofocus for window {su}")
+                        # log(f"uninstalling autofocus for window {su}")
                         su.removeEventFilter(self.ef_autofocus)
                         self.windows_with_autofocus.remove(su)
 
     def onViewOpenedEvent(openedView):
 
-        log(f"view opened {openedView}")
+        # log(f"view opened {openedView}")
 
         g.allBrushPresets = Krita.instance().resources('paintoppresets')
         # for k,v in allBrushPresets.items():
@@ -2087,7 +2092,7 @@ class MyExtension(Extension):
 
     def onDocCreated(openedDoc):
 
-        log(f"doc created{openedDoc}")
+        # log(f"doc created{openedDoc}")
 
         g.allBrushPresets = Krita.instance().resources('paintoppresets')
         # log(f"all brush presets = {allBrushPresets.size()}")
@@ -2168,7 +2173,7 @@ class MyExtension(Extension):
 
        
     def onWindowCreated(self):  # called by framework
-        log("on window created  ")
+        # log("on window created  ")
 
         # self.currentColor = [255,255,255,0]
         # self.previousColor = [255,255,20,0]
@@ -2185,7 +2190,7 @@ class MyExtension(Extension):
         # start listening to color changes via color selector
         colorSelectorNg = next(
             (d for d in app.dockers() if d.objectName() == 'ColorSelectorNg'), None)
-        log(f"type of color selector = {type(colorSelectorNg)}")
+        # log(f"type of color selector = {type(colorSelectorNg)}")
         for child in colorSelectorNg.findChildren(QObject):
             meta = child.metaObject()
             if meta.className() in {
@@ -2402,9 +2407,8 @@ class MyExtension(Extension):
     def switchToLastColor(self):  # bm_previouscolor
         """Switches color based on history, handling consecutive presses vs. first press after paint."""
 
-        log("--- switchToLastColor ---")
-        log(
-            f"Before Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
+        # log("--- switchToLastColor ---")
+        # log(f"Before Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
         try:
             acView = Krita.instance().activeWindow().activeView()
@@ -2436,7 +2440,7 @@ class MyExtension(Extension):
             # g_color_history_index = 0 represents the most recent color.
             next_index = g.g_color_history_index + 1
 
-            log(f"  Current index: {g.g_color_history_index}. Trying next index: {next_index}")
+            # log(f"  Current index: {g.g_color_history_index}. Trying next index: {next_index}")
 
 
             # Update virtual color and Krita's foreground color
@@ -2445,16 +2449,13 @@ class MyExtension(Extension):
             if next_index < num_colors:
                 g.g_color_history_index = next_index  # Update the global index
                 target_color = g.g_last_virtual_colors_used[g.g_color_history_index]
-                log(
-                    f"g_virtual_fg_color_rgb = last color cioe' {target_color.toString()}")
+                # log(f"g_virtual_fg_color_rgb = last color cioe' {target_color.toString()}")
                 # Set the virtual foreground color
                 g.g_virtual_fg_color_rgb = target_color.clone()
-                log(
-                    f"  Switched to color at index {g.g_color_history_index}: {target_color.toString()}")
+                # log(f"  Switched to color at index {g.g_color_history_index}: {target_color.toString()}")
             else:
                 # Index is out of bounds (tried to go past the oldest color)
-                log(
-                    f"  Reached end of history. No change. Index remains {g.g_color_history_index}")
+                # log(f"  Reached end of history. No change. Index remains {g.g_color_history_index}")
                 quickMessage("Reached oldest color in history.")
                 # Do not wrap around, do not change color
 
@@ -2473,13 +2474,11 @@ class MyExtension(Extension):
             col.setComponents(comp)
             
             acView.setForeGroundColor(col)
-            log(f"  Set FG Color to: {g.g_virtual_fg_color_rgb.toString()}")
+            # log(f"  Set FG Color to: {g.g_virtual_fg_color_rgb.toString()}")
 
             # DO NOT reorder the list.
-            acView.showFloatingMessage(
-                f"Switched color (History pos {g.g_color_history_index})", QIcon(), g.timeMessage, 1)
-            log(
-                f"After Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
+            acView.showFloatingMessage(f"Switched color (History pos {g.g_color_history_index})", QIcon(), g.timeMessage, 1)
+            # log(f"After Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
             # --- Optional: Layer creation logic (kept from original) ---
 
@@ -2502,8 +2501,7 @@ class MyExtension(Extension):
             quickMessage(
                 "Error accessing color history (Index out of bounds).")
             g.g_color_history_index = -1  # Reset index on error
-            log(
-                f"IndexError in switchToLastColor (Index was {g.g_color_history_index}), resetting index to -1.")
+            log(f"IndexError in switchToLastColor (Index was {g.g_color_history_index}), resetting index to -1.")
             import traceback
             traceback.print_exc()
         except Exception as e:
@@ -2683,7 +2681,7 @@ class MyExtension(Extension):
 
                         # creo il colore composito dei layer. questo è il bgcolor
                         bgColor = calcolaCompositeColor(colors)
-                        bgColor.log("bgColor")
+                        # bgColor.log("bgColor")
 
                         # setto il fg color uguale a merged color mischiato con il fg
                         fg = view.foregroundColor()  # tipo ManagedColor, valori da 0 a 1

@@ -15,3 +15,6 @@ DONE se premo D, fare clean brush se sporco
 
 DONE mi crea un nuovo layer se esco e rientro con mouseover dal selector,
 anche se non ha cambiato colore
+
+TODO ad ogni mouse up viene rebuildata la color history. per verificarlo, scommenta qualcosa dentro 
+    update_color_history_ui
