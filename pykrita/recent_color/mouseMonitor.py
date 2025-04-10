@@ -15,8 +15,8 @@ from PyQt5.QtCore import (
 
 
 class MouseMonitor(QObject):
-    mouseClicked = pyqtSignal(QWidget)
-    mouseReleased = pyqtSignal(QWidget)
+    mouseClicked = pyqtSignal(QObject)
+    mouseReleased = pyqtSignal(QObject)
 
     def __init__(self):
         super().__init__()
