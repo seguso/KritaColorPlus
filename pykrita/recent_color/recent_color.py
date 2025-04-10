@@ -1036,6 +1036,8 @@ class AutoFocusSetter(QObject):
 
 
 def setFgColor(col: rgb):
+    log("setFgColor")
+
     app = Krita.instance()
     win = app.activeWindow()
     if win is not None:
@@ -1693,10 +1695,10 @@ def handle_click(widget):
         log(f"Click su: {widget}")
 
 
-def handle_release(widget): # bm_released
+def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleased
     if monitor.is_krita_canvas(widget):
 
-        log("******************** on history was made - mouse released on canvas")
+        log("mouse released on canvas")
 
         # ********************************
         # 1)  aggiorna la color history
@@ -1805,11 +1807,11 @@ def handle_release(widget): # bm_released
 
         elif g.g_auto_mix_color_to_ignore is not None and arrEqual(components, g.g_auto_mix_color_to_ignore):
             # non aggiorno la history visuale, perche' e' un colore generato dall'automix
-            log(f"colore ignorato , generato da automix {components}")
+            log(f"aggiorna history : colore ignorato , generato da automix {components}")
 
             # non aggiungo alla history il colore fasullo dell'automixing, ma devo aggiungere quello vero selezionato dall'utente
             if g.g_ultimo_colore_vero_settato_dall_utente is not None:
-                log(f"automixing: aggiungo il colore vero:  {g.g_ultimo_colore_vero_settato_dall_utente}")
+                log(f"automixing: aggiungo alla history il colore vero:  {g.g_ultimo_colore_vero_settato_dall_utente}")
                 aggiorna_history_aggiungendo(g.g_ultimo_colore_vero_settato_dall_utente)
                         
         else:
@@ -1836,8 +1838,7 @@ def handle_release(widget): # bm_released
 
         # remember layer is dirty
 
-        g.g_layer_is_dirty[Krita.instance(
-        ).activeDocument().activeNode().uniqueId()] = True
+        g.g_layer_is_dirty[Krita.instance().activeDocument().activeNode().uniqueId()] = True
         # log(f"setting layer dirty {Krita.instance().activeDocument().activeNode().uniqueId()}")
 
         if g.g_auto_dry_each_stroke and g.g_multi_layer_mode:
