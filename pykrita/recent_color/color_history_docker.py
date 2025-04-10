@@ -52,8 +52,16 @@ class ColorHistoryDocker(DockWidget):
         # Add new color squares in a grid layout
         g.log(f"Updating color history UI with {len(g.g_last_virtual_colors_used)} colors.")
         
-        # Define grid dimensions - 5 colors per row
-        colors_per_row = 5
+        # Calculate how many color squares can fit in the current width
+        docker_width = self.width()
+        square_size = 32  # Size of each color square
+        spacing = 2       # Spacing between squares
+        margins = 10      # Total horizontal margins (5px on each side)
+        
+        # Calculate available width and how many squares can fit
+        available_width = docker_width - margins
+        colors_per_row = max(1, available_width // (square_size + spacing))
+        g.log(f"Docker width: {docker_width}px, can fit {colors_per_row} color squares per row")
         
         for i, item in enumerate(g.g_last_virtual_colors_used):
             qcolor_to_display = None
