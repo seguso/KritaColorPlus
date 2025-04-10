@@ -2942,19 +2942,8 @@ class MyExtension(Extension):
                         fg = view.foregroundColor()
                         comp = fg.components()
 
-                        # anche qui vedo la distanza, perche' se è piccola faccio snap
+                      
 
-                        # if dist < g.g_auto_mix_snap_distance and g.g_auto_mix__how_much_canvas_to_pick < 0.98:
-                        # #snap to destination
-                        # comp[0] = (g.g_virtual_fg_color_rgb.r/255.0)
-                        # comp[1] = (g.g_virtual_fg_color_rgb.g / 255.0)
-                        # comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0)
-
-                        # else:
-                        # blending
-                        # log(f"fg color = {comp}")
-
-                        canv = g.g_auto_mix__how_much_canvas_to_pick
 
                         
 
@@ -2968,7 +2957,7 @@ class MyExtension(Extension):
                         # begin mix colors spectral: Foreground vs Blended Canvas Color
                         # 'canv' (g.g_auto_mix__how_much_canvas_to_pick) is the weight of the canvas color (color2)
                         # spectral_mix's 't' parameter is the weight of color2.
-                        t_mix = canv # Weight of the blended canvas color in the final mix
+                        t_mix = g.g_auto_mix__how_much_canvas_to_pick # Weight of the blended canvas color in the final mix
 
                         # Foreground color (color1) - Ensure it's [R, G, B] 0-255 list
                         # g.g_virtual_fg_color_rgb stores R, G, B as floats 0-255
