@@ -8,14 +8,20 @@ from . mouseMonitor import MouseMonitor
 from PyQt5.QtWidgets import QTreeView
 from PyQt5.QtCore import Qt, QModelIndex, QItemSelectionModel
 import pprint
+import time
 from . import globals as g
+
+# Throttling for debug logs
+last_log_time_sample_points = 0
+last_log_time_sampled_colors = 0
+last_log_time_final_color = 0
 from .whichtool import EKritaTools, EKritaToolsId  # Import the necessary classes
 from .brush_cycler import brush_cycler  # Import the brush cycler instance
 from .brush_list_widget import BrushListDialog  # Import the brush list dialog
 from .slider import KritaStyleSlider # Import the new slider
 
 
-from .rgb import rgb, rgbOfColorArray,colorArrayOfRgb
+from .rgb import rgb, rgbOfColorArray,colorArrayOfRgb, colorArray3OfRgb
 
 
 from krita import *
@@ -59,7 +65,7 @@ from PyQt5.QtWidgets import (
     QDockWidget       # Added QDockWidget back
     )
 
-from typing import List, Tuple, Optional, Sequence
+from typing import List, Tuple, Optional, Sequence, Union # Add Union
 
 
 # from PyQt5 import QtWidgets, QtCore, QtGui, uic
@@ -132,35 +138,65 @@ def sample_pixel_rgb0255(document, x, y):
 
 # Helper function to blend a list of colors [[R,G,B], ...] using spectral_mix
 # Assumes colors are lists of floats [0-255]
-def blend_colors_spectral(colors):
-    # Filter out None values resulting from sampling errors
-    valid_colors = [c for c in colors if c is not None and isinstance(c, list) and len(c) == 3]
+# Define the expected type for a single color: List of 3 numbers (int or float)
+ColorType = List[Union[float, int]]
+# Define the input type: List containing optional colors
+InputColorsType = List[Optional[ColorType]]
 
-    if not valid_colors:
-        log("Warning: No valid colors to blend.")
-        # Return a default color, e.g., black, or raise an error
-        return [0.0, 0.0, 0.0]
+def blend_colors_spectral(colors: InputColorsType) -> ColorType:
+    """
+    Blends a list of colors using spectral mixing.
 
-    if len(valid_colors) == 1:
+    Args:
+        colors: A list where each element is either None or a list of 3 numbers
+                (int or float) representing RGB values [0-255].
+
+    Returns:
+        A list of 3 numbers representing the blended RGB color.
+
+    Raises:
+        TypeError: If the input is not a list, or if any element (that is not None)
+                   is not a list of 3 numbers (int or float).
+        ValueError: If the input list is empty or contains only None values after validation.
+    """
+    if not isinstance(colors, list):
+        raise TypeError(f"Input must be a list, but got {type(colors).__name__}")
+
+    validated_colors: List[ColorType] = []
+    for i, color in enumerate(colors):
+        if color is None:
+            continue # Skip None values as intended by original filter
+
+        if not isinstance(color, list) or len(color) != 3:
+            raise TypeError(f"Element at index {i} must be a list of 3 numbers or None, but got {type(color).__name__} with length {len(color) if isinstance(color, list) else 'N/A'}")
+
+        for j, component in enumerate(color):
+            if not isinstance(component, (int, float)):
+                raise TypeError(f"Color component at index {i}[{j}] must be an int or float, but got {type(component).__name__}")
+
+        validated_colors.append(color) # Add the validated color
+
+    if not validated_colors:
+        raise ValueError("Cannot blend empty list or list containing only None values.")
+
+    if len(validated_colors) == 1:
         # If only one valid color, return it directly
-        return valid_colors[0]
+        log("solo uno")
+        return validated_colors[0]
 
     # Start with the first valid color
-    blended_color = valid_colors[0]
+    # Start with the first valid color
+    blended_color = validated_colors[0]
 
+    log(f"i validi sono {len(validated_colors)}")
     # Sequentially mix in the remaining valid colors
-    for i in range(1, len(valid_colors)):
+    for i in range(1, len(validated_colors)):
         # The weight 't' for spectral_mix represents the proportion of the *new* color
         # being added to the current blend. For the (i+1)-th color overall (index i),
         # its weight in the final mix should be 1/(i+1).
         t = 1.0 / (float(i) + 1.0)
-        try:
-            blended_color = spectral_mix(blended_color, valid_colors[i], t)
-        except Exception as e:
-            log(f"Error during spectral_mix step {i}: {e}")
-            # Handle error: skip this color, return current blend, or return error state
-            # For robustness, let's just log and continue with the current blend
-            pass # Continue with the blend as it was before this step
+        # Call spectral_mix directly, using the correct variable name
+        blended_color = spectral_mix(blended_color, validated_colors[i], t)
 
     # The final blended_color is already in [R, G, B] format (0-255)
     return blended_color
@@ -2929,43 +2965,17 @@ class MyExtension(Extension):
 
                     if not g.g_mix_radius_enabled:
 
-                        # pixBytes = document.pixelData(
-                        #     int(doc_pos.x()), int(doc_pos.y()), 1, 1)
-
-                        # # byte_values = [str(int.from_bytes(byte, 'big')) for byte in pixBytes]
-                        # # concatenated_string = '-'.join(byte_values)
-
-                        # # log(f'Dati letti: {concatenated_string}')
-
-                        # # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
-                        # if len(pixBytes) == 4:
-                        #     imageData = QImage(
-                        #         pixBytes, 1, 1, QImage.Format_RGBA8888)
-                        # elif len(pixBytes) == 8:
-                        #     imageData = QImage(
-                        #         pixBytes, 1, 1, QImage.Format_RGBA64)
-                        # else:
-                        #     raise f"unsupported len {len(pixBytes)}"
-
-                        # pixelC: QColor = imageData.pixelColor(0, 0)
-
+                      
                         # e ora da colore qt a colore mio
                         bgColor255 = colorRgb
-                        # rgb(float(pixelC.red()),  float(
-                        #     pixelC.green()),  float(pixelC.blue()), 255.0)
-
+                      
                      
                         # vecchia logia senza radius
                         canv = g.g_auto_mix__how_much_canvas_to_pick
 
                         fgMul = 1.0 - canv
 
-                        # BEGIN mix colors old way
-                        # comp[0] = (g.g_virtual_fg_color_rgb.r/255.0) * fgMul + (mergedColor.r / 255.0)  * canv
-                        # comp[1] = (g.g_virtual_fg_color_rgb.g / 255.0) * fgMul + (mergedColor.g / 255.0)  * canv
-                        # comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0) * fgMul + (mergedColor.b  / 255.0)  * canv
-
-                        # END
+                   
 
                         # begin mix colors spectral, bgr
                         fgMul = 1.0 - canv
@@ -3000,11 +3010,11 @@ class MyExtension(Extension):
                         view.setForeGroundColor(fg)
 
 
-                    else:  # parentNode is not None:
+                    else:  # con mixing radius
 
                        
 
-                        # === New 5-point sampling logic ===
+                        # === New 4-point sampling logic ===
                         cx = doc_pos.x()
                         cy = doc_pos.y()
                         radius = float(g.g_mix_radius) # Ensure radius is float, read from globals
@@ -3012,21 +3022,43 @@ class MyExtension(Extension):
                         # Define the 5 sample points
                         sample_points = [
                             # (cx, cy),             # Center non lo metto piu
-                            (cx, cy - radius),    # Up
-                            (cx, cy + radius),    # Down
-                            (cx - radius, cy),    # Left
-                            (cx + radius, cy)     # Right
+                            xy(cx, cy - radius),    # Up
+                            xy(cx, cy + radius),    # Down
+                            xy(cx - radius, cy),    # Left
+                            xy(cx + radius, cy)     # Right
+                        
                         ]
 
+                        current_time = time.time()
+                        if current_time - last_log_time_sample_points > 1.0:
+                            log(f"Sample points: {sample_points}") # DEBUG
+                            last_log_time_sample_points = current_time
+
                         # Sample the colors at these points using the new helper
-                        sampled_colors_rgb = []
-                        for px, py in sample_points:
-                            color = sample_pixel_rgb0255(document, px, py)
-                            sampled_colors_rgb.append(color) # Appends color [R,G,B] or None
+                        sampled_colors_rgbarr = []
+                        for p in sample_points:
+
+                            maybeColorRgb : Optional[rgb] = getColorUnderCursorOrAtPos(forcedPos=p, ignore_bottom_layer=True)
+                            colorRgb: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb is None else maybeColorRgb
+                    
+                            # color = sample_pixel_rgb0255(document, px, py)
+
+                            rgbArr = colorArray3OfRgb(colorRgb)
+                            sampled_colors_rgbarr.append(rgbArr) # Appends color [R,G,B] or None
+
+                            
+                        current_time = time.time()
+                        if current_time - last_log_time_sampled_colors > 1.0:
+                            log(f"Sampled colors RGB array: {sampled_colors_rgbarr}") # DEBUG
+                            last_log_time_sampled_colors = current_time
 
                         # Blend the sampled colors using the new helper (handles None values)
                         # Result is [R, G, B] 0-255
-                        final_canvas_color_rgb = blend_colors_spectral(sampled_colors_rgb)
+                        final_canvas_color_rgb = blend_colors_spectral(sampled_colors_rgbarr)
+                        current_time = time.time()
+                        if current_time - last_log_time_final_color > 1.0:
+                            log(f"Final canvas color RGB: {final_canvas_color_rgb}") # DEBUG
+                            last_log_time_final_color = current_time
 
                         # We no longer need the single 'mergedColor' object for the primary mixing path.
                         # The final mixing logic later will use final_canvas_color_rgb directly.
