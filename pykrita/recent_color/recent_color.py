@@ -1815,7 +1815,7 @@ def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleas
             # non aggiungo alla history il colore fasullo dell'automixing, ma devo aggiungere quello vero selezionato dall'utente
             # che e' sicuramente il virtual color! perche' devo riportarlo in testa alla history.
             # if g.g_ultimo_colore_vero_settato_dall_utente is not None:
-            log(f"automixing: aggiungo alla history il colore vero:  {g.g_ultimo_colore_vero_settato_dall_utente}")
+            
             aggiorna_history_aggiungendo(colorArrayOfRgb( g.g_virtual_fg_color_rgb))
                         
         else:
