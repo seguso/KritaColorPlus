@@ -2953,7 +2953,7 @@ class MyExtension(Extension):
                         print("aborted mixOnTimer")
                         return
 
-                    doc_pos = p + center
+                    doc_posPiuCenter = p + center
 
 
                       
@@ -3018,31 +3018,33 @@ class MyExtension(Extension):
                        
 
                         # === New 4-point sampling logic ===
-                        cx = doc_pos.x()
-                        cy = doc_pos.y()
+                        cx_c = doc_posPiuCenter.x()
+                        cy_c = doc_posPiuCenter.y()
+
+                        cx_p = p.x()
+                        cy_p = p.y()
                         radius = float(g.g_mix_radius) # Ensure radius is float, read from globals
 
                         # Define the 5 sample points
                         sample_pointsxy = [
-                            # (cx, cy),             # Center non lo metto piu
-                            xy(cx, cy - radius),    # Up
-                            xy(cx, cy + radius),    # Down
-                            xy(cx - radius, cy),    # Left
-                            xy(cx + radius, cy)     # Right
+                            xy(cx_p, cy_p - radius),    # Up
+                            xy(cx_p, cy_p + radius),    # Down
+                            xy(cx_p - radius, cy_p),    # Left
+                            xy(cx_p + radius, cy_p)     # Right
                         
                         ]
                         sample_points = [
                             # (cx, cy),             # Center non lo metto piu
-                            (cx, cy - radius),    # Up
-                            (cx, cy + radius),    # Down
-                            (cx - radius, cy),    # Left
-                            (cx + radius, cy)     # Right
+                            (cx_c, cy_c - radius),    # Up
+                            (cx_c, cy_c + radius),    # Down
+                            (cx_c - radius, cy_c),    # Left
+                            (cx_c + radius, cy_c)     # Right
                         
                         ]
 
-                        current_time = time.time()
-                        if current_time - g.last_log_time_sample_points > 1.0:
-                            log(f"Sample points: {sample_pointsxy}") # DEBUG
+                        # current_time = time.time()
+                        # if current_time - g.last_log_time_sample_points > 1.0:
+                        #     log(f"Sample points: {sample_pointsxy}") # DEBUG
                             
 
                         # Sample the colors at these points using the new helper
@@ -3061,20 +3063,20 @@ class MyExtension(Extension):
 
                             
                         
-                        if current_time - g.last_log_time_sample_points > 1.0:
-                            log(f"Sampled colors RGB array: {sampled_colors_arr255}") # DEBUG
+                        # if current_time - g.last_log_time_sample_points > 1.0:
+                        #     log(f"Sampled colors RGB array: {sampled_colors_arr255}") # DEBUG
                         
 
                         # Blend the sampled colors using the new helper (handles None values)
                         # Result is [R, G, B] 0-255
                         final_canvas_color_rgb = blend_colors_spectral(sampled_colors_arr255)
                         
-                        if current_time - g.last_log_time_sample_points > 1.0:
-                            log(f"Final canvas color RGB: {final_canvas_color_rgb}") # DEBUG
+                        # if current_time - g.last_log_time_sample_points > 1.0:
+                        #     log(f"Final canvas color RGB: {final_canvas_color_rgb}") # DEBUG
                             
 
 
-                        g.last_log_time_sample_points = current_time
+                        # g.last_log_time_sample_points = current_time
 
                         # We no longer need the single 'mergedColor' object for the primary mixing path.
                         # The final mixing logic later will use final_canvas_color_rgb directly.
@@ -3086,7 +3088,7 @@ class MyExtension(Extension):
                              # Handle case where blending failed (e.g., all samples out of bounds/errors)
                              log("Error: Could not determine final canvas color from sampling. Falling back.")
                              # Fallback: try center pixel first
-                             final_canvas_color_rgb = sample_pixel_rgb0255(document, cx, cy)
+                             final_canvas_color_rgb = sample_pixel_rgb0255(document, cx_c, cy_c)
                              
                         # === End of 5-point sampling logic ===
 
