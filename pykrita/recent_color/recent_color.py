@@ -3869,26 +3869,26 @@ class MyExtension(Extension):
         # action2 = window.createAction("MixColorSmall", "MixColorSmall")
         # action2.triggered.connect(self.mixSmall)
 
-        actionMixW = window.createAction(
-            "MixColorBecauseWrong", "Mix color because current color is wrong (also clears current layer)")
-        actionMixW.triggered.connect(lambda: mixFgColorWithBgColor_normalLogic(
-            clearCurLayer=True, createLayer=False))
+        # actionMixW = window.createAction(
+        #     "MixColorBecauseWrong", "Mix color and do post-correction")
+        # actionMixW.triggered.connect(lambda: mixFgColorWithBgColor_normalLogic(
+        #     clearCurLayer=True, createLayer=False))
 
-        actionMixC = window.createAction(
-            "MixColorBecauseWantNew", "Mix color because you want to fade out (also creates new layer)")
-        actionMixC.triggered.connect(lambda: mixFgColorWithBgColor_normalLogic(
-            clearCurLayer=False, createLayer=True))
+        # actionMixC = window.createAction(
+        #     "MixColorBecauseWantNew", "Mix color")
+        # actionMixC.triggered.connect(lambda: mixFgColorWithBgColor_normalLogic(
+        #     clearCurLayer=False, createLayer=True))
 
         # actionMixSmall = window.createAction("MixColorSmall", "Pick some color from canvas, but no more than a given distance")
         # actionMixSmall.triggered.connect(self.mixFgColorWithBgColor_maxDistanceLogic)
 
-        actionPickAndDry = window.createAction(
-            "DryPaperAndPick", "Pick color under cursor and dry the paper")
-        actionPickAndDry.triggered.connect(self.dryPaperAndPick)
+        # actionPickAndDry = window.createAction(
+        #     "DryPaperAndPick", "Pick color under cursor and dry the paper")
+        # actionPickAndDry.triggered.connect(self.dryPaperAndPick)
 
-        actionPick = window.createAction(
-            "PickColor", "Pick color under cursor")
-        actionPick.triggered.connect(self.pickColorFun)
+        # actionPick = window.createAction(
+        #     "PickColor", "Pick color under cursor")
+        # actionPick.triggered.connect(self.pickColorFun)
 
         actionDryPaper = window.createAction(
             "LayerMergeDownAndNew", "Dry the paper (create new layer and set opacity)")
@@ -3914,13 +3914,13 @@ class MyExtension(Extension):
         # actiondecao = window.createAction("DecreaseMaxDistanceAutoOpacity", "Decrease max distance for auto opacity")
         # actiondecao.triggered.connect(self.decreaseAutoOpacityMaxDistance)
 
-        actionincmi = window.createAction(
-            "IncreaseMixing", "Increase mixing level (amount of color you pick from canvas when mixing)")
-        actionincmi.triggered.connect(self.increaseMixing)
+        # actionincmi = window.createAction(
+        #     "IncreaseMixing", "Increase mixing level (amount of color you pick from canvas when mixing)")
+        # actionincmi.triggered.connect(self.increaseMixing)
 
-        actiondecmi = window.createAction(
-            "DecreaseMixing", "Decrease mixing level (amount of color you pick from canvas when mixing)")
-        actiondecmi.triggered.connect(self.decreaseMixing)
+        # actiondecmi = window.createAction(
+        #     "DecreaseMixing", "Decrease mixing level (amount of color you pick from canvas when mixing)")
+        # actiondecmi.triggered.connect(self.decreaseMixing)
 
         # global g.g_mix_auto_clears_cur_layer
         # actionmixClear = window.createAction("MixClearCurrentLayer", "Mixing color auto-clears current layer")
@@ -3928,15 +3928,15 @@ class MyExtension(Extension):
         # actionmixClear.setChecked(g.g_mix_auto_clears_cur_layer == "1")
         # actionmixClear.triggered.connect(self.toggleMixClearsCurrentLayer)
 
-        actioninaro = window.createAction(
-            "IncreaseAutoResetOpacityOnPick", "Increase default layer opacity")
-        actioninaro.setShortcut("w")
-        actioninaro.triggered.connect(self.increaseAutoResetOpacityOnPick)
+        # actioninaro = window.createAction(
+        #     "IncreaseAutoResetOpacityOnPick", "Increase default layer opacity")
+        # actioninaro.setShortcut("w")
+        # actioninaro.triggered.connect(self.increaseAutoResetOpacityOnPick)
 
-        actiondearo = window.createAction(
-            "DecreaseAutoResetOpacityOnPick", "Decrease default layer opacity")
-        actiondearo.setShortcut("q")
-        actiondearo.triggered.connect(self.decreaseAutoResetOpacityOnPick)
+        # actiondearo = window.createAction(
+        #     "DecreaseAutoResetOpacityOnPick", "Decrease default layer opacity")
+        # actiondearo.setShortcut("q")
+        # actiondearo.triggered.connect(self.decreaseAutoResetOpacityOnPick)
 
         actionSave = window.createAction(
             "saveWindowPositions", "Save state and position of all windows")
@@ -3948,15 +3948,15 @@ class MyExtension(Extension):
         actionRestore.setShortcut("Ctrl+Shift+R")
         actionRestore.triggered.connect(self.restoreWindowPositions)
 
-        actionToggle100 = window.createAction(
-            "toggle100PercOpacity", "Toggle 100% layer opacity")
-        # actionToggle100.setShortcut("f")
-        actionToggle100.triggered.connect(self.toggle_100_opac)
+        # actionToggle100 = window.createAction(
+        #     "toggle100PercOpacity", "Toggle 100% layer opacity")
+        # # actionToggle100.setShortcut("f")
+        # actionToggle100.triggered.connect(self.toggle_100_opac)
 
-        actionToggle25 = window.createAction(
-            "toggle25PercOpacity", "Toggle 25% layer opacity")
+        # actionToggle25 = window.createAction(
+        #     "toggle25PercOpacity", "Toggle 25% layer opacity")
 
-        actionToggle25.triggered.connect(self.toggle_25_opac)
+        # actionToggle25.triggered.connect(self.toggle_25_opac)
 
         actionToggleMc = window.createAction(
             "cleanupLayers", "Cleanup (merge all temp layers)")
@@ -4029,21 +4029,22 @@ class MyExtension(Extension):
         g.g_actionBrushCycler.setShortcut("b")
         g.g_actionBrushCycler.triggered.connect(lambda: g.g_docker_instance.toggleBrushCycler())
 
-        self.actionIncAutoMix = window.createAction(
-            "increaseAutoMixing", "Increase auto-mixing (amount of bg color you pick at each stroke)")
-        self.actionIncAutoMix.setShortcut("shift+w")
-        self.actionIncAutoMix.triggered.connect(self.increaseAutoMixing)
+        # self.actionIncAutoMix = window.createAction(
+        #     "increaseAutoMixing", "Increase auto-mixing (amount of bg color you pick at each stroke)")
+        # self.actionIncAutoMix.setShortcut("shift+w")
+        # self.actionIncAutoMix.triggered.connect(self.increaseAutoMixing)
 
-        self.actionDecAutoMix = window.createAction(
-            "decreaseAutoMixing", "Decrease auto-mixing (amount of bg color you pick at each stroke)")
-        self.actionDecAutoMix.setShortcut("shift+q")
-        self.actionDecAutoMix.triggered.connect(self.decreaseAutoMixing)
+        # self.actionDecAutoMix = window.createAction(
+        #     "decreaseAutoMixing", "Decrease auto-mixing (amount of bg color you pick at each stroke)")
+        # self.actionDecAutoMix.setShortcut("shift+q")
+        # self.actionDecAutoMix.triggered.connect(self.decreaseAutoMixing)
 
         custom_menu.addSeparator()
         custom_menu.addAction(g.g_actionAutoMix)
-        custom_menu.addAction(self.actionIncAutoMix)
-        custom_menu.addAction(self.actionDecAutoMix)
+        # custom_menu.addAction(self.actionIncAutoMix)
+        # custom_menu.addAction(self.actionDecAutoMix)
         custom_menu.addAction(g.g_actionDirtyBrush)
+        custom_menu.addSeparator()
         custom_menu.addAction(g.g_actionBrushCycler)
 
         custom_menu.addSeparator()
@@ -4055,14 +4056,14 @@ class MyExtension(Extension):
         custom_menu.addAction(actionRestore)
         custom_menu.addAction(actionSave)
 
-        custom_menu.addSeparator()
-        custom_menu.addAction(actionPick)
-        custom_menu.addAction(actionPickAndDry)
+        # custom_menu.addSeparator()
+        # custom_menu.addAction(actionPick)
+        # custom_menu.addAction(actionPickAndDry)
 
         custom_menu.addSeparator()
         custom_menu.addAction(g.g_actionAutoResOnPick)
-        custom_menu.addAction(actioninaro)
-        custom_menu.addAction(actiondearo)
+        # custom_menu.addAction(actioninaro)
+        # custom_menu.addAction(actiondearo)
         custom_menu.addAction(g.g_manualResOnPick)
 
         custom_menu.addSeparator()
@@ -4071,16 +4072,16 @@ class MyExtension(Extension):
         custom_menu.addAction(actiondeclo)
         custom_menu.addSeparator()
         # custom_menu.addAction(actionmixClear)
-        custom_menu.addAction(actionMixW)
-        custom_menu.addAction(actionMixC)
+        # custom_menu.addAction(actionMixW)
+        # custom_menu.addAction(actionMixC)
 
-        custom_menu.addAction(actionincmi)
-        custom_menu.addAction(actiondecmi)
+        # custom_menu.addAction(actionincmi)
+        # custom_menu.addAction(actiondecmi)
 
         custom_menu.addSeparator()
 
-        custom_menu.addAction(actionToggle100)
-        custom_menu.addAction(actionToggle25)
+        # custom_menu.addAction(actionToggle100)
+        # custom_menu.addAction(actionToggle25)
 
 
 def mergeCleanup(): # bm_mergelayers
