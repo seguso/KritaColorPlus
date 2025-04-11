@@ -384,6 +384,65 @@ class HelloDocker(DockWidget):
         # g.g_btn_mix_radius.setMinimumHeight(60)
         g.g_btn_mix_radius.clicked.connect(self.toggleMixRadiusEnabled)
         
+        # Autofocus windows layout
+        layoutHorizAutoFocus = QHBoxLayout()
+        mainLayout.addLayout(layoutHorizAutoFocus)
+        
+        # Autofocus windows button
+        g.g_btn_auto_focus = QPushButton("Autofocus windows", mainWidget)
+        g.g_btn_auto_focus.setCheckable(True)
+        g.g_btn_auto_focus.setChecked(g.g_auto_focus == "true")
+        layoutHorizAutoFocus.addWidget(g.g_btn_auto_focus)
+        font = g.g_btn_auto_focus.font()
+        font.setPixelSize(15)
+        g.g_btn_auto_focus.setFont(font)
+        g.g_btn_auto_focus.setToolTip("Autofocus windows on mouse over")
+        g.g_btn_auto_focus.clicked.connect(toggleAutoFocus)
+        
+        # Auto-reset layer opacity layout
+        layoutHorizAutoResetOpacity = QHBoxLayout()
+        mainLayout.addLayout(layoutHorizAutoResetOpacity)
+        
+        # Auto-reset layer opacity button
+        g.g_btn_auto_reset_opacity = QPushButton("Auto-reset opacity", mainWidget)
+        g.g_btn_auto_reset_opacity.setCheckable(True)
+        g.g_btn_auto_reset_opacity.setChecked(g.g_auto_reset_opacity_on_pick == 1)
+        layoutHorizAutoResetOpacity.addWidget(g.g_btn_auto_reset_opacity)
+        font = g.g_btn_auto_reset_opacity.font()
+        font.setPixelSize(15)
+        g.g_btn_auto_reset_opacity.setFont(font)
+        g.g_btn_auto_reset_opacity.setToolTip("Auto-reset layer opacity to default on color pick")
+        g.g_btn_auto_reset_opacity.clicked.connect(toggleAutoResetOpacityOnPick)
+        
+        # Single-layer mode layout
+        layoutHorizSingleLayer = QHBoxLayout()
+        mainLayout.addLayout(layoutHorizSingleLayer)
+        
+        # Single-layer mode button
+        g.g_btn_single_layer = QPushButton("Single-layer mode", mainWidget)
+        g.g_btn_single_layer.setCheckable(True)
+        g.g_btn_single_layer.setChecked(not g.g_multi_layer_mode)
+        layoutHorizSingleLayer.addWidget(g.g_btn_single_layer)
+        font = g.g_btn_single_layer.font()
+        font.setPixelSize(15)
+        g.g_btn_single_layer.setFont(font)
+        g.g_btn_single_layer.setToolTip("Single-layer mode (don't auto create layers for watercolor effect)")
+        g.g_btn_single_layer.clicked.connect(toggleMultiLayerMode)
+        
+        # Cleanup layers layout
+        layoutHorizCleanup = QHBoxLayout()
+        mainLayout.addLayout(layoutHorizCleanup)
+        
+        # Cleanup layers button
+        btnCleanup = QPushButton("Cleanup layers", mainWidget)
+        layoutHorizCleanup.addWidget(btnCleanup)
+        font = btnCleanup.font()
+        font.setPixelSize(15)
+        btnCleanup.setFont(font)
+        btnCleanup.setToolTip("Merge all temporary layers")
+        btnCleanup.setMinimumHeight(50)
+        btnCleanup.clicked.connect(lambda: Krita.instance().activeWindow().views()[0].extension.mergeCleanup())
+        
         # mix radius dial
         g.g_slider_mix_radius = KritaStyleSlider(mainWidget, "Mix radius")
         g.g_slider_mix_radius.setToolTip("Mix radius in pixels (0-20)")
@@ -4219,11 +4278,13 @@ def minimizeOnTopAndViewFullScreen():  #bm_fullscreeen bm_preview
 
 def toggleAutoFocus():
     if g.g_auto_focus == "true":
-
         g.g_auto_focus = "false"
+        if g.g_btn_auto_focus is not None:
+            g.g_btn_auto_focus.setChecked(False)
     else:
-
         g.g_auto_focus = "true"
+        if g.g_btn_auto_focus is not None:
+            g.g_btn_auto_focus.setChecked(True)
 
     Krita.instance().writeSetting("colorPlus", "g.g_auto_focus", g.g_auto_focus)
 
@@ -4232,9 +4293,13 @@ def toggleAutoResetOpacityOnPick():
 
     if g.g_auto_reset_opacity_on_pick == 1:
         g.g_auto_reset_opacity_on_pick = 0
+        if g.g_btn_auto_reset_opacity is not None:
+            g.g_btn_auto_reset_opacity.setChecked(False)
         quickMessage("Auto reset opacity on color pick: disabled")
     else:
         g.g_auto_reset_opacity_on_pick = 1
+        if g.g_btn_auto_reset_opacity is not None:
+            g.g_btn_auto_reset_opacity.setChecked(True)
         quickMessage(
             f"Auto reset opacity on color pick: enabled. Will be reset to {round(g.g_auto_reset_opacity_on_pick_level)}.")
 
@@ -4256,11 +4321,17 @@ def toggleAutoResetOpacityOnPick():
 def toggleMultiLayerMode():
 
     g.g_multi_layer_mode = not g.g_multi_layer_mode
+    
+    # Aggiorna il pulsante (il pulsante è checked quando siamo in single-layer mode)
+    if g.g_btn_single_layer is not None:
+        g.g_btn_single_layer.setChecked(not g.g_multi_layer_mode)
 
     multi_layer_mode_str = "1" if g.g_multi_layer_mode else "0"
 
     Krita.instance().writeSetting(
         "colorPlus", "g.g_multi_layer_mode", multi_layer_mode_str)
+        
+    quickMessage("Single-layer mode: " + ("disabled" if g.g_multi_layer_mode else "enabled"))
 
 
 # And add the extension to Krita's list of extensions:

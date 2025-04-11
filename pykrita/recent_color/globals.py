@@ -259,6 +259,9 @@ allBrushPresets = None # Use None instead of null
 # Brush cycler instance
 g_brush_cycler_instance = None # Will be set to BrushCycler instance
 g_btn_brush_cycler = None # Button for brush cycler
+g_btn_auto_focus = None # Button for autofocus windows
+g_btn_auto_reset_opacity = None # Button for auto-reset layer opacity
+g_btn_single_layer = None # Button for single-layer mode
 
 g_docker_instance = None
 g_color_history_docker_instance = None
