@@ -1764,45 +1764,78 @@ def handle_click(widget):
                             # doc_pos remains None
 
                         if doc_pos:
-                            cx = doc_pos.x()
-                            cy = doc_pos.y()
 
 
                             if not g.g_mix_radius_enabled:
                                 #niente radius
                                 
-                                g.g_color_on_down_dirty_brush = getColorUnderCursorOrAtPos()
+                                
+
+                                maybeColorRgb255 : Optional[rgb] = getColorUnderCursorOrAtPos( ignore_bottom_layer=True)
+                                colorRgb255: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb255 is None else maybeColorRgb255
+
+                                g.g_color_on_down_dirty_brush = colorRgb255
                                 # log (f"niente mix radius per dirty. color on down = {g.g_color_on_down_dirty_brush.toString()}")
                             else:
+
+
+
+
+                                pcursor = get_cursor_in_document_coords()
+                                if pcursor is None:
+                                    print("aborted mixOnTimer")
+                                    return
+
+                                cx_p = pcursor.x()
+                                cy_p = pcursor.y()
                                 radius = float(g.g_mix_radius) # Ensure radius is float, read from globals
 
                                 # Define the 5 sample points
-                                sample_points = [
-                                    # (cx, cy),             # Center non lo metto piu
-                                    (cx, cy - radius),    # Up
-                                    (cx, cy + radius),    # Down
-                                    (cx - radius, cy),    # Left
-                                    (cx + radius, cy)     # Right
+                                sample_pointsxy = [
+                                    xy(cx_p, cy_p - radius),    # Up
+                                    xy(cx_p, cy_p + radius),    # Down
+                                    xy(cx_p - radius, cy_p),    # Left
+                                    xy(cx_p + radius, cy_p)     # Right
+                                
                                 ]
+                                    
 
                                 # Sample the colors at these points using the new helper
-                                sampled_colors_rgb = []
-                                for px, py in sample_points:
-                                    # Assuming sample_pixel_rgb is defined and handles coordinates correctly
-                                    color = sample_pixel_rgb0255(document, px, py)
-                                    sampled_colors_rgb.append(color) # Appends color [R,G,B] or None
+                                sampled_colors_arr255 = []
+                                for pcursor in sample_pointsxy:
+                                    maybeColorRgb255 : Optional[rgb] = getColorUnderCursorOrAtPos(forcedPos=pcursor, ignore_bottom_layer=True)
+                                    colorRgb255: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb255 is None else maybeColorRgb255
+
+                                    rgbArr = colorArray255_3_OfRgb(colorRgb255)
+                                    sampled_colors_arr255.append(rgbArr) # Appends color [R,G,B] or None
+                                
 
                                 # Blend the sampled colors using the new helper (handles None values)
                                 # Result is [R, G, B] 0-255
-                                # Assuming blend_colors_spectral is defined
-                                final_canvas_color_rgb = blend_colors_spectral(sampled_colors_rgb)
-                                # Fallback logic if blending fails
-                                if not final_canvas_color_rgb:
-                                    log("Warning: Blending failed (e.g., all samples out of bounds/errors). Falling back to center pixel.")
-                                    # Fallback: try center pixel
-                                    final_canvas_color_rgb = sample_pixel_rgb0255(document, cx, cy)
-
+                                final_canvas_color_rgb = blend_colors_spectral(sampled_colors_arr255)
                                 
+                                # if current_time - g.last_log_time_sample_points > 1.0:
+                                #     log(f"Final canvas color RGB: {final_canvas_color_rgb}") # DEBUG
+                                    
+
+
+                                # g.last_log_time_sample_points = current_time
+
+                                # We no longer need the single 'mergedColor' object for the primary mixing path.
+                                # The final mixing logic later will use final_canvas_color_rgb directly.
+                                # However, some other code paths might still expect mergedColor.
+                                # Let's create an rgb object from the final blend for potential compatibility.
+                                # Note: spectral_mix returns [R, G, B], rgb expects R, G, B args.
+                                # Also, rgb uses 0-255 range, which matches final_canvas_color_rgb.
+                                if not final_canvas_color_rgb:
+                                    # Handle case where blending failed (e.g., all samples out of bounds/errors)
+                                    log("Error: Could not determine final canvas color from sampling.")
+                                    # Fallback: try center pixel first
+                                    
+                                # === End of 5-point sampling logic ===
+
+                            
+
                               
                                     
                                 # Convert R,G,B to float as per rgb class expectation
@@ -1998,15 +2031,6 @@ def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleas
                     g.g_virtual_fg_color_rgb_previous_when_dirty_brush_on = g.g_virtual_fg_color_rgb.clone()
 
                     fg = view.foregroundColor()  # tipo ManagedColor, valori da 0 a 1
-            # log(f"fg  = {fg}")
-
-                    # fg2 = rgbOfManagedColor(fg) # valori da 0 a 255
-
-                    # global g.g_virtual_fg_color_rgb
-                    # g.g_virtual_fg_color_rgb = fg2
-
-                    # non riesco aprendere il colore precedente
-                    # bgColor = getColorUnderCursorOrAtPos(True) # skippo current layer altrimenti prende il fg attuale
 
                     # average between color when mouse down and color when mouse up
 
@@ -3083,9 +3107,8 @@ class MyExtension(Extension):
                         # Also, rgb uses 0-255 range, which matches final_canvas_color_rgb.
                         if not final_canvas_color_rgb:
                              # Handle case where blending failed (e.g., all samples out of bounds/errors)
-                             log("Error: Could not determine final canvas color from sampling. Falling back.")
+                             log(">>> Error: Could not determine final canvas color from sampling. ")
                              # Fallback: try center pixel first
-                             final_canvas_color_rgb = sample_pixel_rgb0255(document, cx_c, cy_c)
                              
                         # === End of 5-point sampling logic ===
 
