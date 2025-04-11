@@ -107,7 +107,7 @@ cambi  colore.  In questo modo, permette la "post-correzione" dei colori sbaglia
 esempio, capita spesso che, dopo aver fatto una pennellata, ti accorgi che il colore è
 sbagliato, cioè che armonizza male con lo sfondo, perché è *troppo diverso* dal colore
 che c'era sotto, sul quale hai dipinto. In questo caso, puoi modificare il colore "sul
-posto", gradualmente, fino a che vedi che armonizza bene con lo sfondo.
+posto", gradualmente, fino a che vedi che è diventato abbastanza simile allo sfondo.
 
 Come si fa a modificare gradualmente il colore della pennellata appena fatta? Hai 2 modi:
     
