@@ -16,6 +16,11 @@ g_blur_on_dry = False
 countColorChanged = 0
 printCount = 0
 
+
+last_log_time_sample_points = 0
+last_log_time_sampled_colors = 0
+last_log_time_final_color = 0
+
 # g_mix_auto_clears_cur_layer = "1"
 
 g_color_changed_from_selector_probably = False

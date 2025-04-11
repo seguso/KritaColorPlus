@@ -12,16 +12,14 @@ import time
 from . import globals as g
 
 # Throttling for debug logs
-last_log_time_sample_points = 0
-last_log_time_sampled_colors = 0
-last_log_time_final_color = 0
+
 from .whichtool import EKritaTools, EKritaToolsId  # Import the necessary classes
 from .brush_cycler import brush_cycler  # Import the brush cycler instance
 from .brush_list_widget import BrushListDialog  # Import the brush list dialog
 from .slider import KritaStyleSlider # Import the new slider
 
 
-from .rgb import rgb, rgbOfColorArray,colorArrayOfRgb, colorArray3OfRgb
+from .rgb import rgb, rgbOfColorArray,colorArrayOfRgb, colorArray255_3_OfRgb
 
 
 from krita import *
@@ -188,7 +186,7 @@ def blend_colors_spectral(colors: InputColorsType) -> ColorType:
     # Start with the first valid color
     blended_color = validated_colors[0]
 
-    log(f"i validi sono {len(validated_colors)}")
+    # log(f"i validi sono {len(validated_colors)}")
     # Sequentially mix in the remaining valid colors
     for i in range(1, len(validated_colors)):
         # The weight 't' for spectral_mix represents the proportion of the *new* color
@@ -2955,8 +2953,8 @@ class MyExtension(Extension):
                     doc_pos = p + center
 
 
-                    maybeColorRgb : Optional[rgb] = getColorUnderCursorOrAtPos(ignore_bottom_layer=True)
-                    colorRgb: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb is None else maybeColorRgb
+                    maybeColorRgb255 : Optional[rgb] = getColorUnderCursorOrAtPos(ignore_bottom_layer=True)
+                    colorRgb255: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb255 is None else maybeColorRgb255
                       
                     # doc_pos = xyOfQpoint(doc_pos)
                     # log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
@@ -2967,7 +2965,7 @@ class MyExtension(Extension):
 
                       
                         # e ora da colore qt a colore mio
-                        bgColor255 = colorRgb
+                        bgColor255 = colorRgb255
                       
                      
                         # vecchia logia senza radius
@@ -3020,7 +3018,7 @@ class MyExtension(Extension):
                         radius = float(g.g_mix_radius) # Ensure radius is float, read from globals
 
                         # Define the 5 sample points
-                        sample_points = [
+                        sample_pointsxy = [
                             # (cx, cy),             # Center non lo metto piu
                             xy(cx, cy - radius),    # Up
                             xy(cx, cy + radius),    # Down
@@ -3028,37 +3026,50 @@ class MyExtension(Extension):
                             xy(cx + radius, cy)     # Right
                         
                         ]
+                        sample_points = [
+                            # (cx, cy),             # Center non lo metto piu
+                            (cx, cy - radius),    # Up
+                            (cx, cy + radius),    # Down
+                            (cx - radius, cy),    # Left
+                            (cx + radius, cy)     # Right
+                        
+                        ]
 
                         current_time = time.time()
-                        if current_time - last_log_time_sample_points > 1.0:
-                            log(f"Sample points: {sample_points}") # DEBUG
-                            last_log_time_sample_points = current_time
+                        if current_time - g.last_log_time_sample_points > 1.0:
+                            log(f"Sample points: {sample_pointsxy}") # DEBUG
+                            
 
                         # Sample the colors at these points using the new helper
-                        sampled_colors_rgbarr = []
-                        for p in sample_points:
+                        sampled_colors_arr255 = []
+                        for p in sample_pointsxy:
+                            maybeColorRgb255 : Optional[rgb] = getColorUnderCursorOrAtPos(forcedPos=p, ignore_bottom_layer=True)
+                            colorRgb255: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb255 is None else maybeColorRgb255
 
-                            maybeColorRgb : Optional[rgb] = getColorUnderCursorOrAtPos(forcedPos=p, ignore_bottom_layer=True)
-                            colorRgb: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb is None else maybeColorRgb
-                    
-                            # color = sample_pixel_rgb0255(document, px, py)
+                            rgbArr = colorArray255_3_OfRgb(colorRgb255)
+                            sampled_colors_arr255.append(rgbArr) # Appends color [R,G,B] or None
+                        
+                        # for (px,py) in sample_points:
 
-                            rgbArr = colorArray3OfRgb(colorRgb)
-                            sampled_colors_rgbarr.append(rgbArr) # Appends color [R,G,B] or None
+                        #     color = sample_pixel_rgb0255(document, px, py)
+                        #     sampled_colors_rgbarr.append(color) # Appends color [R,G,B] or None
 
                             
-                        current_time = time.time()
-                        if current_time - last_log_time_sampled_colors > 1.0:
-                            log(f"Sampled colors RGB array: {sampled_colors_rgbarr}") # DEBUG
-                            last_log_time_sampled_colors = current_time
+                        
+                        if current_time - g.last_log_time_sample_points > 1.0:
+                            log(f"Sampled colors RGB array: {sampled_colors_arr255}") # DEBUG
+                        
 
                         # Blend the sampled colors using the new helper (handles None values)
                         # Result is [R, G, B] 0-255
-                        final_canvas_color_rgb = blend_colors_spectral(sampled_colors_rgbarr)
-                        current_time = time.time()
-                        if current_time - last_log_time_final_color > 1.0:
+                        final_canvas_color_rgb = blend_colors_spectral(sampled_colors_arr255)
+                        
+                        if current_time - g.last_log_time_sample_points > 1.0:
                             log(f"Final canvas color RGB: {final_canvas_color_rgb}") # DEBUG
-                            last_log_time_final_color = current_time
+                            
+
+
+                        g.last_log_time_sample_points = current_time
 
                         # We no longer need the single 'mergedColor' object for the primary mixing path.
                         # The final mixing logic later will use final_canvas_color_rgb directly.
