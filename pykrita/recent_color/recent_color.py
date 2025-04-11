@@ -2948,11 +2948,7 @@ class MyExtension(Extension):
                 if document:
                     # center = QPointF(0.5 * document.width(),
                     #                  0.5 * document.height())
-                    p = get_cursor_in_document_coords()
-                    if p is None:
-                        print("aborted mixOnTimer")
-                        return
-
+                    
                     # doc_posPiuCenter = p + center
 
 
@@ -3020,9 +3016,13 @@ class MyExtension(Extension):
                         # === New 4-point sampling logic ===
                         # cx_c = doc_posPiuCenter.x()
                         # cy_c = doc_posPiuCenter.y()
+                        pcursor = get_cursor_in_document_coords()
+                        if pcursor is None:
+                            print("aborted mixOnTimer")
+                            return
 
-                        cx_p = p.x()
-                        cy_p = p.y()
+                        cx_p = pcursor.x()
+                        cy_p = pcursor.y()
                         radius = float(g.g_mix_radius) # Ensure radius is float, read from globals
 
                         # Define the 5 sample points
@@ -3049,8 +3049,8 @@ class MyExtension(Extension):
 
                         # Sample the colors at these points using the new helper
                         sampled_colors_arr255 = []
-                        for p in sample_pointsxy:
-                            maybeColorRgb255 : Optional[rgb] = getColorUnderCursorOrAtPos(forcedPos=p, ignore_bottom_layer=True)
+                        for pcursor in sample_pointsxy:
+                            maybeColorRgb255 : Optional[rgb] = getColorUnderCursorOrAtPos(forcedPos=pcursor, ignore_bottom_layer=True)
                             colorRgb255: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb255 is None else maybeColorRgb255
 
                             rgbArr = colorArray255_3_OfRgb(colorRgb255)
