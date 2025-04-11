@@ -4010,6 +4010,13 @@ class MyExtension(Extension):
         actionRestore.setShortcut("Ctrl+Shift+R")
         actionRestore.triggered.connect(self.restoreWindowPositions)
 
+
+
+        actionSave = window.createAction(
+            "exportLayers", "Export layers and coordinates")
+        #actionSave.setShortcut("Ctrl+Shift+F")
+        actionSave.triggered.connect(export_layer_coordinates)
+
         # actionToggle100 = window.createAction(
         #     "toggle100PercOpacity", "Toggle 100% layer opacity")
         # # actionToggle100.setShortcut("f")
@@ -4502,7 +4509,7 @@ def export_layer_coordinates():
     with open(output_file, 'w') as f:
         json.dump(output_data, f, indent=4)
     
-    log("Export completed successfully")
+    quickMessage("Export completed successfully")
 
 
 # And add the extension to Krita's list of extensions:
