@@ -1,5 +1,8 @@
 This plugin contains several actions that can be assigned to different shortcuts. 
 
+
+
+
 These docs are not yet up to date. Please see this video for a better
 explanation: https://youtu.be/HpJodkOphM0
 
