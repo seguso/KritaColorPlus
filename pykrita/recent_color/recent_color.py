@@ -4116,7 +4116,7 @@ def minimizeOnTopAndViewFullScreen():  #bm_fullscreeen bm_preview
 
     # cerca di capire in che stato siamo.
 
-    act = app.action('view_show_canvas_only')
+    act = app.action('view_show_canvas_only')  # nota che non lo eseguo
     siamoInStatoNormale = not act.isChecked()
 
     # old logic: se c'è una window on top non minimizzata, siamo in stato normale. altrimenti siamo in stato view full screen
@@ -4188,6 +4188,12 @@ def minimizeOnTopAndViewFullScreen():  #bm_fullscreeen bm_preview
     else:
         # devo tornare in stato normale, quindi alle on top devo togliere il minimized e alle normali devo ripristinare lo stato precedente
 
+
+        # ora ri-mostro i docker (richiamando la stessa action). questo va fatto prima del ciclo for, altrimenti se era massimizzata 
+        # spariscono i pulsanti close, restore. buggone ma workaround ok.
+        app.action('view_show_canvas_only').trigger()
+        app.activeDocument().waitForDone()  # action needs to finish before continuing
+
         for su in subwins:
             stayOnTop = bool(su.windowFlags() & Qt.WindowStaysOnTopHint)
 
@@ -4209,10 +4215,7 @@ def minimizeOnTopAndViewFullScreen():  #bm_fullscreeen bm_preview
                     # Se non era massimizzata, assicurati che sia in stato normale
                     su.showNormal()
 
-        # ora ri-mostro i docker (richiamando la stessa action)
-        app.action('view_show_canvas_only').trigger()
-        app.activeDocument().waitForDone()  # action needs to finish before continuing
-
+     
 
 def toggleAutoFocus():
     if g.g_auto_focus == "true":
