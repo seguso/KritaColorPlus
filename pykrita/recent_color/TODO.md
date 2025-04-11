@@ -13,6 +13,8 @@ DONE ritesta layer opacity
 
 TODO ritesta full screen preview
 
+    ok ma se era massimizzata, rimassimizzala quando ripremi
+
 DONE mi sembra che il mixing spctral non funzioni piu bene da quando ho fatto il radius
 
 DONE se premo D, fare clean brush se sporco
