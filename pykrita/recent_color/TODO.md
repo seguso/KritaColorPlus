@@ -8,7 +8,7 @@ DONE reimplementa export layer coordinates
 
 DONE pulsante merge temp layers
 
-TODO disabilita sliders visualmente
+DONE disabilita sliders visualmente
 
 DONE  con automix, se premo V, non mette il colore in cima alla history
 
@@ -33,4 +33,6 @@ anche se non ha cambiato colore
 TODO low priority - ad ogni mouse up viene rebuildata la color history.
 per verificarlo, scommenta qualcosa dentro update_color_history_ui
 
-TODO e' inutile il brush cycling cosi', ma con shortcut puo' avere senso    
+TODO è inutile il brush cycling così, ma con shortcut può avere senso 
+
+    per ora commentato

@@ -27,7 +27,7 @@ class ColorHistoryDocker(DockWidget):
     def __init__(self):
         super().__init__()
         g.g_color_history_docker_instance = self  # Store instance globally
-        self.setWindowTitle("Colorplus Color History")
+        self.setWindowTitle("ColorPlus Color History")
         mainWidget = QWidget(self)
         self.setWidget(mainWidget)
         
