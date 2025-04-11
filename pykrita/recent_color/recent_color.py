@@ -441,7 +441,7 @@ class HelloDocker(DockWidget):
         btnCleanup.setFont(font)
         btnCleanup.setToolTip("Merge all temporary layers")
         btnCleanup.setMinimumHeight(50)
-        btnCleanup.clicked.connect(lambda: Krita.instance().activeWindow().views()[0].extension.mergeCleanup())
+        btnCleanup.clicked.connect(mergeCleanup)
         
         # mix radius dial
         g.g_slider_mix_radius = KritaStyleSlider(mainWidget, "Mix radius")
@@ -3770,66 +3770,7 @@ class MyExtension(Extension):
 
                         # currentDoc.setActiveNode(children[1])
 
-    def mergeCleanup(self):
-        # log(f"dry paper called showMessage = {showMessage}")
-        application = Krita.instance()
-        currentDoc = application.activeDocument()
-        activeLayer = currentDoc.activeNode()
-
-        # application.action('selectopaque').trigger()
-        # currentDoc.waitForDone () # action needs to finish before continuing
-        # selectionStroke = currentDoc.selection()
-
-        parentNode = activeLayer.parentNode()
-        newLa = None
-        if parentNode is not None:
-            # log("dry paper called1")
-            oldOpacity = activeLayer.opacity()
-
-            while True:
-                children = parentNode.childNodes()
-                if len(children) <= 1:
-                    break
-
-                # skip the background which has opacity 100%. but follow the order from closest to bg to farthest
-                lastLayer = children[1]
-
-                lastLayer.mergeDown()
-
-            # merged all layers. Create a new one and set opacity
-
-            currentDoc.waitForDone()
-
-            if g.g_multi_layer_mode:
-                # root = currentDoc.rootNode()
-                newLa = currentDoc.createNode("Wet_area", "paintLayer")
-                newLa.setOpacity(oldOpacity)
-
-                if g.g_set_spectral_blend_mode_when_creating_layer:
-                    # log("setting over spectral")
-                    newLa.setBlendingMode("over spectral")
-
-                # backgroundLayer = parentNode.childNodes()[0]
-
-                parentNode.addChildNode(newLa, None)
-
-        else:
-            messageBox(
-                "In order to call \"Cleanup layers\", the current layer needs to have a parent group")
-            showMessage = False
-            # newLa = currentDoc.createNode("Wet_area", "paintLayer")
-            # newLa.setOpacity(50.0 * 255.0 / 100.0)
-            # root.addChildNode(newLa, None)
-            newLa = None
-
-        # test blur
-
-        log("cleanup layers called message")
-        quickMessage("Cleanup layers")
-        # application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
-
-        return newLa
-
+    
     def manualResetLayerOpacityToDefault(self):
 
         application = Krita.instance()
@@ -4019,37 +3960,37 @@ class MyExtension(Extension):
 
         actionToggleMc = window.createAction(
             "cleanupLayers", "Cleanup (merge all temp layers)")
-        actionToggleMc.triggered.connect(self.mergeCleanup)
+        actionToggleMc.triggered.connect(mergeCleanup)
 
-        self.actionAutoFocus = window.createAction(
+        g.g_actionAutoFocus = window.createAction(
             "autoFocus", "Autofocus windows on mouse over")
-        self.actionAutoFocus.setCheckable(True)
-        self.actionAutoFocus.setChecked(g.g_auto_focus == "true")
-        self.actionAutoFocus.triggered.connect(toggleAutoFocus)
+        g.g_actionAutoFocus.setCheckable(True)
+        g.g_actionAutoFocus.setChecked(g.g_auto_focus == "true")
+        g.g_actionAutoFocus.triggered.connect(toggleAutoFocus)
 
-        self.actionAutoResOpPick = window.createAction(
+        g.g_actionAutoResOnPick = window.createAction(
             "toggleAutoResetOpacityOnPick", "Auto-reset layer opacity to default on color pick")
-        self.actionAutoResOpPick.setCheckable(True)
-        self.actionAutoResOpPick.setChecked(
+        g.g_actionAutoResOnPick.setCheckable(True)
+        g.g_actionAutoResOnPick.setChecked(
             g.g_auto_reset_opacity_on_pick == 1)
-        self.actionAutoResOpPick.triggered.connect(
+        g.g_actionAutoResOnPick.triggered.connect(
             toggleAutoResetOpacityOnPick)
 
-        self.actionSingleLayerMode = window.createAction(
+        g.g_actionSingleLayerMode = window.createAction(
             "toggleSingleLayerMode", "Single-layer mode (don't auto create layers for watercolor effect)")
-        self.actionSingleLayerMode.setCheckable(True)
-        self.actionSingleLayerMode.setChecked(not g.g_multi_layer_mode)
-        self.actionSingleLayerMode.triggered.connect(toggleMultiLayerMode)
+        g.g_actionSingleLayerMode.setCheckable(True)
+        g.g_actionSingleLayerMode.setChecked(not g.g_multi_layer_mode)
+        g.g_actionSingleLayerMode.triggered.connect(toggleMultiLayerMode)
 
         self.actionAcceptColorAndStop = window.createAction(
             "acceptCurrentColorAndStopDirty", "Accept current color and stop dirty brush")
         self.actionAcceptColorAndStop.triggered.connect(
             lambda: self.acceptCurrentColorAndStopDirty(clearCurLayer=True))
 
-        self.manualResOpPick = window.createAction(
+        g.g_manualResOnPick = window.createAction(
             "manualResetLayerOpacityToDefault", "Reset layer opacity to default now")
-        # self.manualResOpPick.setShortcut("v")
-        self.manualResOpPick.triggered.connect(
+        
+        g.g_manualResOnPick.triggered.connect(
             self.manualResetLayerOpacityToDefault)
 
         setFgColorEqualToColorOfLastStroke = window.createAction(
@@ -4061,8 +4002,8 @@ class MyExtension(Extension):
         main_menu = window.qwindow().menuBar()
         custom_menu = main_menu.addMenu("ColorPlus")
 
-        custom_menu.addAction(self.actionAutoFocus)
-        custom_menu.addAction(self.actionSingleLayerMode)
+        custom_menu.addAction(g.g_actionAutoFocus)
+        custom_menu.addAction(g.g_actionSingleLayerMode)
 
         custom_menu.addSeparator()
         custom_menu.addAction(actionViewFullScreen)
@@ -4119,10 +4060,10 @@ class MyExtension(Extension):
         custom_menu.addAction(actionPickAndDry)
 
         custom_menu.addSeparator()
-        custom_menu.addAction(self.actionAutoResOpPick)
+        custom_menu.addAction(g.g_actionAutoResOnPick)
         custom_menu.addAction(actioninaro)
         custom_menu.addAction(actiondearo)
-        custom_menu.addAction(self.manualResOpPick)
+        custom_menu.addAction(g.g_manualResOnPick)
 
         custom_menu.addSeparator()
 
@@ -4140,6 +4081,67 @@ class MyExtension(Extension):
 
         custom_menu.addAction(actionToggle100)
         custom_menu.addAction(actionToggle25)
+
+
+def mergeCleanup(): # bm_mergelayers
+        # log(f"dry paper called showMessage = {showMessage}")
+        application = Krita.instance()
+        currentDoc = application.activeDocument()
+        activeLayer = currentDoc.activeNode()
+
+        # application.action('selectopaque').trigger()
+        # currentDoc.waitForDone () # action needs to finish before continuing
+        # selectionStroke = currentDoc.selection()
+
+        parentNode = activeLayer.parentNode()
+        newLa = None
+        if parentNode is not None:
+            # log("dry paper called1")
+            oldOpacity = activeLayer.opacity()
+
+            while True:
+                children = parentNode.childNodes()
+                if len(children) <= 1:
+                    break
+
+                # skip the background which has opacity 100%. but follow the order from closest to bg to farthest
+                lastLayer = children[1]
+
+                lastLayer.mergeDown()
+
+            # merged all layers. Create a new one and set opacity
+
+            currentDoc.waitForDone()
+
+            if g.g_multi_layer_mode:
+                # root = currentDoc.rootNode()
+                newLa = currentDoc.createNode("Wet_area", "paintLayer")
+                newLa.setOpacity(oldOpacity)
+
+                if g.g_set_spectral_blend_mode_when_creating_layer:
+                    # log("setting over spectral")
+                    newLa.setBlendingMode("over spectral")
+
+                # backgroundLayer = parentNode.childNodes()[0]
+
+                parentNode.addChildNode(newLa, None)
+
+        else:
+            messageBox(
+                "In order to call \"Cleanup layers\", the current layer needs to have a parent group")
+            showMessage = False
+            # newLa = currentDoc.createNode("Wet_area", "paintLayer")
+            # newLa.setOpacity(50.0 * 255.0 / 100.0)
+            # root.addChildNode(newLa, None)
+            newLa = None
+
+        # test blur
+
+        log("cleanup layers called message")
+        quickMessage("Cleanup layers")
+        # application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
+
+        return newLa
 
 
 def minimizeOnTopAndViewFullScreen():  #bm_fullscreeen bm_preview
@@ -4276,15 +4278,20 @@ def minimizeOnTopAndViewFullScreen():  #bm_fullscreeen bm_preview
 
      
 
-def toggleAutoFocus():
+def toggleAutoFocus(aself):
     if g.g_auto_focus == "true":
         g.g_auto_focus = "false"
         if g.g_btn_auto_focus is not None:
             g.g_btn_auto_focus.setChecked(False)
+        g.g_actionAutoFocus.setChecked(False)
+        
     else:
         g.g_auto_focus = "true"
         if g.g_btn_auto_focus is not None:
             g.g_btn_auto_focus.setChecked(True)
+
+        g.g_actionAutoFocus.setChecked(True)
+         
 
     Krita.instance().writeSetting("colorPlus", "g.g_auto_focus", g.g_auto_focus)
 
@@ -4295,11 +4302,13 @@ def toggleAutoResetOpacityOnPick():
         g.g_auto_reset_opacity_on_pick = 0
         if g.g_btn_auto_reset_opacity is not None:
             g.g_btn_auto_reset_opacity.setChecked(False)
+        g.g_actionAutoResOnPick.setChecked(False)
         quickMessage("Auto reset opacity on color pick: disabled")
     else:
         g.g_auto_reset_opacity_on_pick = 1
         if g.g_btn_auto_reset_opacity is not None:
             g.g_btn_auto_reset_opacity.setChecked(True)
+        g.g_actionAutoResOnPick.setChecked(True)
         quickMessage(
             f"Auto reset opacity on color pick: enabled. Will be reset to {round(g.g_auto_reset_opacity_on_pick_level)}.")
 
@@ -4325,6 +4334,9 @@ def toggleMultiLayerMode():
     # Aggiorna il pulsante (il pulsante è checked quando siamo in single-layer mode)
     if g.g_btn_single_layer is not None:
         g.g_btn_single_layer.setChecked(not g.g_multi_layer_mode)
+    
+        g.g_actionSingleLayerMode.setChecked(not g.g_multi_layer_mode)
+
 
     multi_layer_mode_str = "1" if g.g_multi_layer_mode else "0"
 

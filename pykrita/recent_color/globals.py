@@ -47,6 +47,14 @@ g_normal_step_layer_opacity = 20
 
 g_mixing_step = 0.05
 
+g_actionAutoMix = None
+g_actionDirtyBrush = None
+g_actionBrushCycler = None
+g_actionAutoFocus = None
+g_actionAutoResOnPick = None
+g_actionSingleLayerMode = None
+g_manualResOnPick = None
+
 g_auto_mixing_distance_step = 5
 
 g_set_spectral_blend_mode_when_creating_layer = False
