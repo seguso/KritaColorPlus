@@ -1,8 +1,3 @@
-# TODO TODO pick color stops creating layers
-# TODO when changing color via the selector, then press mix, it didn't start new layer, because it erases all
-# TODO when using C on reference, add layer to real image.
-# TODO when chanign opacity of reference, do it on real image
-# todo pick color via button does not reset opacity of layer
 
 from . mouseMonitor import MouseMonitor
 from PyQt5.QtWidgets import QTreeView

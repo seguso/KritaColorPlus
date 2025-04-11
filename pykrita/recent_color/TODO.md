@@ -1,3 +1,5 @@
+TODO fixa il bug di quando fa fill dell'intero layer. come si riproduceva?
+
 TODO inverti dry paper e color preview
 
 TODO vedi ultima versione di spectral
