@@ -1,3 +1,27 @@
+# Indice
+
+1.  [ColorPlus](#colorplus)
+2.  [Funzionalità](#funzionalità)
+    * [Logica spectral del color mixing](#logica-spectral-del-color-mixing)
+    * [Auto-mix](#auto-mix)
+    * [Dirty brush](#dirty-brush)
+    * [Alternanza rapida tra colori](#alternanza-rapida-tra-colori)
+    * [Color picker intelligente](#color-picker-intelligente)
+    * [Color Mixing shortcut](#color-mixing-shortcut)
+    * [Post-correzione del colore](#post-correzione-del-colore)
+        * [Modificare la trasparenza della pennellata](#modificare-la-trasparenza-della-pennellata)
+    * [Simulazione di acquerello](#simulazione-di-acquerello)
+    * [Color history intelligente](#color-history-intelligente)
+    * [Docker principale](#docker-principale)
+    * [Preview a tutto schermo](#preview-a-tutto-schermo)
+    * [Salvataggio e ripristino delle finestre e della loro posizione](#salvataggio-e-ripristino-delle-finestre-e-della-loro-posizione)
+    * [Esportazione di layer e coordinate](#esportazione-di-layer-e-coordinate)
+    * [Autofocus delle finestre](#autofocus-delle-finestre)
+3.  [INSTALLAZIONE](#installazione)
+    * [In Windows](#in-windows)
+
+# ColorPlus
+
 ColorPlus è un plugin per Krita che aggiunge a Krita le seguenti funzionalità:
 
 # Funzionalità
@@ -135,7 +159,7 @@ chiama "post-correzione del colore". Vedi sezione apposita.
 
 Consiglio di associare questa funzione al tasto F: https://i.imgur.com/AiehdQv.png
 
-# Post-correzione del colore
+## Post-correzione del colore
 
 Il plugin, nella sua modalità di default, crea automaticamente un layer ogni volta che
 cambi  colore.  In questo modo, permette la "post-correzione" dei colori sbagliati. Ad
