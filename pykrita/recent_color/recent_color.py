@@ -2539,7 +2539,7 @@ class MyExtension(Extension):
         # su.move( w2.x, w2.y)
         # su.resize(w2.wt, w2.ht)
 
-    def restoreWindowPositions(self):
+    def restoreWindowPositions(self):  # bm_restorestateandPosition
 
         # restore last saved window state
         try:
@@ -2589,36 +2589,49 @@ class MyExtension(Extension):
                 log(f"titolo = {w2.title}, x = {w2.x}")
 
                 for su in subwins:
-                    tit = su.windowTitle().replace(" *", "")
-                    if tit == w2.title:
-                        # devo settare questa finestra come era
-                        if w2.isMaximized:  # se era massimizzata
-                            # la massimizzo
-                            su.setWindowState(
-                                su.windowState() | Qt.WindowMaximized)
-                        else:
-                            # tolgo lo stato maximixed
-                            su.setWindowState(
-                                su.windowState() & ~Qt.WindowMaximized)
+                    # Use the same robust regex cleaning as in saveWindowPositions
+                    raw_title_su = su.windowTitle()
+                    match_su = re.match(r"^(.*?)(?: \(.*\))?(?: \[\*\])?$", raw_title_su)
+                    if match_su:
+                        tit_su = match_su.group(1).strip()
+                    else:
+                        tit_su = raw_title_su.replace(" [*]", "").strip() # Fallback
 
-                        if w2.isMinimized:
-                            su.setWindowState(
-                                su.windowState() | Qt.WindowMinimized)
-                        else:
-                            su.setWindowState(
-                                su.windowState() & ~Qt.WindowMinimized)
+                    # Compare cleaned titles
+                    if tit_su == w2.title:
+                        log(f"--- Restoring state for window: '{w2.title}' ---")
+                        log(f"  Target State: Maximized={w2.isMaximized}, Minimized={w2.isMinimized}, AlwaysOnTop={w2.isAlwaysOnTop}")
+                        log(f"  Current State (before): State={su.windowState()}, Flags={su.windowFlags()}")
 
-                        if w2.isAlwaysOnTop:  # se era always on top
-                            # la metto on top
-                            su.setWindowFlags(
-                                su.windowFlags() | Qt.WindowStaysOnTopHint)
+                        # --- Apply Geometry First (Only if target is Normal) ---
+                        if not w2.isMaximized and not w2.isMinimized:
+                            log(f"  Applying Geometry: Pos=({w2.x}, {w2.y}), Size=({w2.wt}, {w2.ht})")
+                            su.move(w2.x, w2.y)
+                            su.resize(w2.wt, w2.ht)
                         else:
-                            # tolgo lo stato on top
-                            su.setWindowFlags(
-                                su.windowFlags() & ~Qt.WindowStaysOnTopHint)
+                            log(f"  Skipping geometry application (target is Maximized/Minimized).")
 
-                        su.move(w2.x, w2.y)
-                        su.resize(w2.wt, w2.ht)
+                        # --- Set State using showMaximized/Minimized/Normal ---
+                        if w2.isMaximized:
+                            log("  Setting state to Maximized.")
+                            su.showMaximized()
+                        elif w2.isMinimized:
+                            log("  Setting state to Minimized.")
+                            su.showMinimized()
+                        else:
+                            log("  Setting state to Normal.")
+                            su.showNormal() # Should respect geometry set earlier if applicable
+
+                        # --- Set AlwaysOnTop Flag (after setting state) ---
+                        log(f"  Setting AlwaysOnTop flag to: {w2.isAlwaysOnTop}")
+                        # Use the dedicated setWindowFlag method
+                        su.setWindowFlag(Qt.WindowStaysOnTopHint, w2.isAlwaysOnTop)
+
+                        # Re-show the window after changing flags/state to ensure updates are applied
+                        su.show()
+
+                        log(f"  Current State (after show()): State={su.windowState()}, Flags={su.windowFlags()}")
+                        log(f"--- Finished restoring state for '{w2.title}' ---")
 
             # I activate any window that is not on top and not minimized. this still leaves the layers of the wrong window in the layer list, therefore I sorted them previously
             for su in subwins:
