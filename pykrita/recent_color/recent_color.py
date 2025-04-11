@@ -413,7 +413,18 @@ class HelloDocker(DockWidget):
         g.g_btn_auto_reset_opacity.setFont(font)
         g.g_btn_auto_reset_opacity.setToolTip("Auto-reset layer opacity to default on color pick")
         g.g_btn_auto_reset_opacity.clicked.connect(toggleAutoResetOpacityOnPick)
-        
+
+        # Auto-reset layer opacity slider
+        g.g_slider_auto_reset_opacity = KritaStyleSlider( mainWidget, "Auto-reset opacity")
+        # g.g_slider_auto_reset_opacity.setRange(0, 100)
+        g.g_slider_auto_reset_opacity.setValue(g.g_auto_reset_opacity_on_pick_level / 100.0)
+        # g.g_slider_auto_reset_opacity.setToolTip(f"Set default opacity level ({int(g.g_auto_reset_opacity_on_pick_level * 100.0)}%)")
+        g.g_slider_auto_reset_opacity.valueChanged.connect(updateAutoResetOpacityLevel)
+        # g.g_slider_auto_reset_opacity.setMinimumWidth(80) # Give it some minimum width
+        layoutHorizAutoResetOpacity.addWidget(g.g_slider_auto_reset_opacity)
+        # Add stretch to push button and slider to the left
+        # layoutHorizAutoResetOpacity.addStretch(1)
+
         # Single-layer mode layout
         layoutHorizSingleLayer = QHBoxLayout()
         mainLayout.addLayout(layoutHorizSingleLayer)
@@ -3256,9 +3267,9 @@ class MyExtension(Extension):
     # def mixBig(self):
         # return self.mix( 0.33)  #0.33 from canvas
 
-    def pickColorFun(self, showMessage=True): #bm_pick
+    def pickColorFun(self, showMessage=True): # bm_pickColor
 
-        # log("pick called")
+        log("pick called")
         app = Krita.instance()
         win = app.activeWindow()
         if win is not None:
@@ -3499,6 +3510,8 @@ class MyExtension(Extension):
 
         quickMessage(
             f"Decreased default opacity to {round(g.g_auto_reset_opacity_on_pick_level)}%")
+
+    
 
     # def increasemixing_targetLogic(self):
         # self.mixing_target_distance += g.g_step_mixing_target_distance
@@ -3869,26 +3882,26 @@ class MyExtension(Extension):
         # action2 = window.createAction("MixColorSmall", "MixColorSmall")
         # action2.triggered.connect(self.mixSmall)
 
-        # actionMixW = window.createAction(
-        #     "MixColorBecauseWrong", "Mix color and do post-correction")
-        # actionMixW.triggered.connect(lambda: mixFgColorWithBgColor_normalLogic(
-        #     clearCurLayer=True, createLayer=False))
+        actionMixW = window.createAction(
+            "MixColorBecauseWrong", "Mix color and do post-correction")
+        actionMixW.triggered.connect(lambda: mixFgColorWithBgColor_normalLogic(
+            clearCurLayer=True, createLayer=False))
 
-        # actionMixC = window.createAction(
-        #     "MixColorBecauseWantNew", "Mix color")
-        # actionMixC.triggered.connect(lambda: mixFgColorWithBgColor_normalLogic(
-        #     clearCurLayer=False, createLayer=True))
+        actionMixC = window.createAction(
+            "MixColorBecauseWantNew", "Mix color")
+        actionMixC.triggered.connect(lambda: mixFgColorWithBgColor_normalLogic(
+            clearCurLayer=False, createLayer=True))
 
         # actionMixSmall = window.createAction("MixColorSmall", "Pick some color from canvas, but no more than a given distance")
         # actionMixSmall.triggered.connect(self.mixFgColorWithBgColor_maxDistanceLogic)
 
-        # actionPickAndDry = window.createAction(
-        #     "DryPaperAndPick", "Pick color under cursor and dry the paper")
-        # actionPickAndDry.triggered.connect(self.dryPaperAndPick)
+        actionPickAndDry = window.createAction(
+            "DryPaperAndPick", "Pick color under cursor and dry the paper")
+        actionPickAndDry.triggered.connect(self.dryPaperAndPick)
 
-        # actionPick = window.createAction(
-        #     "PickColor", "Pick color under cursor")
-        # actionPick.triggered.connect(self.pickColorFun)
+        actionPick = window.createAction(
+            "PickColor", "Pick color under cursor")
+        actionPick.triggered.connect(self.pickColorFun)
 
         actionDryPaper = window.createAction(
             "LayerMergeDownAndNew", "Dry the paper (create new layer and set opacity)")
@@ -4144,6 +4157,19 @@ def mergeCleanup(): # bm_mergelayers
 
         return newLa
 
+def updateAutoResetOpacityLevel(value):
+    """Updates the global opacity level when the slider changes."""
+    g.g_auto_reset_opacity_on_pick_level = float(value) * 100.0;
+    Krita.instance().writeSetting("colorPlus", "g.g_auto_reset_opacity_on_pick_level",
+                                    str(g.g_auto_reset_opacity_on_pick_level))
+    # Update tooltip of slider and maybe button if needed
+    # if g.g_slider_auto_reset_opacity:
+    #         g.g_slider_auto_reset_opacity.setToolTip(f"Set default opacity level ({value}%)")
+    # Optional: Update button tooltip too?
+    # if g.g_btn_auto_reset_opacity:
+    #    g.g_btn_auto_reset_opacity.setToolTip(f"Auto-reset layer opacity to {value}% on color pick")
+    # Optional: Show quick message? Might be too noisy.
+    # quickMessage(f"Default opacity set to {value}%")
 
 def minimizeOnTopAndViewFullScreen():  #bm_fullscreeen bm_preview
     app = Krita.instance()

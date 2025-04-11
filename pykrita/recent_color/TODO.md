@@ -1,4 +1,9 @@
-TODO pulsante merge temp layers
+
+TODO ritesta save e restore state and pos of all windows
+
+TODO reimplementa export layer coordinates
+
+DONE pulsante merge temp layers
 
 TODO disabilita sliders visualmente
 
