@@ -170,3 +170,17 @@ Esiste  uno  shortcut  che mostra la tua immagine attuale a tutto schermo, nasco
 temporaneamente  tutti  i docker floating che ci sono. Se premuto di nuovo, ripristina
 il layout di lavoro, con i docker floating, i docker agganciati, e la reference window
 eventuale.
+
+# Esportazione di layers e coordinate
+
+ColorPlus offre una voce di menu che esporta tutti i layer il cui nome termina con
+-png, .png, -jpg o .jpg. Esporta anche un file .json che contiene le coordinate di
+ogni layer all'interno dell'immagine.
+
+Questo è utile se stai sviluppando un gioco o un'applicazione che deve caricare
+fondale e personaggi, e sapere in che posizione piazzare i personaggi.
+
+La funzione esporta anche gruppi di layer. Se hai un gruppo con nome che finisce ad esempio
+con .png, esporterà un'immagine contenente la fusione di tutti i layer del gruppo.
+
+Il .json e i layer vengono salvati nella tua cartella Documenti.
