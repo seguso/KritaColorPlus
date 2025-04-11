@@ -4178,12 +4178,12 @@ def minimizeOnTopAndViewFullScreen():  #bm_fullscreeen bm_preview
         app.action('view_show_canvas_only').trigger()
         app.activeDocument().waitForDone()  # action needs to finish before continuing
 
-        # workaround per mancanza di fit to page
-        app.action('zoom_to_100pct').trigger()
+        # nuovo in krita
+        app.action('zoom_to_fit').trigger()
         app.activeDocument().waitForDone()  # action needs to finish before continuing
 
-        app.action('toggle_zoom_to_fit').trigger()
-        app.activeDocument().waitForDone()  # action needs to finish before continuing
+        # app.action('toggle_zoom_to_fit').trigger()
+        # app.activeDocument().waitForDone()  # action needs to finish before continuing
 
     else:
         # devo tornare in stato normale, quindi alle on top devo togliere il minimized e alle normali devo ripristinare lo stato precedente
