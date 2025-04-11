@@ -4442,11 +4442,21 @@ def export_layer_coordinates():
 
     def process_layers(node):
         for child in node.childNodes():
-            if child.name().endswith(('-png', '-jpg')):
-                # Get bounds
+            name = child.name()
+            suffixes = ('-png', '-jpg', '.png', '.jpg')
+            if name.endswith(suffixes):
+                suffix = name[-4:].lower()
+                if suffix in ('.png', '-png'):
+                    file_ext = '.png'
+                elif suffix in ('.jpg', '-jpg'):
+                    file_ext = '.jpg'
+                else:
+                    continue
+                clean_name = name[:-4]
                 bounds = child.bounds()
                 layers_data.append({
-                    "fullName": child.name(),
+                    "fullName": name,
+                    "fileName": f"{clean_name}{file_ext}",
                     "x": bounds.x(),
                     "y": bounds.y(),
                     "wt": bounds.width(),
@@ -4457,7 +4467,6 @@ def export_layer_coordinates():
 
     process_layers(root_node)
 
-    # Prepare the output data
     output_data = {
         "layers": layers_data,
         "origWt": document.width(),
@@ -4465,14 +4474,15 @@ def export_layer_coordinates():
         "origFilePath": document.fileName()
     }
 
-    # Save to user's documents folder
     documents_path = os.path.expanduser('~/Documents')
     output_file = os.path.join(documents_path, 'layer_coordinates.json')
 
-    # Export each layer as PNG or JPG
     for layer_data in layers_data:
         layer_name = layer_data['fullName']
-        # Find the layer again to export it
+        file_name = layer_data['fileName']
+        file_ext = os.path.splitext(file_name)[1].lower()
+        is_jpg = (file_ext == '.jpg')
+        
         def find_layer(node, name):
             if node.name() == name:
                 return node
@@ -4484,33 +4494,30 @@ def export_layer_coordinates():
 
         layer = find_layer(root_node, layer_name)
         if layer:
-            is_jpg = layer_name.endswith('-jpg')
-            file_ext = '.jpg' if is_jpg else '.png'
-            # Remove the -jpg or -png suffix from the layer name
-            clean_name = layer_name[:-4] if is_jpg or layer_name.endswith('-png') else layer_name
-            export_path = os.path.join(documents_path, f"{clean_name}{file_ext}")
+            export_path = os.path.join(documents_path, file_name)
             info = InfoObject()
             info.setProperty("width", layer.bounds().width())
             info.setProperty("height", layer.bounds().height())
+            
             if is_jpg:
-                info.setProperty("quality", 95)  # High quality JPEG
-                info.setProperty("forceSRGB", True)  # Force sRGB color space
-                info.setProperty("saveSRGBProfile", True)  # Save color profile
+                info.setProperty("quality", 95)
+                info.setProperty("forceSRGB", True)
+                info.setProperty("saveSRGBProfile", True)
             else:
-                info.setProperty("compression", 9)  # Maximum compression for PNG
-                info.setProperty("alpha", True)  # Preserve transparency
-                info.setProperty("saveSRGBProfile", True)  # Save color profile
-                info.setProperty("forceSRGB", True)  # Force sRGB color space
-            info.setProperty("batchmode", True)  # Prevent export dialog from showing
+                info.setProperty("compression", 9)
+                info.setProperty("alpha", True)
+                info.setProperty("saveSRGBProfile", True)
+                info.setProperty("forceSRGB", True)
+            
+            info.setProperty("batchmode", True)
             layer.save(export_path, layer.bounds().x(), layer.bounds().y(), info)
-            log(f"Exported layer {layer_name} to {export_path}")
+            log(f"Exported {layer_name} to {file_name}")
 
-    # Save the coordinates JSON
     with open(output_file, 'w') as f:
         json.dump(output_data, f, indent=4)
     
     quickMessage("Export completed successfully")
 
-
+    
 # And add the extension to Krita's list of extensions:
 Krita.instance().addExtension(MyExtension(Krita.instance()))
