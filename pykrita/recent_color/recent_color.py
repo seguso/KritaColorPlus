@@ -2603,11 +2603,13 @@ class MyExtension(Extension):
                         log(f"  Target State: Maximized={w2.isMaximized}, Minimized={w2.isMinimized}, AlwaysOnTop={w2.isAlwaysOnTop}")
                         log(f"  Window State (before): {su.windowState()}, Flags (before): {su.windowFlags()}")
 
-                        # --- Apply Geometry (Always, state might override later) ---
-                        log(f"  Applying Geometry: Pos=({w2.x}, {w2.y}), Size=({w2.wt}, {w2.ht})")
-                        su.move(w2.x, w2.y)
-                        su.resize(w2.wt, w2.ht)
-
+                        # --- Apply Geometry (Only if target state is Normal) ---
+                        if not w2.isMaximized and not w2.isMinimized:
+                            log(f"  Applying Geometry for Normal state: Pos=({w2.x}, {w2.y}), Size=({w2.wt}, {w2.ht})")
+                            su.move(w2.x, w2.y)
+                            su.resize(w2.wt, w2.ht)
+                        else:
+                            log(f"  Skipping geometry application (target state is Maximized or Minimized).")
                         # --- Set AlwaysOnTop Flag ---
                         log(f"  Setting AlwaysOnTop flag to: {w2.isAlwaysOnTop}")
                         su.setWindowFlag(Qt.WindowStaysOnTopHint, w2.isAlwaysOnTop)
