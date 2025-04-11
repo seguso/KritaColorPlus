@@ -215,6 +215,7 @@ def toggleAutoMixing():
         g.g_auto_mix_ignore_this_color_in_onfgcolorchanged = None
 
 
+        g.g_slider_auto_mix_level.setEnabled(False)
 
         quickMessage("Disabled auto-mixing")
 
@@ -224,6 +225,7 @@ def toggleAutoMixing():
         g.g_auto_mix_enabled = True
         g.g_btn_auto_mix.setChecked(True)
         g.g_actionAutoMix.setChecked(True)
+        g.g_slider_auto_mix_level.setEnabled(True)
 
 
 def toggleDirtyBrush():
@@ -236,12 +238,14 @@ def toggleDirtyBrush():
         quickMessage("Disabled dirty brush")
 
         g.g_btn_dirty_brush.setChecked(False)
+
+        g.g_slider_dirty_brush_level.setEnabled(False)
     else:
         quickMessage("Enabled dirty brush")
         g.g_dirty_brush_overall_enabled = True
         g.g_btn_dirty_brush.setChecked(True)
         g.g_actionDirtyBrush.setChecked(True)
-
+        g.g_slider_dirty_brush_level.setEnabled(True)
 
 def log(s):
     g.printCount += 1
@@ -344,6 +348,7 @@ class HelloDocker(DockWidget):
         g.g_slider_auto_mix_level.setValue(g.g_auto_mix__how_much_canvas_to_pick)
         g.g_slider_auto_mix_level.valueChanged.connect(
             self.autoMixLevelValueChanged)
+        g.g_slider_auto_mix_level.setEnabled(g.g_auto_mix_enabled)
 
         # dirty brush layout
         layoutHorizDirtyBrush = QHBoxLayout()
@@ -369,7 +374,8 @@ class HelloDocker(DockWidget):
         g.g_slider_dirty_brush_level.setValue(max(0.0, min(1.0, initial_dirty_value))) # Clamp value
         g.g_slider_dirty_brush_level.valueChanged.connect(
             self.dirtyBrushLevelValueChanged)
-            
+        g.g_slider_dirty_brush_level.setEnabled(g.g_dirty_brush_overall_enabled)
+
         # mix radius layout
         layoutHorizMixRadius = QHBoxLayout()
         mainLayout.addLayout(layoutHorizMixRadius)
@@ -423,6 +429,8 @@ class HelloDocker(DockWidget):
         g.g_slider_auto_reset_opacity.valueChanged.connect(updateAutoResetOpacityLevel)
         # g.g_slider_auto_reset_opacity.setMinimumWidth(80) # Give it some minimum width
         layoutHorizAutoResetOpacity.addWidget(g.g_slider_auto_reset_opacity)
+
+        g.g_slider_auto_reset_opacity.setEnabled(g.g_auto_reset_opacity_on_pick)
         # Add stretch to push button and slider to the left
         # layoutHorizAutoResetOpacity.addStretch(1)
 
@@ -463,6 +471,8 @@ class HelloDocker(DockWidget):
         initial_radius_value = g.g_mix_radius / 20.0 if g.g_mix_radius is not None else 0.0
         g.g_slider_mix_radius.setValue(max(0.0, min(1.0, initial_radius_value))) # Clamp value
         g.g_slider_mix_radius.valueChanged.connect(self.mixRadiusValueChanged)
+
+        g.g_slider_mix_radius.setEnabled(g.g_mix_radius_enabled) 
 
         # Brush cycler layout
         layoutHorizBrushCycler = QHBoxLayout()
@@ -558,9 +568,13 @@ class HelloDocker(DockWidget):
     def toggleMixRadiusEnabled(self):
         # Inverte lo stato della variabile g_mix_radius_enabled
         g.g_mix_radius_enabled = not g.g_mix_radius_enabled
+
+        g.g_slider_mix_radius.setEnabled(g.g_mix_radius_enabled) 
         
         # Aggiorna lo stato del pulsante
         g.g_btn_mix_radius.setChecked(g.g_mix_radius_enabled)
+
+        # g.g_slid.setEnabled(True)
         
         # Salva lo stato nelle impostazioni di Krita per renderlo persistente
         Krita.instance().writeSetting("colorPlus", "g.g_mix_radius_enabled",
@@ -4386,12 +4400,14 @@ def toggleAutoResetOpacityOnPick():
         if g.g_btn_auto_reset_opacity is not None:
             g.g_btn_auto_reset_opacity.setChecked(False)
         g.g_actionAutoResOnPick.setChecked(False)
+        g.g_slider_auto_reset_opacity.setEnabled(False)
         quickMessage("Auto reset opacity on color pick: disabled")
     else:
         g.g_auto_reset_opacity_on_pick = 1
         if g.g_btn_auto_reset_opacity is not None:
             g.g_btn_auto_reset_opacity.setChecked(True)
         g.g_actionAutoResOnPick.setChecked(True)
+        g.g_slider_auto_reset_opacity.setEnabled(True)
         quickMessage(
             f"Auto reset opacity on color pick: enabled. Will be reset to {round(g.g_auto_reset_opacity_on_pick_level)}.")
 

@@ -1,10 +1,10 @@
-TODO col polling posso togliere autofocus windows! che crea un sacco di problemi?
+TODO on hold: col polling posso togliere autofocus windows! che crea un sacco di problemi?
 ma no, non posso. non posso creare un layer senza rendere attiva la subwindow.
 
 
 DONE ritesta save e restore state and pos of all windows
 
-TODO reimplementa export layer coordinates
+DONE reimplementa export layer coordinates
 
 DONE pulsante merge temp layers
 
