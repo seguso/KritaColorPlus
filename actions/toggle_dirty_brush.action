@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
-        <text>Decrease mixing level</text>
+        <text>Toggle dirty brush</text>
 
-        <Action name="DecreaseMixing">
+        <Action name="toggleDirtyBrush">
         <icon></icon>
-        <text>Pick less of the background when you press Mix</text>
+        <text>Enable or disable the dirty brush</text>
         <whatsThis></whatsThis>
         <toolTip></toolTip>
         <iconText></iconText>
