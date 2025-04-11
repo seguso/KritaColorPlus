@@ -2616,7 +2616,7 @@ class MyExtension(Extension):
                         su.show() # Show after flag change
                         log(f"  Flags (after setWindowFlag + show): {su.windowFlags()}")
 
-                        # --- Set State using showMaximized/Minimized/Normal ---
+                        # --- Set State and Geometry ---
                         if w2.isMaximized:
                             log("  Calling showMaximized().")
                             su.showMaximized()
@@ -2624,10 +2624,18 @@ class MyExtension(Extension):
                             log("  Calling showMinimized().")
                             su.showMinimized()
                         else:
+                            # Force Normal state first, then apply geometry
+                            log("  Forcing Normal state (removing Max/Min flags).")
+                            current_state = su.windowState()
+                            normal_state = current_state & ~Qt.WindowMaximized & ~Qt.WindowMinimized
+                            su.setWindowState(normal_state) # Explicitly set state bits
                             log("  Calling showNormal().")
-                            su.showNormal()
+                            su.showNormal() # Ensure visual state is normal
+                            log(f"  Applying Geometry for Normal state: Pos=({w2.x}, {w2.y}), Size=({w2.wt}, {w2.ht})")
+                            su.move(w2.x, w2.y) # Apply geometry AFTER forcing normal state
+                            su.resize(w2.wt, w2.ht)
 
-                        su.show() # Show again after state change
+                        su.show() # Show again after state/geometry change
 
                         log(f"  Window State (after state change + show): {su.windowState()}, Flags (final): {su.windowFlags()}")
                         log(f"--- Finished restoring state for '{w2.title}' ---")
