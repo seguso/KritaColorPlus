@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QTreeView
 from PyQt5.QtCore import Qt, QModelIndex, QItemSelectionModel
 import pprint
 import time
+import re # Import the regular expression module
 from . import globals as g
 
 # Throttling for debug logs
@@ -880,7 +881,7 @@ def dryPaper(showMessage=True):
         if is_top_level:
             # log("dry paper called. Layer is top-level. Creating new group.")
             # Create a new group layer at the top level
-            newGroup = currentDoc.createGroupLayer("Dry Paper auto-group")
+            newGroup = currentDoc.createGroupLayer("ColorPlus auto-group")
             # Find the index of the active layer to insert the group above it
             try:
                 # Insert the new group *before* the active layer
@@ -2453,15 +2454,43 @@ class MyExtension(Extension):
 
         windows = []
         for su in subwins:
-            tit = su.windowTitle().replace(" *", "")
+            raw_title = su.windowTitle()
+            # Regex to extract filename before optional parenthesized info and/or modified marker
+            # Matches: 'filename.ext', 'filename.ext (anything)', 'filename.ext [*]', 'filename.ext (anything) [*]'
+            match = re.match(r"^(.*?)(?: \(.*\))?(?: \[\*\])?$", raw_title)
+            if match:
+                tit = match.group(1).strip() # Get the captured filename and strip potential whitespace
+            else:
+                # Fallback: basic cleaning if regex doesn't match (shouldn't happen often)
+                tit = raw_title.replace(" [*]", "").strip()
+                log(f"Warning: Regex did not match raw title '{raw_title}', using basic cleaning: '{tit}'")
 
-            path = [fp for fp in fullPaths if fp.endswith(tit)][0]
-            log(f"window {tit}, position {su.pos()}")
-            newWin = Window()
-            newWin.x = su.pos().x()
-            newWin.y = su.pos().y()
-            newWin.wt = su.size().width()
-            newWin.ht = su.size().height()
+
+            log(f"--- Debugging saveWindowPositions ---")
+            log(f"Subwindow Title (raw): '{raw_title}'")
+            log(f"Subwindow Title (cleaned with regex): '{tit}'") # Updated log message
+            log(f"Full Paths List: {fullPaths}")
+            # Use os.path.normpath for robust path comparison, especially on Windows
+            matching_paths = [fp for fp in fullPaths if os.path.normpath(fp).endswith(os.path.normpath(tit))]
+            log(f"Matching Paths: {matching_paths}")
+            log(f"--- End Debugging ---")
+
+            try:
+                path = matching_paths[0]
+                log(f"Found path: {path} for window {tit}, position {su.pos()}")
+                newWin = Window()
+                newWin.x = su.pos().x()
+                newWin.y = su.pos().y()
+                newWin.wt = su.size().width()
+                newWin.ht = su.size().height()
+                newWin.fullPath = path
+            except IndexError:
+                log(f"ERROR: Could not find matching full path for window title '{tit}'. Skipping this window.")
+                # Optionally, you could try a different matching strategy here,
+                # like checking if the title is *contained* in the path,
+                # or using a fuzzy match, but for now, we just skip.
+                continue # Skip to the next subwindow
+
             newWin.fullPath = path
             newWin.title = tit
             newWin.isMaximized = True if su.windowState() & Qt.WindowMaximized else False
