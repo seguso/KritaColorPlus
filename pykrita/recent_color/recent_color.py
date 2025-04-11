@@ -2601,36 +2601,33 @@ class MyExtension(Extension):
                     if tit_su == w2.title:
                         log(f"--- Restoring state for window: '{w2.title}' ---")
                         log(f"  Target State: Maximized={w2.isMaximized}, Minimized={w2.isMinimized}, AlwaysOnTop={w2.isAlwaysOnTop}")
-                        log(f"  Current State (before): State={su.windowState()}, Flags={su.windowFlags()}")
+                        log(f"  Window State (before): {su.windowState()}, Flags (before): {su.windowFlags()}")
 
-                        # --- Apply Geometry First (Only if target is Normal) ---
-                        if not w2.isMaximized and not w2.isMinimized:
-                            log(f"  Applying Geometry: Pos=({w2.x}, {w2.y}), Size=({w2.wt}, {w2.ht})")
-                            su.move(w2.x, w2.y)
-                            su.resize(w2.wt, w2.ht)
-                        else:
-                            log(f"  Skipping geometry application (target is Maximized/Minimized).")
+                        # --- Apply Geometry (Always, state might override later) ---
+                        log(f"  Applying Geometry: Pos=({w2.x}, {w2.y}), Size=({w2.wt}, {w2.ht})")
+                        su.move(w2.x, w2.y)
+                        su.resize(w2.wt, w2.ht)
+
+                        # --- Set AlwaysOnTop Flag ---
+                        log(f"  Setting AlwaysOnTop flag to: {w2.isAlwaysOnTop}")
+                        su.setWindowFlag(Qt.WindowStaysOnTopHint, w2.isAlwaysOnTop)
+                        su.show() # Show after flag change
+                        log(f"  Flags (after setWindowFlag + show): {su.windowFlags()}")
 
                         # --- Set State using showMaximized/Minimized/Normal ---
                         if w2.isMaximized:
-                            log("  Setting state to Maximized.")
+                            log("  Calling showMaximized().")
                             su.showMaximized()
                         elif w2.isMinimized:
-                            log("  Setting state to Minimized.")
+                            log("  Calling showMinimized().")
                             su.showMinimized()
                         else:
-                            log("  Setting state to Normal.")
-                            su.showNormal() # Should respect geometry set earlier if applicable
+                            log("  Calling showNormal().")
+                            su.showNormal()
 
-                        # --- Set AlwaysOnTop Flag (after setting state) ---
-                        log(f"  Setting AlwaysOnTop flag to: {w2.isAlwaysOnTop}")
-                        # Use the dedicated setWindowFlag method
-                        su.setWindowFlag(Qt.WindowStaysOnTopHint, w2.isAlwaysOnTop)
+                        su.show() # Show again after state change
 
-                        # Re-show the window after changing flags/state to ensure updates are applied
-                        su.show()
-
-                        log(f"  Current State (after show()): State={su.windowState()}, Flags={su.windowFlags()}")
+                        log(f"  Window State (after state change + show): {su.windowState()}, Flags (final): {su.windowFlags()}")
                         log(f"--- Finished restoring state for '{w2.title}' ---")
 
             # I activate any window that is not on top and not minimized. this still leaves the layers of the wrong window in the layer list, therefore I sorted them previously
