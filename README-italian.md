@@ -227,6 +227,21 @@ di Krita, ma non ti fa vedere tutti i colori prodotti dall'automix e
 dal dirty brush, ma solo quelli originali che tu hai selezionato dal
 color selector di Krita.
 
+
+La color history è un docker che potete attivare così:
+
+Settings -> Dockers -> ColorPlus color history.
+
+## Docker principale
+
+ColorPlus ha un docker principale che racchiude tutti i settaggi che dovete cambiare
+di frequente. Per attivarlo: da menu: Settings -> Dockers -> ColorPlus
+
+Ecco una schermata: https://i.imgur.com/ISNM3wA.png
+
+Notate anche che nel menu di ColorPlus ci sono alcune funzioni che
+mancano nel docker: https://i.imgur.com/bunL1Wt.png
+
 ## Preview a tutto schermo
 
 Esiste  uno  shortcut  che  mostra il tuo dipinto attuale a tutto schermo, nascondendo
