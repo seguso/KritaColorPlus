@@ -3013,9 +3013,6 @@ class MyExtension(Extension):
 
                        
 
-                        # === New 4-point sampling logic ===
-                        # cx_c = doc_posPiuCenter.x()
-                        # cy_c = doc_posPiuCenter.y()
                         pcursor = get_cursor_in_document_coords()
                         if pcursor is None:
                             print("aborted mixOnTimer")
