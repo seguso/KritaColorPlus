@@ -133,6 +133,29 @@ vorrai probabilmente fonderli tutti insieme, il che si fa con un apposito shortc
 Puoi disattivare la creazione automatica di layer, ma perderai la
 possibilità di fare post-correzioni dei colori.
 
+Nota: Il fatto che ColorPlus crei automaticamente layer permette anche
+l'effetto acquerello (vedi sezione apposita).
+
+
+# simulazione di acquerello
+
+L'acquerello  è caratterizzato soprattutto dal fatto che due pennellate trasparenti si
+fondono tra loro. Non vedi la sovrapposizione di colori (overlap). Invece in krita, se
+usi un colore trasparente e fai due pennellate, vedrai la sovrapposizione nel punto di
+intersezione tra di loro. Le pennellate non si fondono tra loro.
+
+Per  risolvere questo problema, ColorPlus fa sì che sia il layer ad essere
+trasparente, non il tuo brush preset (che è opaco al 100%). In questo modo
+vedrai  pennellate  che  si fondono tra loro senza overlap, ma allo stesso
+tempo  sono trasparenti, cioè vedi il colore sotto. ColorPlus si occupa di
+creare  automaticamente  layer quando cambi colore, in modo che pennellate
+con lo stesso colore si fondano insieme, pur restando trasparenti.
+
+Nota: Il fatto che ColorPlus crea automaticamente layer permette anche
+la post-correzione del colore (vedi sezione apposita).
+
+
+
 # Color history intelligente
 
 Hai una color history visuale, che ti mostra i colori recenti, a cui

@@ -4083,7 +4083,7 @@ class MyExtension(Extension):
         custom_menu.addAction(actionToggle25)
 
 
-def minimizeOnTopAndViewFullScreen():
+def minimizeOnTopAndViewFullScreen():  #bm_fullscreeen bm_preview
     app = Krita.instance()
 
     # log(f"windows = {app.windows()}")
@@ -4147,16 +4147,22 @@ def minimizeOnTopAndViewFullScreen():
     log(f"siamo in stato normale: {siamoInStatoNormale}")
 
     if siamoInStatoNormale:
-        # devo minimizzare le on top e massimizzare la prima delle non-on-top
-
+        # Salva lo stato di massimizzazione delle finestre normali prima di entrare in fullscreen
+        g.g_window_maximized_states.clear()  # Pulisci il dizionario prima di salvare i nuovi stati
+        
         for su in subwins:
-            flags = su.windowFlags()
-
-            stayOnTop = False
-            if su.windowFlags() & Qt.WindowStaysOnTopHint:
-                stayOnTop = True
-            else:
-                stayOnTop = False
+            stayOnTop = bool(su.windowFlags() & Qt.WindowStaysOnTopHint)
+            
+            if not stayOnTop:
+                # Salva lo stato di massimizzazione solo per le finestre normali (non always on top)
+                is_maximized = bool(su.windowState() & Qt.WindowMaximized)
+                window_title = su.windowTitle()
+                g.g_window_maximized_states[window_title] = is_maximized
+                log(f"Salvato stato finestra '{window_title}': {'massimizzata' if is_maximized else 'non massimizzata'}")
+        
+        # devo minimizzare le on top e massimizzare la prima delle non-on-top
+        for su in subwins:
+            stayOnTop = bool(su.windowFlags() & Qt.WindowStaysOnTopHint)
 
             if stayOnTop:
                 # è una finestra di reference: minimizzala
@@ -4180,24 +4186,25 @@ def minimizeOnTopAndViewFullScreen():
         app.activeDocument().waitForDone()  # action needs to finish before continuing
 
     else:
-        # devo tornare in stato normale, quindi alle on top devo togliere il minimized e alle normali devo togliere il maximized
+        # devo tornare in stato normale, quindi alle on top devo togliere il minimized e alle normali devo ripristinare lo stato precedente
 
         for su in subwins:
-            flags = su.windowFlags()
-
-            stayOnTop = False
-            if su.windowFlags() & Qt.WindowStaysOnTopHint:
-                stayOnTop = True
-            else:
-                stayOnTop = False
+            stayOnTop = bool(su.windowFlags() & Qt.WindowStaysOnTopHint)
 
             if stayOnTop:
                 # è una finestra di reference: togli il minimized
                 su.setWindowState(su.windowState() & ~Qt.WindowMinimized)
             else:
-                # è è una finestra normal: togli il massimizza
-                # tolgo lo stato maximixed
+                # è una finestra normale: ripristina lo stato precedente
+                window_title = su.windowTitle()
+                
+                # Prima rimuovi lo stato di massimizzazione
                 su.setWindowState(su.windowState() & ~Qt.WindowMaximized)
+                
+                # Poi ripristina lo stato salvato se era massimizzata
+                if window_title in g.g_window_maximized_states and g.g_window_maximized_states[window_title]:
+                    log(f"Ripristino finestra '{window_title}' a massimizzata")
+                    su.setWindowState(su.windowState() | Qt.WindowMaximized)
 
         # ora ri-mostro i docker (richiamando la stessa action)
         app.action('view_show_canvas_only').trigger()

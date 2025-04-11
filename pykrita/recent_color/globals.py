@@ -264,3 +264,7 @@ g_docker_instance = None
 g_color_history_docker_instance = None
 
 g_auto_focus = "False"
+
+# Dictionary to store window maximization state before entering fullscreen
+# Key: window title, Value: True if window was maximized, False otherwise
+g_window_maximized_states: Dict[str, bool] = {}
