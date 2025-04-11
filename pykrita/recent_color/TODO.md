@@ -1,3 +1,5 @@
+TODO vedi ultima versione di spectral
+
 TODO quando togli dirty brush, deve fare accept current color. forse
 solo metterlo nella history.
 
