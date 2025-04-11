@@ -4,5 +4,5 @@ ServiceTypes=Krita/PythonPlugin
 X-KDE-Library=recent_color
 X-Python-2-Compatible=false
 X-Krita-Manual=myPluginManual.html
-Name=previous_color3
-Comment=Switch to previous color
+Name=ColorPlus
+Comment=This plugin enhances Krita with spectral color mixing logic, auto-mix and dirty brush modes, quick color switching, smart color picking and mixing, post-stroke color correction, watercolor simulation, a selective color history, fullscreen preview, and layer/coordinate exporting.
