@@ -1,3 +1,5 @@
+TODO inverti dry paper e color preview
+
 TODO vedi ultima versione di spectral
 
 TODO quando togli dirty brush, deve fare accept current color. forse
