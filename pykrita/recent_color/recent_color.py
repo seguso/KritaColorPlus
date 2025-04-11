@@ -19,7 +19,7 @@ from .brush_list_widget import BrushListDialog  # Import the brush list dialog
 from .slider import KritaStyleSlider # Import the new slider
 
 
-from .rgb import rgb, rgbOfColorArray,colorArrayOfRgb, colorArray255_3_OfRgb, rgbOfManagedColor
+from .rgb import rgb, rgbOfColorArray01, rgbOfColorArray255, colorArrayOfRgb, colorArray255_3_OfRgb, rgbOfManagedColor
 
 
 from krita import *
@@ -1822,7 +1822,7 @@ def handle_click(widget) -> None:
 
                                 # Blend the sampled colors using the new helper (handles None values)
                                 # Result is [R, G, B] 0-255
-                                final_canvas_color_rgb = blend_colors_spectral(sampled_colors_arr255)
+                                final_canvas_color_rgb : list[float] = blend_colors_spectral(sampled_colors_arr255)
                                 
                                 # if current_time - g.last_log_time_sample_points > 1.0:
                                 #     log(f"Final canvas color RGB: {final_canvas_color_rgb}") # DEBUG
@@ -1849,7 +1849,7 @@ def handle_click(widget) -> None:
                               
                                     
                                 # Convert R,G,B to float as per rgb class expectation
-                                g.g_color_on_down_dirty_brush = rgb(float(final_canvas_color_rgb[0] * 255.0), float(final_canvas_color_rgb[1] * 255.0), float(final_canvas_color_rgb[2] * 255.0), 255.0)
+                                g.g_color_on_down_dirty_brush = rgbOfColorArray255(final_canvas_color_rgb) 
                                 # log(f"Dirty brush down color set via sampling: {g.g_color_on_down_dirty_brush}")
                                 
                         else:
@@ -2288,7 +2288,7 @@ class MyExtension(Extension):
                 comp: Sequence[float] = fg.components()
                 if len(comp) == 4:  # Assuming RGBA
 
-                    newColorRgb = rgbOfColorArray(comp)
+                    newColorRgb = rgbOfColorArray01(comp)
 
                     if (not g.g_auto_mix_enabled or g.g_auto_mix_paused):
                         if g.g_auto_mix_color_to_ignore is not None and arrEqual(g.g_auto_mix_color_to_ignore, comp):
@@ -3079,12 +3079,12 @@ class MyExtension(Extension):
                             
 
                         # Sample the colors at these points using the new helper
-                        sampled_colors_arr255 = []
+                        sampled_colors_arr255 :list[list[float]] = []
                         for pcursor in sample_pointsxy:
                             maybeColorRgb255 : Optional[rgb] = getColorUnderCursorOrAtPos(forcedPos=pcursor, ignore_bottom_layer=True)
                             colorRgb255: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb255 is None else maybeColorRgb255
 
-                            rgbArr = colorArray255_3_OfRgb(colorRgb255)
+                            rgbArr : list[float]= colorArray255_3_OfRgb(colorRgb255)
                             sampled_colors_arr255.append(rgbArr) # Appends color [R,G,B] or None
                         
                         # for (px,py) in sample_points:
@@ -3100,7 +3100,7 @@ class MyExtension(Extension):
 
                         # Blend the sampled colors using the new helper (handles None values)
                         # Result is [R, G, B] 0-255
-                        final_canvas_color_rgb = blend_colors_spectral(sampled_colors_arr255)
+                        final_canvas_color_rgb : list[float] = blend_colors_spectral(sampled_colors_arr255)
                         
                         # if current_time - g.last_log_time_sample_points > 1.0:
                         #     log(f"Final canvas color RGB: {final_canvas_color_rgb}") # DEBUG
