@@ -4198,13 +4198,16 @@ def minimizeOnTopAndViewFullScreen():  #bm_fullscreeen bm_preview
                 # è una finestra normale: ripristina lo stato precedente
                 window_title = su.windowTitle()
                 
-                # Prima rimuovi lo stato di massimizzazione
-                su.setWindowState(su.windowState() & ~Qt.WindowMaximized)
-                
-                # Poi ripristina lo stato salvato se era massimizzata
+                # Usa i metodi nativi di Qt invece di manipolare direttamente i flag di stato
                 if window_title in g.g_window_maximized_states and g.g_window_maximized_states[window_title]:
                     log(f"Ripristino finestra '{window_title}' a massimizzata")
-                    su.setWindowState(su.windowState() | Qt.WindowMaximized)
+                    # Usa showNormal prima per assicurarsi che la finestra sia in uno stato pulito
+                    su.showNormal()
+                    # Poi usa showMaximized che gestisce correttamente i controlli della finestra
+                    su.showMaximized()
+                else:
+                    # Se non era massimizzata, assicurati che sia in stato normale
+                    su.showNormal()
 
         # ora ri-mostro i docker (richiamando la stessa action)
         app.action('view_show_canvas_only').trigger()
