@@ -2946,14 +2946,14 @@ class MyExtension(Extension):
             if view is not None:
                 document = view.document()
                 if document:
-                    center = QPointF(0.5 * document.width(),
-                                     0.5 * document.height())
+                    # center = QPointF(0.5 * document.width(),
+                    #                  0.5 * document.height())
                     p = get_cursor_in_document_coords()
                     if p is None:
                         print("aborted mixOnTimer")
                         return
 
-                    doc_posPiuCenter = p + center
+                    # doc_posPiuCenter = p + center
 
 
                       
@@ -3018,8 +3018,8 @@ class MyExtension(Extension):
                        
 
                         # === New 4-point sampling logic ===
-                        cx_c = doc_posPiuCenter.x()
-                        cy_c = doc_posPiuCenter.y()
+                        # cx_c = doc_posPiuCenter.x()
+                        # cy_c = doc_posPiuCenter.y()
 
                         cx_p = p.x()
                         cy_p = p.y()
@@ -3033,14 +3033,14 @@ class MyExtension(Extension):
                             xy(cx_p + radius, cy_p)     # Right
                         
                         ]
-                        sample_points = [
-                            # (cx, cy),             # Center non lo metto piu
-                            (cx_c, cy_c - radius),    # Up
-                            (cx_c, cy_c + radius),    # Down
-                            (cx_c - radius, cy_c),    # Left
-                            (cx_c + radius, cy_c)     # Right
+                        # sample_points = [
+                        #     # (cx, cy),             # Center non lo metto piu
+                        #     (cx_c, cy_c - radius),    # Up
+                        #     (cx_c, cy_c + radius),    # Down
+                        #     (cx_c - radius, cy_c),    # Left
+                        #     (cx_c + radius, cy_c)     # Right
                         
-                        ]
+                        # ]
 
                         # current_time = time.time()
                         # if current_time - g.last_log_time_sample_points > 1.0:
