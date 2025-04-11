@@ -16,7 +16,7 @@ primo stroke appena lascio mi rimette l'altro
 
 DONE ritesta layer opacity
 
-TODO ritesta full screen preview
+DONE ritesta full screen preview
 
     ok ma se era massimizzata, rimassimizzala quando ripremi
 

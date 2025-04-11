@@ -410,7 +410,7 @@ class HelloDocker(DockWidget):
         layoutHorizAutoResetOpacity.addWidget(g.g_btn_auto_reset_opacity)
         font = g.g_btn_auto_reset_opacity.font()
         font.setPixelSize(15)
-        g.g_btn_auto_reset_opacity.setFont(font)
+        g.g_btn_auto_reset_opacity.setFont(font) 
         g.g_btn_auto_reset_opacity.setToolTip("Auto-reset layer opacity to default on color pick")
         g.g_btn_auto_reset_opacity.clicked.connect(toggleAutoResetOpacityOnPick)
 
