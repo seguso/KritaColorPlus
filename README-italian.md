@@ -114,10 +114,10 @@ offre una sua color history, che non mostra questi colori "intermedi".
 
 Per attivare il dirty Brush, usa il docker di ColorPlus: https://i.imgur.com/RDHdyWS.png
 
-## Alternanza rapida tra colori
+## Alternanza rapida tra colori (Previous Color)
 
 C'è uno shortcut con cui tu puoi alternare facilmente tra due colori,
-passando istantaneamente al colore usato prima di quello attuale.
+passando istantaneamente al colore usato prima di quello attuale. 
 
 La maggior parte del tempo, per il mio stile di pittura, io alterno continuamente tra
 due colori, quindi questa funzione è essenziale per evitare mouse travel per cliccare
@@ -127,6 +127,8 @@ Con lo stesso shortcut, premuto due volte di seguito, puoi passare
 al penultimo colore usato, e così via.
 
 Consiglio di assegnare questo shortcut al tasto V: https://i.imgur.com/vpKxHaf.png
+
+(La funzione si chiama Last Color tra gli shortcut di Krita.)
 
 
 ## Color picker intelligente
@@ -150,7 +152,7 @@ Ad esempio, se hai il colore blu, e il mouse si trova sul colore giallo, con
 questo shortcut puoi aggiungere il 50% di giallo al blu, ottenendo il verde.
 
 La quantità di colore che prelevi dalla tela è configurabile con lo
-slider "mix level" nel docker di ColorPlus:
+slider "mix level" nel docker di ColorPlus.
 
 Una  opzione importante è che, quando mixi un colore per farlo diventare più
 simile a un altro, il plugin è in grado di cambiare automaticamente anche la
