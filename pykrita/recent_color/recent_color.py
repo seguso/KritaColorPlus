@@ -19,7 +19,7 @@ from .brush_list_widget import BrushListDialog  # Import the brush list dialog
 from .slider import KritaStyleSlider # Import the new slider
 
 
-from .rgb import rgb, rgbOfColorArray,colorArrayOfRgb, colorArray255_3_OfRgb
+from .rgb import rgb, rgbOfColorArray,colorArrayOfRgb, colorArray255_3_OfRgb, rgbOfManagedColor
 
 
 from krita import *
@@ -1307,9 +1307,6 @@ def quickMessage(msg, timeMessage=360):
         msg, QIcon(), timeMessage, 1)
 
 
-def rgbOfManagedColor(c):
-    co = c.components()
-    return rgb(float(co[0] * 255.0), float(co[1] * 255.0), float(co[2] * 255.0), 255.0)
 
 
 class xy:
@@ -1728,7 +1725,7 @@ class PluginState:
 monitor = MouseMonitor()
 
 
-def handle_click(widget):
+def handle_click(widget) -> None:
     if monitor.is_krita_canvas(widget):
         # log("Click sul canvas di Krita!")
 
@@ -1743,7 +1740,6 @@ def handle_click(widget):
             if win is not None:
                 view = win.activeView()
                 if view is not None:
-                    fg = view.foregroundColor()  # tipo ManagedColor, valori da 0 a 1
                     document = Krita.instance().activeDocument()
 
                     if document is not None:
@@ -1772,7 +1768,14 @@ def handle_click(widget):
                                 
 
                                 maybeColorRgb255 : Optional[rgb] = getColorUnderCursorOrAtPos( ignore_bottom_layer=True)
-                                colorRgb255: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb255 is None else maybeColorRgb255
+
+                                # se e' trasparente, non ci devo mettere il virtuale , che e' il colore non sporcato.ma il fg color
+                                
+
+                                fg : ManagedColor = view.foregroundColor()  # tipo ManagedColor, valori da 0 a 1
+                                fgRgb = rgbOfManagedColor(fg)
+                   
+                                colorRgb255: rgb = fgRgb if maybeColorRgb255 is None else maybeColorRgb255
 
                                 g.g_color_on_down_dirty_brush = colorRgb255
                                 # log (f"niente mix radius per dirty. color on down = {g.g_color_on_down_dirty_brush.toString()}")

@@ -85,3 +85,8 @@ def colorArray255_3_OfRgb(rgb_color: rgb) -> List[float]:
     
     # Return as a list [R, G, B, A] with alpha = 1.0
     return [r_comp, g_comp, b_comp]
+
+
+def rgbOfManagedColor(c):
+    co = c.components()
+    return rgb(float(co[0] * 255.0), float(co[1] * 255.0), float(co[2] * 255.0), 255.0)

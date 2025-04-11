@@ -1,4 +1,4 @@
-from typing import List, TYPE_CHECKING # Import List and TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Optional, Dict # Import List, TYPE_CHECKING, Optional, and Dict
 
 if TYPE_CHECKING:
     from .recent_color import rgb # Import for type hinting only
@@ -26,7 +26,7 @@ last_log_time_final_color = 0
 g_color_changed_from_selector_probably = False
 g_color_changed_since_last_leave = False # Tracks if color changed after leaving canvas
 
-g_layer_is_dirty = {}
+g_layer_is_dirty: dict[str, bool] = {} # Use lowercase dict type hint
 
 g_diminishing_opacity = False #True to have auto-mixing with amount that auto-decreases
 
@@ -94,7 +94,7 @@ g_dirty_brush_level = None # value is ignored: will be read from settings --- ra
 g_mix_radius = None # value is ignored: will be read from settings --- range from 0 to 20 pixels
 g_mix_radius_enabled = False
 
-g_color_on_down_dirty_brush = None
+g_color_on_down_dirty_brush: Optional['rgb'] = None # Add type hint
 g_last_coord_mouse_down = None
 g_last_coord_mouse_up = None
 
