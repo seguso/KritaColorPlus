@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ActionCollection version="2" name="Scripts">
     <Actions category="Scripts">
-        <text>Mix color because it is wrong</text>
+        <text>Mix color with post-correction</text>
 
         <Action name="MixColorBecauseWrong">
         <icon></icon>
-        <text>Make the current color more similar with the canvas color, because the current color is wrong. (Also clears current layer, erasing your mistake.)</text>
+        <text>Makes the current color more similar to the color under the mouse, and also modifies the already made brushstroke to give it that color.</text>
         <whatsThis></whatsThis>
         <toolTip></toolTip>
         <iconText></iconText>
