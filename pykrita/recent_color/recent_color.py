@@ -25,7 +25,7 @@ from .rgb import rgb, rgbOfColorArray,colorArrayOfRgb, colorArray255_3_OfRgb, rg
 from krita import *
 
 from krita import (
-    Krita,)
+    Krita, ManagedColor)
 
 from pathlib import Path
 
@@ -137,9 +137,9 @@ def sample_pixel_rgb0255(document, x, y):
 # Helper function to blend a list of colors [[R,G,B], ...] using spectral_mix
 # Assumes colors are lists of floats [0-255]
 # Define the expected type for a single color: List of 3 numbers (int or float)
-ColorType = List[Union[float, int]]
+ColorType = list[float]
 # Define the input type: List containing optional colors
-InputColorsType = List[Optional[ColorType]]
+InputColorsType = List[ColorType]
 
 def blend_colors_spectral(colors: InputColorsType) -> ColorType:
     """
@@ -1791,7 +1791,10 @@ def handle_click(widget) -> None:
 
                                 cx_p = pcursor.x()
                                 cy_p = pcursor.y()
-                                radius = float(g.g_mix_radius) # Ensure radius is float, read from globals
+                                if g.g_mix_radius is None:
+                                    raise ValueError("mix radius none impossibile")
+                                
+                                radius : float = g.g_mix_radius # Ensure radius is float, read from globals
 
                                 # Define the 5 sample points
                                 sample_pointsxy = [
@@ -1804,12 +1807,16 @@ def handle_click(widget) -> None:
                                     
 
                                 # Sample the colors at these points using the new helper
-                                sampled_colors_arr255 = []
+                                sampled_colors_arr255: list[list[float]] = []
                                 for pcursor in sample_pointsxy:
-                                    maybeColorRgb255 : Optional[rgb] = getColorUnderCursorOrAtPos(forcedPos=pcursor, ignore_bottom_layer=True)
-                                    colorRgb255: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb255 is None else maybeColorRgb255
+                                    maybeColorRgb255_2 : Optional[rgb] = getColorUnderCursorOrAtPos(forcedPos=pcursor, ignore_bottom_layer=True)
+                                    
+                                    fg_2 : ManagedColor = view.foregroundColor()  # tipo ManagedColor, valori da 0 a 1
+                                    fgRgb = rgbOfManagedColor(fg_2)
+                    
+                                    colorRgb255_2: rgb = fgRgb if maybeColorRgb255_2 is None else maybeColorRgb255_2
 
-                                    rgbArr = colorArray255_3_OfRgb(colorRgb255)
+                                    rgbArr : list[float] = colorArray255_3_OfRgb(colorRgb255_2)
                                     sampled_colors_arr255.append(rgbArr) # Appends color [R,G,B] or None
                                 
 
