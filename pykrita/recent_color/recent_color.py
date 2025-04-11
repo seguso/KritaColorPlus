@@ -585,6 +585,8 @@ def get_all_layers(node):
                  layers.extend(get_all_layers(child))
     return layers
 
+
+# forcedPos deve essere relativo al centro del document, non assoluto
 def getColorUnderCursorOrAtPos(forcedPos: Optional['xy'] = None, ignore_bottom_layer: bool = False) -> Optional[rgb]:
     # forcedPos is of type xy
     application = Krita.instance()
@@ -707,7 +709,8 @@ def getColorUnderCursorOrAtPos(forcedPos: Optional['xy'] = None, ignore_bottom_l
                                                 found_opaque_pixel_above_bottom = True
                                                 # log(f"trovato opaco sul layer: {curLayer.name()}")
                                                 break # Found one, no need to check further layers
-                                # else: coordinate out of bounds for this layer or pixelData empty, treat as transparent
+                                else: #coordinate out of bounds for this layer or pixelData empty, treat as transparent
+                                    log("getColorUnderCursorOrAtPos coordinate out of bounds")
 
                             except Exception as e:
                                 # Log error or handle cases where pixelData fails for a layer
@@ -2953,8 +2956,6 @@ class MyExtension(Extension):
                     doc_pos = p + center
 
 
-                    maybeColorRgb255 : Optional[rgb] = getColorUnderCursorOrAtPos(ignore_bottom_layer=True)
-                    colorRgb255: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb255 is None else maybeColorRgb255
                       
                     # doc_pos = xyOfQpoint(doc_pos)
                     # log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
@@ -2962,7 +2963,11 @@ class MyExtension(Extension):
                     # parentNode = document.activeNode().parentNode()
 
                     if not g.g_mix_radius_enabled:
-
+                        
+                        
+                        maybeColorRgb255 : Optional[rgb] = getColorUnderCursorOrAtPos(ignore_bottom_layer=True)
+                        colorRgb255: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb255 is None else maybeColorRgb255
+                  
                       
                         # e ora da colore qt a colore mio
                         bgColor255 = colorRgb255
