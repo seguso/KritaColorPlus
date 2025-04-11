@@ -1,3 +1,5 @@
+TODO quando togli dirty brush, deve fare accept current color.
+
 TODO on hold: col polling posso togliere autofocus windows! che crea un sacco di problemi?
 ma no, non posso. non posso creare un layer senza rendere attiva la subwindow.
 

@@ -3968,12 +3968,12 @@ class MyExtension(Extension):
 
         actionIncreaseLO = window.createAction(
             "IncreaseLayerOpacity", "Increase current layer opacity")
-        actionIncreaseLO.setShortcut("S")
+        # actionIncreaseLO.setShortcut("S")
         actionIncreaseLO.triggered.connect(self.increaseLayerOpacity)
 
         actiondeclo = window.createAction(
             "DecreaseLayerOpacity", "Decrease current layer opacity")
-        actiondeclo.setShortcut("A")
+        # actiondeclo.setShortcut("A")
         actiondeclo.triggered.connect(self.decreaseLayerOpacity)
 
         # actionIncreaseAO = window.createAction("IncreaseMaxDistanceAutoOpacity", "Increase max distance for auto opacity")
@@ -4008,12 +4008,12 @@ class MyExtension(Extension):
 
         actionSave = window.createAction(
             "saveWindowPositions", "Save state and position of all windows")
-        actionSave.setShortcut("Ctrl+Shift+F")
+        # actionSave.setShortcut("Ctrl+Shift+F")
         actionSave.triggered.connect(self.saveWindowPositions)
 
         actionRestore = window.createAction(
             "restoreWindowPositions", "Restore state and position of all windows")
-        actionRestore.setShortcut("Ctrl+Shift+R")
+        # actionRestore.setShortcut("Ctrl+Shift+R")
         actionRestore.triggered.connect(self.restoreWindowPositions)
 
 
@@ -4072,7 +4072,7 @@ class MyExtension(Extension):
             "acceptCurrentColor", "accept current layer color")
         setFgColorEqualToColorOfLastStroke.triggered.connect(
             setFgColorEqualToColorOfLastStrokeAfterOpacityAdjust)
-        setFgColorEqualToColorOfLastStroke.setShortcut("v")
+        # setFgColorEqualToColorOfLastStroke.setShortcut("v")
 
         main_menu = window.qwindow().menuBar()
         custom_menu = main_menu.addMenu("ColorPlus")
@@ -4087,21 +4087,21 @@ class MyExtension(Extension):
         g.g_actionAutoMix = window.createAction(
             "toggleAutoMixing", "Auto mixing (each stroke picks a bit of color from the background)")
         g.g_actionAutoMix.setCheckable(True)
-        g.g_actionAutoMix.setShortcut("r")
+        # g.g_actionAutoMix.setShortcut("r")
         g.g_actionAutoMix.triggered.connect(toggleAutoMixing)
         
         g.g_dirty_brush_overall_enabled = False
         g.g_actionDirtyBrush = window.createAction(
             "toggleDirtyBrush", "Dirty brush (simulates a brush that gets dirty with previous colors)")
         g.g_actionDirtyBrush.setCheckable(True)
-        g.g_actionDirtyBrush.setShortcut("d")
+        # g.g_actionDirtyBrush.setShortcut("d")
         g.g_actionDirtyBrush.triggered.connect(toggleDirtyBrush)
         
         # Add brush cycler action
         g.g_actionBrushCycler = window.createAction(
             "toggleBrushCycler", "Cycle brushes (automatically change brush after each stroke)")
         g.g_actionBrushCycler.setCheckable(True)
-        g.g_actionBrushCycler.setShortcut("b")
+        # g.g_actionBrushCycler.setShortcut("b")
         g.g_actionBrushCycler.triggered.connect(lambda: g.g_docker_instance.toggleBrushCycler())
 
         # self.actionIncAutoMix = window.createAction(
