@@ -1806,7 +1806,7 @@ monitor = MouseMonitor()
 
 def handle_click(widget) -> None:
     if monitor.isColorSelector(widget): # attenzione, non basta questo. devo lanciare l'evento fgcolorchanged anche quando fa mouse released sul selector
-        onFgColorChanged()
+        onFgColorChangedNotByAutomix()
     elif monitor.is_krita_canvas(widget):
         # log("Click sul canvas di Krita!")
 
@@ -1948,7 +1948,7 @@ def handle_click(widget) -> None:
 def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleased bm_mouseup
     if monitor.isColorSelector(widget): # devo gestire anche released sul selector, perche' altrimenti lancia l'evento solo su mousedown, ma se poi trascina e lascia
                                         # cambia colore ma lo ignorerebbe se non lanciassi anche qui
-        onFgColorChanged()
+        onFgColorChangedNotByAutomix()
     elif monitor.is_krita_canvas(widget):
     
 
@@ -4468,7 +4468,25 @@ def export_layer_coordinates():
     
     quickMessage("Export completed successfully")
 
-def onFgColorChanged() -> None:
+
+def getFgColorAsRgb() -> Optional[rgb]: # Replace 'any' with the actual return type of rgbOfColorArray01 if known
+    """Gets the Krita foreground color and converts it to an RGB representation."""
+    view = Krita.instance().activeWindow().activeView()
+    if view is not None:
+        fg: Optional[ManagedColor] = view.foregroundColor()
+        if fg: # Check if foregroundColor() returned a color
+            comp: Sequence[float] = fg.components()
+            if len(comp) == 4:  # Assuming RGBA
+                return rgbOfColorArray01(comp)
+            else:
+                # Log or handle non-RGBA cases if necessary, or raise as before
+                # For now, let's return None as it's unexpected based on the original code's assumption
+                log(f"Warning: Foreground color components length is not 4: {len(comp)}") # Optional logging
+                raise Exception("Foreground color is not RGBA") # Or raise if it's truly an error
+                
+    return None # Return None if view or fg is None
+
+def onFgColorChangedNotByAutomix() -> None:
 
     
     # this is fired several times when the user changes a color via the color selector.
@@ -4481,67 +4499,11 @@ def onFgColorChanged() -> None:
 
     log(f"fg color changed event: {g.countColorChanged}")
 
-    g.countColorChanged += 1
-
-    # otherwise it is the auto-mixing timer that changed the color. ignore
-
-
-    # the color has been changed manually, not by auto-mix
-
-    # devo settare questo colore come target per l'auto-mixing
-    view = Krita.instance().activeWindow().activeView()
-    if view is not None:
-        fg: Optional[ManagedColor] = view.foregroundColor()
-        if fg is not None:
-            # components() likely returns Tuple[float, float, float, float] for RGBA
-            # il ManagedColor si usa cosi'
-            comp: Sequence[float] = fg.components()
-            if len(comp) == 4:  # Assuming RGBA
-
-                newColorRgb = rgbOfColorArray01(comp)
-
-                if (not g.g_auto_mix_enabled or g.g_auto_mix_paused):
-
-
-                    if ( not g.g_mouse_is_out_of_canvas  # se fosse fuori dal canvas, il colore e' un colore vero! significa che ho usato il selector
-                            and  g.g_auto_mix_color_to_ignore is not None and arrEqual(g.g_auto_mix_color_to_ignore, comp) ):
-                        
-                        log(f"fg color changed. ignorato. colore to ignore matchato {g.g_auto_mix_color_to_ignore}")
-                        pass
-                    elif g.g_dirty_brush_color_to_ignore is not None and arrEqual(g.g_dirty_brush_color_to_ignore, comp):
-                        pass
-                    else:
-                        # e' un colore settato davvero dall'utente. ricordalo
-                        # g.g_ultimo_colore_vero_settato_dall_utente = comp
-                        log("fg color changed. nonignorato")
-                        g.g_color_changed_from_selector_probably = True
-                        
-                        # Use the new utility function for conversion
-                        
-
-                        # log(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}, orig = {comp[0]}, {comp[1]}, {comp[2]}")
-
-                        # print(f"setto target per automixing {newColorRgb}")
-                        g.g_virtual_fg_color_rgb = newColorRgb  # lo memorizzo. diventa il target dell'automixing
-
-                        update_label_from_virtual_color()
-
-                        # log(f"setting last_color_picked = {g.g_virtual_fg_color_rgb.toString()}")
-                    
-
-                #cruciale altrimenti l'automix crea nuovi layer quando vai sul selector e torni sul canvas.
-                if not g.g_auto_mix_ignore_this_color_in_onfgcolorchanged or not g.g_auto_mix_ignore_this_color_in_onfgcolorchanged.equals(newColorRgb):
-                    log("fgcolorchanged - g.g_color_changed_since_last_leave = True")
-                    g.g_color_changed_since_last_leave = True
-                    
-            else:
-                log("err1")
-
-        else:
-            log("err2")
-
+    #adesso sono sicuro che e' stato cambiato manualmente, quindi aggiorno il virtual color con il fg color di krita
     
-    # Set the flag indicating color has changed since the last leave event
+    g.g_virtual_fg_color_rgb  = getFgColorAsRgb();
+    if g.g_virtual_fg_color_rgb is None:
+        raise Exception("fdkfdjk")
 
 
     

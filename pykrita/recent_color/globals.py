@@ -1,5 +1,7 @@
 from typing import List, TYPE_CHECKING, Optional, Dict # Import List, TYPE_CHECKING, Optional, and Dict
 
+
+
 if TYPE_CHECKING:
     from .recent_color import rgb # Import for type hinting only
     from PyQt5.QtWidgets import QLabel # Import for type hinting only
@@ -39,7 +41,7 @@ g_diminishing_opacity = False #True to have auto-mixing with amount that auto-de
 #g_virtual_color_used_last_rgb  = None
 
 # questo colore e' il target per l'automix, e se c'e' dirty brush e' il colore originale prima di sporcarsi
-g_virtual_fg_color_rgb = None
+g_virtual_fg_color_rgb : Optional['rgb'] = None
 
 g_last_virtual_colors_used: List['rgb'] = [] # Add type hint using forward reference
 g_color_history_index = -1 # Index pointing to the 'active' color in g_last_virtual_colors_used for switching
