@@ -1432,7 +1432,7 @@ def get_q_canvas(q_view):
             return child
 
 
-def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, deleteCurLayer=False):
+def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, deleteCurLayer=False):  # b_mixColor bm_mixFgColor
 
     app = Krita.instance()
     win = app.activeWindow()
@@ -2863,7 +2863,7 @@ class MyExtension(Extension):
 
     # Never used. this mixing logic makes sense when the current color is mostly correct, and you only want to introduce a small variation. In practice it is useless.
 
-    def mixFgColorWithBgColor_maxDistanceLogic(self):
+    def mixFgColorWithBgColor_maxDistanceLogic(self):  
         app = Krita.instance()
         win = app.activeWindow()
         if win is not None:

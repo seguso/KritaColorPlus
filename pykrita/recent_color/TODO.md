@@ -3,17 +3,17 @@ esci ti setta un altro, precedente. non succede dall'inizoi ma dopo un po'
 
     riscrivi tutto su questa idea: se arriva il fgcolor changed MENTRE TU SEI FUORI, allora e' un colore vero.
 
-    TODO manca gestire il click nella history
+    DONE manca gestire il click nella history
 
         click su color history inizia a funzionare ma crea duplicati
-        
+
     TODO manca krita palette
 
     DONE manca gestire C
 
     TODO gestire anche grayscale quando fai C. l'ho commentato
 
-    TODO gestire mix shortcut
+    DONE gestire mix shortcut
 
 
 TODO fixa il bug di quando fa fill dell'intero layer. come si riproduceva?
