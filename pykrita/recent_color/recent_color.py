@@ -1805,7 +1805,9 @@ monitor = MouseMonitor()
 
 
 def handle_click(widget) -> None:
-    if monitor.is_krita_canvas(widget):
+    if monitor.isColorSelector(widget):
+        onFgColorChanged()
+    elif monitor.is_krita_canvas(widget):
         # log("Click sul canvas di Krita!")
 
         g.g_last_coord_mouse_down = get_cursor_in_document_coords()
@@ -2336,84 +2338,6 @@ class MyExtension(Extension):
         # log(f"all brush presets = {allBrushPresets.size()}")
 
         # openedView.updateAutoFocus()
-
-    def onFgColorChanged(self) -> None:
-
-        
-        # this is fired several times when the user changes a color via the color selector.
-        # So I can't add a layer here, because I would add hundreds of layers. So I don't do anything,
-        # but mark it dirty via g.g_color_changed_from_selector_probably.
-
-        # capisci se è davvero cambiato, dato che questa callback è inaffidabile e viene chiamata anche se entro ed esco dal selector senza cliccare
-        # serve per la logica che crea new layer
-        
-
-        log(f"fg color changed event: {g.countColorChanged}")
-
-        g.countColorChanged += 1
-
-        # otherwise it is the auto-mixing timer that changed the color. ignore
-    
-
-        # the color has been changed manually, not by auto-mix
-
-        # devo settare questo colore come target per l'auto-mixing
-        view = Krita.instance().activeWindow().activeView()
-        if view is not None:
-            fg: Optional[ManagedColor] = view.foregroundColor()
-            if fg is not None:
-                # components() likely returns Tuple[float, float, float, float] for RGBA
-                # il ManagedColor si usa cosi'
-                comp: Sequence[float] = fg.components()
-                if len(comp) == 4:  # Assuming RGBA
-
-                    newColorRgb = rgbOfColorArray01(comp)
-
-                    if (not g.g_auto_mix_enabled or g.g_auto_mix_paused):
-
-
-                        if ( not g.g_mouse_is_out_of_canvas  # se fosse fuori dal canvas, il colore e' un colore vero! significa che ho usato il selector
-                             and  g.g_auto_mix_color_to_ignore is not None and arrEqual(g.g_auto_mix_color_to_ignore, comp) ):
-                            
-                            log(f"fg color changed. ignorato. colore to ignore matchato {g.g_auto_mix_color_to_ignore}")
-                            pass
-                        elif g.g_dirty_brush_color_to_ignore is not None and arrEqual(g.g_dirty_brush_color_to_ignore, comp):
-                            pass
-                        else:
-                            # e' un colore settato davvero dall'utente. ricordalo
-                            # g.g_ultimo_colore_vero_settato_dall_utente = comp
-                            log("fg color changed. nonignorato")
-                            g.g_color_changed_from_selector_probably = True
-                            
-
-                            
-
-                            # Use the new utility function for conversion
-                            
-
-                            # log(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}, orig = {comp[0]}, {comp[1]}, {comp[2]}")
-
-                            # print(f"setto target per automixing {newColorRgb}")
-                            g.g_virtual_fg_color_rgb = newColorRgb  # lo memorizzo. diventa il target dell'automixing
-
-                            update_label_from_virtual_color()
-
-                            # log(f"setting last_color_picked = {g.g_virtual_fg_color_rgb.toString()}")
-                        
-
-                    #cruciale altrimenti l'automix crea nuovi layer quando vai sul selector e torni sul canvas.
-                    if not g.g_auto_mix_ignore_this_color_in_onfgcolorchanged or not g.g_auto_mix_ignore_this_color_in_onfgcolorchanged.equals(newColorRgb):
-                        log("fgcolorchanged - g.g_color_changed_since_last_leave = True")
-                        g.g_color_changed_since_last_leave = True
-                        
-                else:
-                    log("err1")
-
-            else:
-                log("err2")
-
-        
-        # Set the flag indicating color has changed since the last leave event
 
        
     def onWindowCreated(self):  # called by framework
@@ -4539,6 +4463,82 @@ def export_layer_coordinates():
         json.dump(output_data, f, indent=4)
     
     quickMessage("Export completed successfully")
+
+def onFgColorChanged() -> None:
+
+    
+    # this is fired several times when the user changes a color via the color selector.
+    # So I can't add a layer here, because I would add hundreds of layers. So I don't do anything,
+    # but mark it dirty via g.g_color_changed_from_selector_probably.
+
+    # capisci se è davvero cambiato, dato che questa callback è inaffidabile e viene chiamata anche se entro ed esco dal selector senza cliccare
+    # serve per la logica che crea new layer
+    
+
+    log(f"fg color changed event: {g.countColorChanged}")
+
+    g.countColorChanged += 1
+
+    # otherwise it is the auto-mixing timer that changed the color. ignore
+
+
+    # the color has been changed manually, not by auto-mix
+
+    # devo settare questo colore come target per l'auto-mixing
+    view = Krita.instance().activeWindow().activeView()
+    if view is not None:
+        fg: Optional[ManagedColor] = view.foregroundColor()
+        if fg is not None:
+            # components() likely returns Tuple[float, float, float, float] for RGBA
+            # il ManagedColor si usa cosi'
+            comp: Sequence[float] = fg.components()
+            if len(comp) == 4:  # Assuming RGBA
+
+                newColorRgb = rgbOfColorArray01(comp)
+
+                if (not g.g_auto_mix_enabled or g.g_auto_mix_paused):
+
+
+                    if ( not g.g_mouse_is_out_of_canvas  # se fosse fuori dal canvas, il colore e' un colore vero! significa che ho usato il selector
+                            and  g.g_auto_mix_color_to_ignore is not None and arrEqual(g.g_auto_mix_color_to_ignore, comp) ):
+                        
+                        log(f"fg color changed. ignorato. colore to ignore matchato {g.g_auto_mix_color_to_ignore}")
+                        pass
+                    elif g.g_dirty_brush_color_to_ignore is not None and arrEqual(g.g_dirty_brush_color_to_ignore, comp):
+                        pass
+                    else:
+                        # e' un colore settato davvero dall'utente. ricordalo
+                        # g.g_ultimo_colore_vero_settato_dall_utente = comp
+                        log("fg color changed. nonignorato")
+                        g.g_color_changed_from_selector_probably = True
+                        
+                        # Use the new utility function for conversion
+                        
+
+                        # log(f"g_virtual_fg_color_rgb = onfgcolorchanged cioe' {mergedColor.toString()}, orig = {comp[0]}, {comp[1]}, {comp[2]}")
+
+                        # print(f"setto target per automixing {newColorRgb}")
+                        g.g_virtual_fg_color_rgb = newColorRgb  # lo memorizzo. diventa il target dell'automixing
+
+                        update_label_from_virtual_color()
+
+                        # log(f"setting last_color_picked = {g.g_virtual_fg_color_rgb.toString()}")
+                    
+
+                #cruciale altrimenti l'automix crea nuovi layer quando vai sul selector e torni sul canvas.
+                if not g.g_auto_mix_ignore_this_color_in_onfgcolorchanged or not g.g_auto_mix_ignore_this_color_in_onfgcolorchanged.equals(newColorRgb):
+                    log("fgcolorchanged - g.g_color_changed_since_last_leave = True")
+                    g.g_color_changed_since_last_leave = True
+                    
+            else:
+                log("err1")
+
+        else:
+            log("err2")
+
+    
+    # Set the flag indicating color has changed since the last leave event
+
 
     
 # And add the extension to Krita's list of extensions:

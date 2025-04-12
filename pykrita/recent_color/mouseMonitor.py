@@ -81,6 +81,11 @@ class MouseMonitor(QObject):
                     self.last_widget = None
                 self.last_widget = None
 
+
+    def isColorSelector(self, widget):
+        return widget.metaObject().className() == 'KisColorSelector'
+    
+    
     def is_krita_canvas(self, widget):
         """Verifica se il widget è il canvas di Krita"""
 
