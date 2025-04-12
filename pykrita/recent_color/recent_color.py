@@ -2081,7 +2081,10 @@ def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleas
 
         # remember layer is dirty
 
-        g.g_layer_is_dirty[Krita.instance().activeDocument().activeNode().uniqueId()] = True
+        activeLayerId = Krita.instance().activeDocument().activeNode().uniqueId()
+
+        if not (activeLayerId is None): #succede quando faccio release mouse e sono su un layer di tipo transparency mask
+            g.g_layer_is_dirty[activeLayerId] = True
         # log(f"setting layer dirty {Krita.instance().activeDocument().activeNode().uniqueId()}")
 
         if g.g_auto_dry_each_stroke and g.g_multi_layer_mode:
@@ -3801,8 +3804,8 @@ class MyExtension(Extension):
 
 
         # ora devo anche creare il layer. solo se multilayer mode, e se il corrente e' dirty . find if there is a parent node
-        curLayerId = Krita.instance().activeDocument().activeNode().uniqueId()
-        if g.g_multi_layer_mode and (curLayerId in g.g_layer_is_dirty):
+        curLayerId = Krita.instance().activeDocument().activeNode().uniqueId() # puo' essere none se sono su un transparency mask
+        if not (curLayerId is None) and g.g_multi_layer_mode and (curLayerId in g.g_layer_is_dirty):
 
             hasParentNode = False
             app = Krita.instance()

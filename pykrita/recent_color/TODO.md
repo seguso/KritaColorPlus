@@ -6,7 +6,7 @@ esci ti setta un altro, precedente. non succede dall'inizoi ma dopo un po'
     DONE manca gestire il click nella history
 
         click su color history inizia a funzionare ma crea duplicati
-
+ 
     TODO manca krita palette
 
     DONE manca gestire C
