@@ -80,7 +80,7 @@ g_auto_mix_ignore_this_color_in_onfgcolorchanged = None
 g_auto_mixing_target_distance = None  # value is ignored, will be read from settings.
 
 #when distance logic is not active
-g_auto_mix__how_much_canvas_to_pick = None # value is ignored: will be read from settings --- 0.999 to drag color from canvas , e.g. to remove overlap. then set auto-mixing. 
+g_auto_mix__how_much_canvas_to_pick : float = 0.5 # value is ignored: will be read from settings --- 0.999 to drag color from canvas , e.g. to remove overlap. then set auto-mixing. 
 
 g_auto_mix_ignore_current_layer = False # metti false se vuoi trascinare il colore appena messo, true se vuoi evitarlo
 

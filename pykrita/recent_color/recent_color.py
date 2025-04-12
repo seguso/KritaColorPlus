@@ -1057,9 +1057,20 @@ def onEnterCanvas(obj) -> None:
         mdi_area = q_win.findChild(QMdiArea)
         mdi_area.setActiveSubWindow(obj)  # Devo attivarla perche' altrimenti il layer dove sara' creato? TODO vedere se ancora necessario
 
-        # subwin = obj
-        # isAlwaysOnTop = True if subwin.windowFlags() & Qt.WindowStaysOnTopHint else False
 
+
+
+        # if I am entering a window that is not always on top (the part "and not isalwaysontop" is there to attemp to fix a bug: auto-mix sometimes stops pausing when you hover the color picker)
+        subwin = obj
+        isAlwaysOnTop = True if subwin.windowFlags() & Qt.WindowStaysOnTopHint else False
+
+        if g.g_auto_mix_enabled  and not isAlwaysOnTop:
+            log("on Enter: tolgo pause all auto mix")
+            g.g_auto_mix_paused = False
+        # else:
+        #     log(f"non attivo automix . paused = {g.g_auto_mix_paused}, isontop: {isAlwaysOnTop}")
+            
+        
         # # if the color has just been changed manually, create a new layer
 
         # if g.g_color_changed_from_selector_probably:
@@ -1089,9 +1100,7 @@ def onEnterCanvas(obj) -> None:
 
         # # Use the new flag to check if color changed *since last leave*
     
-        # # if I am entering a window that is not always on top (the part "and not isalwaysontop" is there to attemp to fix a bug: auto-mix sometimes stops pausing when you hover the color picker)
-        # if g.g_auto_mix_paused and not isAlwaysOnTop:
-        #     g.g_auto_mix_paused = False
+        
 
         # # obj.activateWindow()
 
@@ -1214,7 +1223,7 @@ class AutoFocusSetter(QObject):
 # log(Krita.instance().filters())
 
 
-def setFgColor(col: rgb):
+def setFgColor(col: rgb):  # aggiorna solo il selector, ma non fa piu' scattare eventi
     # log("setFgColor")
 
     app = Krita.instance()
@@ -3009,12 +3018,15 @@ class MyExtension(Extension):
         for k, v in g.allBrushPresets.items():
             print(f"key {k}")
 
-    def mixOnTimer(self):  #bm_automix
+    def mixOnTimer(self) -> None:  #bm_automix
 
-        if g.g_virtual_fg_color_rgb is None or not g.g_auto_mix_enabled or g.g_auto_mix_paused or (g.g_auto_mixing_just_once_logic and not g.g_auto_mixing_just_once_now_on):
+        if g.g_virtual_fg_color_rgb is None or not g.g_auto_mix_enabled or g.g_auto_mix_paused : #or (g.g_auto_mixing_just_once_logic and not g.g_auto_mixing_just_once_now_on):
+
+            if not g.g_auto_mix_paused:
+                log(F"mixOnTimer non scatta. enabled = {g.g_auto_mix_enabled}, virtcol {g.g_virtual_fg_color_rgb}, paused = {g.g_auto_mix_paused}")    
             return
 
-        # log("timer 2")
+        
         app = Krita.instance()
         win = app.activeWindow()
         if win is not None:
@@ -3096,6 +3108,9 @@ class MyExtension(Extension):
 
                         cx_p = pcursor.x()
                         cy_p = pcursor.y()
+                        if(g.g_mix_radius is None):
+                            raise Exception("fdkjfdk")
+
                         radius = float(g.g_mix_radius) # Ensure radius is float, read from globals
 
                         # Define the 5 sample points
@@ -3123,10 +3138,10 @@ class MyExtension(Extension):
                         # Sample the colors at these points using the new helper
                         sampled_colors_arr255 :list[list[float]] = []
                         for pcursor in sample_pointsxy:
-                            maybeColorRgb255 : Optional[rgb] = getColorUnderCursorOrAtPos(forcedPos=pcursor, ignore_bottom_layer=True)
-                            colorRgb255: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb255 is None else maybeColorRgb255
+                            maybeColorRgb255_2 : Optional[rgb] = getColorUnderCursorOrAtPos(forcedPos=pcursor, ignore_bottom_layer=True)
+                            colorRgb255_2: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb255_2 is None else maybeColorRgb255_2
 
-                            rgbArr : list[float]= colorArray255_3_OfRgb(colorRgb255)
+                            rgbArr : list[float]= colorArray255_3_OfRgb(colorRgb255_2)
                             sampled_colors_arr255.append(rgbArr) # Appends color [R,G,B] or None
                         
                         # for (px,py) in sample_points:
