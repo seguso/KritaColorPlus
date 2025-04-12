@@ -117,6 +117,7 @@ g_last_coord_mouse_up = None
 #g_mixing_color = False
 
 
+g_virtual_fg_color_rgb_previous_when_dirty_brush_on = None
 
 g_opacity_decided_for_layer = False
 

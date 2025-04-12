@@ -2092,23 +2092,23 @@ def handle_release(widget) -> None: # bm_released  bm_mousereleased bm_mousebutt
 
         # remember layer is dirty
 
-        activeLayerId = Krita.instance().activeDocument().activeNode().uniqueId()
-
-        if not (activeLayerId is None): #succede quando faccio release mouse e sono su un layer di tipo transparency mask
+        activeLayer = Krita.instance().activeDocument().activeNode()
+        if not (activeLayer is None):  # succede se sei su un transparency mask
+            activeLayerId = activeLayer.uniqueId()
             g.g_layer_is_dirty[activeLayerId] = True
+
+
         # log(f"setting layer dirty {Krita.instance().activeDocument().activeNode().uniqueId()}")
 
         if g.g_auto_dry_each_stroke and g.g_multi_layer_mode:
             newLa = dryPaper(showMessage=False)
 
-        if g.g_diminishing_opacity:
-            g.g_auto_mix__how_much_canvas_to_pick = g.g_auto_mix__how_much_canvas_to_pick * 0.9
+        # if g.g_diminishing_opacity:
+        #     g.g_auto_mix__how_much_canvas_to_pick = g.g_auto_mix__how_much_canvas_to_pick * 0.9
 
-            val099 = round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-            g.g_dial_auto_mix_level.setValue(val099)
+        #     val099 = round(g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+        #     g.g_dial_auto_mix_level.setValue(val099)
 
-            # if g.g_auto_mix__how_much_canvas_to_pick > 1.0:
-            # g.g_auto_mix__how_much_canvas_to_pick = 1.0
 
         # mouse released: sporca se dirty brush
 
