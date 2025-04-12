@@ -2702,28 +2702,12 @@ class MyExtension(Extension):
                 quickMessage("Reached oldest color in history.")
                 return
 
-            
 
-           
-            # col: ManagedColor = acView.foregroundColor()
-            # comp = col.components()
 
-            # comp[0] = (g.g_virtual_fg_color_rgb.r / 255.0)
-            # comp[1] = (g.g_virtual_fg_color_rgb.g / 255.0)
-            # comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0)
-            # comp[3] = 1.0
 
-            # col.setComponents(comp)
-            
-            # acView.setForeGroundColor(col)
 
-            # log(f"  Set FG Color to: {g.g_virtual_fg_color_rgb.toString()}")
 
-            # DO NOT reorder the list.
-            # acView.showFloatingMessage(f"Switched color (History pos {g.g_color_history_index})", QIcon(), g.timeMessage, 1)
-            # log(f"After Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
-
-            # --- Optional: Layer creation logic (kept from original) ---
+            # auto reset opacity
 
             document = acView.document()
             if document is not None:
@@ -2731,14 +2715,13 @@ class MyExtension(Extension):
                 if activeNode is not None:
                     parentNode = activeNode.parentNode()
                     if parentNode is not None:
-                        if g.g_temp_switched_to_100_previous_opac is None and g.g_multi_layer_mode:
+                        if  g.g_multi_layer_mode:
                             newLa = dryPaper(showMessage=False)
                             if newLa is not None and g.g_auto_reset_opacity_on_pick == 1:
 
                                 newLa.setOpacity(
                                     int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
                                 document.refreshProjection()
-            # --- End Optional Layer Logic ---
 
         except IndexError:
             quickMessage(
