@@ -1057,7 +1057,7 @@ class AutoFocusSetter(QObject):
 
             # if obj.type() == QMdiSubWindow:
             if isinstance(obj, QMdiSubWindow):
-                # log(f"debug - enter subwindow")
+                log(f"debug - enter subwindow")
 
                 wi = Krita.instance().activeWindow()
                 q_win = wi.qwindow()
@@ -1076,8 +1076,10 @@ class AutoFocusSetter(QObject):
                     # pprint.plog(g.g_layer_is_dirty)
 
                     if (curLayerId in g.g_layer_is_dirty):  # if cur layer is dirty
+                        log("mouse enter: debug 1")
                         l_color_changed_from_selector = True
                     else:
+                        log("mouse enter: debug 2")
                         l_color_changed_from_selector = False
 
                     # questo era bacato! a volte era uguale. lo commento. così crea layer anche se esco e rientro dal canvas, ma può essere comodo invece che premere D per rafforzare.
@@ -1087,6 +1089,7 @@ class AutoFocusSetter(QObject):
                     # else:
                         # l_color_changed_from_selector = True
                 else:
+                    log("mouse enter: color changed from selector probably, ma poi deciso = false")
                     l_color_changed_from_selector = False
 
                 # log ("debug 1")
@@ -1096,7 +1099,7 @@ class AutoFocusSetter(QObject):
                             g.g_color_changed_since_last_leave 
                             and (not g.g_auto_mix_enabled or g.g_auto_mix_paused) and g.g_multi_layer_mode):
 
-                    # log ("debug 2 creating layer")
+                    log ("debug 3 creating layer")
                     newLa = dryPaper(False)
 
                     # reenable dirty brush
@@ -2364,13 +2367,14 @@ class MyExtension(Extension):
 
                     if (not g.g_auto_mix_enabled or g.g_auto_mix_paused):
                         if g.g_auto_mix_color_to_ignore is not None and arrEqual(g.g_auto_mix_color_to_ignore, comp):
+                            log(f"fg color changed. ignorato. colore to ignore matchato {g.g_auto_mix_color_to_ignore}")
                             pass
                         elif g.g_dirty_brush_color_to_ignore is not None and arrEqual(g.g_dirty_brush_color_to_ignore, comp):
                             pass
                         else:
                             # e' un colore settato davvero dall'utente. ricordalo
                             # g.g_ultimo_colore_vero_settato_dall_utente = comp
-
+                            log("fg color changed. nonignorato")
                             g.g_color_changed_from_selector_probably = True
                             
 
