@@ -103,17 +103,19 @@ class ColorHistoryDocker(DockWidget):
         clickedColorRgb = rgb(float(color.blue()) , float( color.green()) , float( color.red()) , 255.0)
         g.g_virtual_fg_color_rgb = clickedColorRgb
         update_label_from_virtual_color()
-        setFgColor(g.g_virtual_fg_color_rgb)
+        
 
-        # view = Krita.instance().activeWindow().activeView()
-        # fg = view.foregroundColor()
-        # # Converti il QColor in ManagedColor
-        # comp = fg.components()
-        # comp[0] = color.blueF()
-        # comp[1] = color.greenF()
-        # comp[2] = color.redF()
-        # fg.setComponents(comp)
-        # view.setForeGroundColor(fg)
+
+        # invece di  setFgColor(g.g_virtual_fg_color_rgb)
+        # faccio cosi', altrimenti per sottili differenze di arrotondamento si creano duplicati nella history
+        view = Krita.instance().activeWindow().activeView()
+        fg = view.foregroundColor()
+        comp = fg.components()
+        comp[0] = color.blueF()
+        comp[1] = color.greenF()
+        comp[2] = color.redF()
+        fg.setComponents(comp)
+        view.setForeGroundColor(fg)
         
     def canvasChanged(self, canvas):
         """ Override of the abstract method from DockWidget class.
