@@ -20,7 +20,7 @@ esci ti setta un altro, precedente. non succede dall'inizoi ma dopo un po'
 
     DONE manca gestire C
 
-    TODO gestire anche grayscale quando fai C. l'ho commentato
+    DONE gestire anche grayscale quando fai C. l'ho commentato
 
     DONE gestire mix shortcut
 
