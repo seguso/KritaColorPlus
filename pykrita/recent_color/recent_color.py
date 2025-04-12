@@ -2700,11 +2700,11 @@ class MyExtension(Extension):
             # col.setComponents(comp)
             
             # acView.setForeGroundColor(col)
-            
+
             # log(f"  Set FG Color to: {g.g_virtual_fg_color_rgb.toString()}")
 
             # DO NOT reorder the list.
-            acView.showFloatingMessage(f"Switched color (History pos {g.g_color_history_index})", QIcon(), g.timeMessage, 1)
+            # acView.showFloatingMessage(f"Switched color (History pos {g.g_color_history_index})", QIcon(), g.timeMessage, 1)
             # log(f"After Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
             # --- Optional: Layer creation logic (kept from original) ---
