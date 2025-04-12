@@ -2614,7 +2614,7 @@ class MyExtension(Extension):
 
             # log("LastColor setup ok")
 
-    def switchToLastColor(self) -> None:  # bm_previouscolor
+    def switchToLastColor(self) -> None:  # bm_previouscolor  bm_lastcolor
         """Switches color based on history, handling consecutive presses vs. first press after paint."""
 
         # log("--- switchToLastColor ---")
@@ -2659,37 +2659,48 @@ class MyExtension(Extension):
 
 
             # Update virtual color and Krita's foreground color
-
+            if g.g_virtual_fg_color_rgb is None:
+                raise Exception("impossibile, prima ho fatto return")
+            
             # Check if the next index is within the list bounds
             if next_index < num_colors:
                 g.g_color_history_index = next_index  # Update the global index
                 target_color = g.g_last_virtual_colors_used[g.g_color_history_index]
+
+                
                 # log(f"g_virtual_fg_color_rgb = last color cioe' {target_color.toString()}")
                 # Set the virtual foreground color
                 g.g_virtual_fg_color_rgb = target_color.clone()
+
+                if g.g_virtual_fg_color_rgb is None:
+                    raise Exception("impossibile, l'ho clonato da target color")
+            
                 update_label_from_virtual_color()
+                
+                setFgColor(g.g_virtual_fg_color_rgb) # non lancia eventi, aggiorna solo il selector
 
                 # log(f"  Switched to color at index {g.g_color_history_index}: {target_color.toString()}")
             else:
                 # Index is out of bounds (tried to go past the oldest color)
                 # log(f"  Reached end of history. No change. Index remains {g.g_color_history_index}")
                 quickMessage("Reached oldest color in history.")
-                # Do not wrap around, do not change color
+                return
 
             
 
+           
+            # col: ManagedColor = acView.foregroundColor()
+            # comp = col.components()
 
-            col: ManagedColor = acView.foregroundColor()
-            comp = col.components()
+            # comp[0] = (g.g_virtual_fg_color_rgb.r / 255.0)
+            # comp[1] = (g.g_virtual_fg_color_rgb.g / 255.0)
+            # comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0)
+            # comp[3] = 1.0
 
-            comp[0] = (g.g_virtual_fg_color_rgb.r / 255.0)
-            comp[1] = (g.g_virtual_fg_color_rgb.g / 255.0)
-            comp[2] = (g.g_virtual_fg_color_rgb.b / 255.0)
-            comp[3] = 1.0
-
-            col.setComponents(comp)
+            # col.setComponents(comp)
             
-            acView.setForeGroundColor(col)
+            # acView.setForeGroundColor(col)
+            
             # log(f"  Set FG Color to: {g.g_virtual_fg_color_rgb.toString()}")
 
             # DO NOT reorder the list.
