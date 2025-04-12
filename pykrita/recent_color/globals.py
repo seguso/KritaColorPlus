@@ -97,7 +97,10 @@ g_auto_mix_paused = False
 g_auto_mix_enabled = False
 g_auto_mix_color_to_ignore = None
 
+g_auto_reset_opacity_on_pick : bool = False
+g_auto_reset_opacity_on_pick_level = 1.0;
 
+g_dial_auto_mix_level = None
 
 g_dirty_brush_overall_enabled = False
 g_dirty_brush_currently_on = True

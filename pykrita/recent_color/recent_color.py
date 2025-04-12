@@ -1010,13 +1010,14 @@ def node_to_index(node, model):
     return index
 
 
-def update_label_from_virtual_color():
-    r = g.g_virtual_fg_color_rgb.r
-    # Use a different name for the local variable
-    green_val = g.g_virtual_fg_color_rgb.g
-    b = g.g_virtual_fg_color_rgb.b
-    g.lblActiveColor.setStyleSheet(
-        f"background-color: rgb({b}, {green_val}, {r})")  # Use the new variable name
+def update_label_from_virtual_color() -> None:
+    if g.g_virtual_fg_color_rgb is not None:
+        r = g.g_virtual_fg_color_rgb.r
+        # Use a different name for the local variable
+        green_val = g.g_virtual_fg_color_rgb.g
+        b = g.g_virtual_fg_color_rgb.b
+        g.lblActiveColor.setStyleSheet(
+            f"background-color: rgb({b}, {green_val}, {r})")  # Use the new variable name
 
 
 def index_to_node(index, document):
@@ -1037,6 +1038,64 @@ def index_to_node(index, document):
     return node
 
 
+def onEnterCanvas(obj) -> None:
+    
+    g.g_mouse_is_out_of_canvas = False
+
+    # log(f"enter")
+    # log(f"enter color selector ")
+
+    # if isinstance(obj, QDockWidget):
+    # log(f"enter dock widget {obj.objectName()} ")
+
+    # if obj.type() == QMdiSubWindow:
+    if isinstance(obj, QMdiSubWindow):
+        log(f"debug - enter subwindow")
+
+        wi = Krita.instance().activeWindow()
+        q_win = wi.qwindow()
+        mdi_area = q_win.findChild(QMdiArea)
+        mdi_area.setActiveSubWindow(obj)  # Devo attivarla perche' altrimenti il layer dove sara' creato? TODO vedere se ancora necessario
+
+        # subwin = obj
+        # isAlwaysOnTop = True if subwin.windowFlags() & Qt.WindowStaysOnTopHint else False
+
+        # # if the color has just been changed manually, create a new layer
+
+        # if g.g_color_changed_from_selector_probably:
+
+        #     curLayerId = Krita.instance().activeDocument().activeNode().uniqueId()
+        #     # print (f"debug - color changed probably. curnode =  {curLayerId}")
+        #     # pprint.plog(g.g_layer_is_dirty)
+
+        #     if (curLayerId in g.g_layer_is_dirty):  # if cur layer is dirty
+        #         log("mouse enter: debug 1")
+        #         l_color_changed_from_selector = True
+        #     else:
+        #         log("mouse enter: debug 2")
+        #         l_color_changed_from_selector = False
+
+        #     # questo era bacato! a volte era uguale. lo commento. così crea layer anche se esco e rientro dal canvas, ma può essere comodo invece che premere D per rafforzare.
+        #     # TODO aggiungi controllo "se il layer attuale è dirty"
+        #     # if g.g_virtual_fg_color_rgb.equals(g.g_virtual_color_used_last_rgb):
+        #         # l_color_changed_from_selector = False
+        #     # else:
+        #         # l_color_changed_from_selector = True
+        # else:
+        #     log("mouse enter: color changed from selector probably, ma poi deciso = false")
+        #     l_color_changed_from_selector = False
+
+        # # log ("debug 1")
+
+        # # Use the new flag to check if color changed *since last leave*
+    
+        # # if I am entering a window that is not always on top (the part "and not isalwaysontop" is there to attemp to fix a bug: auto-mix sometimes stops pausing when you hover the color picker)
+        # if g.g_auto_mix_paused and not isAlwaysOnTop:
+        #     g.g_auto_mix_paused = False
+
+        # # obj.activateWindow()
+
+
 class AutoFocusSetter(QObject):
 
     # Q_OBJECT
@@ -1049,91 +1108,7 @@ class AutoFocusSetter(QObject):
         # log(f"event {g.event_lookup.get(str(event.type()), 'sconosciuto')}")
 
         if event.type() == QEvent.Enter:
-            g.g_mouse_is_out_of_canvas = False
-
-            # log(f"enter")
-            # log(f"enter color selector ")
-
-            # if isinstance(obj, QDockWidget):
-            # log(f"enter dock widget {obj.objectName()} ")
-
-            # if obj.type() == QMdiSubWindow:
-            if isinstance(obj, QMdiSubWindow):
-                log(f"debug - enter subwindow")
-
-                wi = Krita.instance().activeWindow()
-                q_win = wi.qwindow()
-                mdi_area = q_win.findChild(QMdiArea)
-                mdi_area.setActiveSubWindow(obj)
-
-                subwin = obj
-                isAlwaysOnTop = True if subwin.windowFlags() & Qt.WindowStaysOnTopHint else False
-
-                # if the color has just been changed manually, create a new layer
-
-                if g.g_color_changed_from_selector_probably:
-
-                    curLayerId = Krita.instance().activeDocument().activeNode().uniqueId()
-                    # print (f"debug - color changed probably. curnode =  {curLayerId}")
-                    # pprint.plog(g.g_layer_is_dirty)
-
-                    if (curLayerId in g.g_layer_is_dirty):  # if cur layer is dirty
-                        log("mouse enter: debug 1")
-                        l_color_changed_from_selector = True
-                    else:
-                        log("mouse enter: debug 2")
-                        l_color_changed_from_selector = False
-
-                    # questo era bacato! a volte era uguale. lo commento. così crea layer anche se esco e rientro dal canvas, ma può essere comodo invece che premere D per rafforzare.
-                    # TODO aggiungi controllo "se il layer attuale è dirty"
-                    # if g.g_virtual_fg_color_rgb.equals(g.g_virtual_color_used_last_rgb):
-                        # l_color_changed_from_selector = False
-                    # else:
-                        # l_color_changed_from_selector = True
-                else:
-                    log("mouse enter: color changed from selector probably, ma poi deciso = false")
-                    l_color_changed_from_selector = False
-
-                # log ("debug 1")
-
-                # Use the new flag to check if color changed *since last leave*
-                if ( not isAlwaysOnTop and l_color_changed_from_selector and 
-                            g.g_color_changed_since_last_leave 
-                            and (not g.g_auto_mix_enabled or g.g_auto_mix_paused) and g.g_multi_layer_mode):
-
-                    log ("debug 3 creating layer")
-                    newLa = dryPaper(False)
-
-                    # reenable dirty brush
-
-                    if g.g_dirty_brush_overall_enabled:
-                        g.g_dirty_brush_currently_on = True
-
-                    # devo anche resettare opacità di default
-
-                    document = Krita.instance().activeDocument()
-                    if g.g_auto_reset_opacity_on_pick == 1 and document is not None:
-                        newLa.setOpacity(
-                            int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
-
-                        document.refreshProjection()
-
-                    # Flag is now reset on Leave event, no need to reset here
-                    g.g_color_changed_from_selector_probably = False
-
-                    if g.g_diminishing_opacity:
-                        g.g_auto_mix__how_much_canvas_to_pick = 1.0
-
-                        val099 = round(
-                            g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                        g.g_dial_auto_mix_level.setValue(val099)
-
-                # if I am entering a window that is not always on top (the part "and not isalwaysontop" is there to attemp to fix a bug: auto-mix sometimes stops pausing when you hover the color picker)
-                if g.g_auto_mix_paused and not isAlwaysOnTop:
-                    g.g_auto_mix_paused = False
-
-                # obj.activateWindow()
-
+            onEnterCanvas(obj)
         if event.type() == QEvent.Leave:
             # log(f"leave")
 
@@ -4505,6 +4480,47 @@ def onFgColorChangedNotByAutomix() -> None:
     if g.g_virtual_fg_color_rgb is None:
         raise Exception("fdkfdjk")
 
+    curLayerId = Krita.instance().activeDocument().activeNode().uniqueId()
+
+
+    # adesso devo creare un layer, se il layer attuale e' dirty e se sei in multi layer mode
+    if g.g_multi_layer_mode and (curLayerId in g.g_layer_is_dirty):
+    # if ( not isAlwaysOnTop and l_color_changed_from_selector and 
+    #             g.g_color_changed_since_last_leave 
+    #             and (not g.g_auto_mix_enabled or g.g_auto_mix_paused) and g.g_multi_layer_mode):
+
+        log ("fg color changed by user:  creating layer")
+        newLa = dryPaper(False)
+
+
+        # non serve dire che il layer appena creeato non e' dirty. il fatto che non e' nel dizionario significa quello
+        # g.g_layer_is_dirty[curLayerId] = False
+
+
+
+        # reenable dirty brush
+
+        if g.g_dirty_brush_overall_enabled:
+            g.g_dirty_brush_currently_on = True
+
+        # devo anche resettare opacità di default
+
+        document = Krita.instance().activeDocument()
+        if g.g_auto_reset_opacity_on_pick == 1 and document is not None:
+            newLa.setOpacity(
+                int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
+
+            document.refreshProjection()
+
+        # Flag is now reset on Leave event, no need to reset here
+        g.g_color_changed_from_selector_probably = False
+
+        if g.g_diminishing_opacity:
+            g.g_auto_mix__how_much_canvas_to_pick = 1.0
+
+            val099 = round(
+                g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
+            g.g_dial_auto_mix_level.setValue(val099)
 
     
 # And add the extension to Krita's list of extensions:
