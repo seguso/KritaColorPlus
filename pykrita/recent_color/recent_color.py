@@ -3912,10 +3912,10 @@ class MyExtension(Extension):
 
 
 
-        actionSave = window.createAction(
+        actionExportCoords = window.createAction(
             "exportLayers", "Export layers and coordinates")
         #actionSave.setShortcut("Ctrl+Shift+F")
-        actionSave.triggered.connect(export_layer_coordinates)
+        actionExportCoords.triggered.connect(export_layer_coordinates)
 
         # actionToggle100 = window.createAction(
         #     "toggle100PercOpacity", "Toggle 100% layer opacity")
@@ -4029,6 +4029,8 @@ class MyExtension(Extension):
         # custom_menu.addAction(actionPick)
         # custom_menu.addAction(actionPickAndDry)
 
+        custom_menu.addSeparator()
+        custom_menu.addAction(actionExportCoords)
         custom_menu.addSeparator()
         custom_menu.addAction(g.g_actionAutoResOnPick)
         # custom_menu.addAction(actioninaro)
