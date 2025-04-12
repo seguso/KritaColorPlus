@@ -21,7 +21,7 @@ from .rgb import rgb, rgbOfColorArray01, rgbOfColorArray255, colorArrayOfRgb, co
 from krita import *
 
 from krita import (
-    Krita, ManagedColor)
+    Krita, ManagedColor, Extension)
 
 from pathlib import Path
 
@@ -2121,7 +2121,7 @@ def handle_release(widget) -> None: # bm_released  bm_mousereleased bm_mousebutt
                     # log("g_color_on_down_dirty_brush is none. skippo logica dirty")
                     pass
 
-                if view is not None and g.g_color_on_down_dirty_brush is not None:
+                if view is not None and g.g_color_on_down_dirty_brush is not None and g.g_virtual_fg_color_rgb is not None:
 
                     g.g_virtual_fg_color_rgb_previous_when_dirty_brush_on = g.g_virtual_fg_color_rgb.clone()
 
@@ -2136,7 +2136,7 @@ def handle_release(widget) -> None: # bm_released  bm_mousereleased bm_mousebutt
                     #canv = 0.12  # Amount of background color to mix in
 
                     # Get components (assuming 0.0-1.0 range from Krita API)
-                    fg_comp_orig = fg.components()
+                    fg_comp_orig : list[float] = fg.components()
 
                     # Prepare colors for spectral_mix (expects 0-255 integer lists)
                     fg_rgb_255 = [int(c * 255) for c in fg_comp_orig[0:3]]
