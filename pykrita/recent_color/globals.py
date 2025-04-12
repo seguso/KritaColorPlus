@@ -116,7 +116,7 @@ g_last_coord_mouse_up = None
 #g_picking_color = False
 #g_mixing_color = False
 
-g_temp_switched_to_100_previous_opac = None
+
 
 g_opacity_decided_for_layer = False
 
