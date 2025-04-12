@@ -100,7 +100,7 @@ class ColorHistoryDocker(DockWidget):
         # Set as foreground color in Krita
         
 
-        clickedColorRgb = rgb(float(color.blue()) , float( color.green()) , float( color.red()) , 255.0)
+        clickedColorRgb = rgb(float(color.blueF() * 255.0) , float( color.greenF() * 255.0) , float( color.redF() * 255.0) , 255.0)
         g.g_virtual_fg_color_rgb = clickedColorRgb
         update_label_from_virtual_color()
         
