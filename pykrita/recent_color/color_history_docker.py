@@ -2,7 +2,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QColor, QResizeEvent # Import QResizeEvent
 from PyQt5.QtWidgets import QDockWidget, QWidget, QGridLayout, QLabel
 from krita import DockWidget , Krita
-from .recent_color import rgb, setFgColor, update_label_from_virtual_color, log
+from .recent_color import rgb, setFgColor, update_label_from_virtual_color, log, maybe_dry_paper_and_autoResetOpacity
 from . import globals as g
 
 # --- Custom Widget for Clickable Color Squares ---
@@ -119,6 +119,9 @@ class ColorHistoryDocker(DockWidget):
             comp[2] = color.redF()
             fg.setComponents(comp)
             view.setForeGroundColor(fg)
+
+
+        maybe_dry_paper_and_autoResetOpacity()
         
     def canvasChanged(self, canvas):
         """ Override of the abstract method from DockWidget class.

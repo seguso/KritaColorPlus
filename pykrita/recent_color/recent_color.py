@@ -2630,7 +2630,7 @@ class MyExtension(Extension):
 
             # log("LastColor setup ok")
 
-    def switchToLastColor(self) -> None:  # bm_previouscolor  bm_lastcolor
+    def switchToLastColor(self) -> None:  # bm_previouscolor  bm_lastcolor  bm_recentColor
         """Switches color based on history, handling consecutive presses vs. first press after paint."""
 
         # log("--- switchToLastColor ---")
@@ -2707,22 +2707,10 @@ class MyExtension(Extension):
 
 
 
-            # auto reset opacity
+            # dry paper e auto reset opacity
+            maybe_dry_paper_and_autoResetOpacity()
 
-            document = acView.document()
-            if document is not None:
-                activeNode = document.activeNode()
-                if activeNode is not None:
-                    parentNode = activeNode.parentNode()
-                    if parentNode is not None:
-                        if  g.g_multi_layer_mode:
-                            newLa = dryPaper(showMessage=False)
-                            if newLa is not None and g.g_auto_reset_opacity_on_pick == 1:
-
-                                newLa.setOpacity(
-                                    int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
-                                document.refreshProjection()
-
+            
         except IndexError:
             quickMessage(
                 "Error accessing color history (Index out of bounds).")
@@ -4505,50 +4493,51 @@ def onFgColorChangedNotByAutomix() -> None:
 
         update_label_from_virtual_color()
 
-    
-    
-    curLayerId = Krita.instance().activeDocument().activeNode().uniqueId()
+    maybe_dry_paper_and_autoResetOpacity()
 
-
-    # adesso devo creare un layer, se il layer attuale e' dirty e se sei in multi layer mode
-    if g.g_multi_layer_mode and (curLayerId in g.g_layer_is_dirty):
-    # if ( not isAlwaysOnTop and l_color_changed_from_selector and 
-    #             g.g_color_changed_since_last_leave 
-    #             and (not g.g_auto_mix_enabled or g.g_auto_mix_paused) and g.g_multi_layer_mode):
-
-        log ("fg color changed by user:  creating layer")
-        newLa = dryPaper(False)
-
-
-        # non serve dire che il layer appena creeato non e' dirty. il fatto che non e' nel dizionario significa quello
-        # g.g_layer_is_dirty[curLayerId] = False
-
-
-
-        # reenable dirty brush
-
-        if g.g_dirty_brush_overall_enabled:
-            g.g_dirty_brush_currently_on = True
-
-        # devo anche resettare opacità di default
-
-        document = Krita.instance().activeDocument()
-        if g.g_auto_reset_opacity_on_pick == 1 and document is not None:
-            newLa.setOpacity(
-                int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
-
-            document.refreshProjection()
-
-        # Flag is now reset on Leave event, no need to reset here
-        g.g_color_changed_from_selector_probably = False
-
-        if g.g_diminishing_opacity:
-            g.g_auto_mix__how_much_canvas_to_pick = 1.0
-
-            val099 = round(
-                g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-            g.g_dial_auto_mix_level.setValue(val099)
 
     
+def maybe_dry_paper_and_autoResetOpacity() -> None:
+    curLayer = Krita.instance().activeDocument().activeNode()
+    if curLayer is not None:
+        curLayerId = curLayer.uniqueId()
+
+
+        # adesso devo creare un layer, se il layer attuale e' dirty e se sei in multi layer mode
+        if g.g_multi_layer_mode and (curLayerId in g.g_layer_is_dirty):
+        # if ( not isAlwaysOnTop and l_color_changed_from_selector and 
+        #             g.g_color_changed_since_last_leave 
+        #             and (not g.g_auto_mix_enabled or g.g_auto_mix_paused) and g.g_multi_layer_mode):
+
+            log ("fg color changed by user:  creating layer")
+            newLa = dryPaper(False)
+
+
+            # non serve dire che il layer appena creeato non e' dirty. il fatto che non e' nel dizionario significa quello
+            # g.g_layer_is_dirty[curLayerId] = False
+
+
+
+            # reenable dirty brush
+
+            if g.g_dirty_brush_overall_enabled:
+                g.g_dirty_brush_currently_on = True
+
+            # devo anche resettare opacità di default
+            if newLa is not None:
+                document = Krita.instance().activeDocument()
+                if g.g_auto_reset_opacity_on_pick and document is not None:
+                    newLa.setOpacity( int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
+
+                    document.refreshProjection()
+
+                # Flag is now reset on Leave event, no need to reset here
+                g.g_color_changed_from_selector_probably = False
+
+
+
+
+
+
 # And add the extension to Krita's list of extensions:
 Krita.instance().addExtension(MyExtension(Krita.instance()))

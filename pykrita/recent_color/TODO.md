@@ -3,9 +3,18 @@ esci ti setta un altro, precedente. non succede dall'inizoi ma dopo un po'
 
     riscrivi tutto su questa idea: se arriva il fgcolor changed MENTRE TU SEI FUORI, allora e' un colore vero.
 
+
+    TODO C non crea il nuovo layer? o solo se non sei in un group?
+
+    DONE vedi se pulsante V crea nuovo layer
+    
+    
+
     DONE manca gestire il click nella history
 
         click su color history inizia a funzionare ma crea duplicati
+
+        DONE non crea il nuovo layer
  
     TODO manca krita palette
 
