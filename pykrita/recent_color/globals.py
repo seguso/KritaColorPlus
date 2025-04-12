@@ -21,6 +21,8 @@ last_log_time_sample_points = 0
 last_log_time_sampled_colors = 0
 last_log_time_final_color = 0
 
+g_mouse_is_out_of_canvas = True
+
 # g_mix_auto_clears_cur_layer = "1"
 
 g_color_changed_from_selector_probably = False

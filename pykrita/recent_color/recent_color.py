@@ -1049,6 +1049,8 @@ class AutoFocusSetter(QObject):
         # log(f"event {g.event_lookup.get(str(event.type()), 'sconosciuto')}")
 
         if event.type() == QEvent.Enter:
+            g.g_mouse_is_out_of_canvas = False
+            
             # log(f"enter")
             # log(f"enter color selector ")
 
@@ -1134,6 +1136,8 @@ class AutoFocusSetter(QObject):
 
         if event.type() == QEvent.Leave:
             # log(f"leave")
+
+            g.g_mouse_is_out_of_canvas = True
 
             # logic: if the mouse leaver an always-on-top window, focus the first window that's not always on top.
             if isinstance(obj, QMdiSubWindow):

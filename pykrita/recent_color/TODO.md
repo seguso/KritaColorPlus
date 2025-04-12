@@ -1,6 +1,8 @@
 TODO c'è ancora il bug nell automix: scegli un colore nel selector, e quando
 esci ti setta un altro, precedente. non succede dall'inizoi ma dopo un po'
 
+    riscrivi tutto su questa idea: se arriva il fgcolor changed MENTRE TU SEI FUORI, allora e' un colore vero.
+
 TODO fixa il bug di quando fa fill dell'intero layer. come si riproduceva?
 
 TODO inverti dry paper e color preview

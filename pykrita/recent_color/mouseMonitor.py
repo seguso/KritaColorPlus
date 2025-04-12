@@ -17,6 +17,17 @@ from PyQt5.QtCore import (
                 pyqtSignal) # Added pyqtSignal
 
 
+from . import globals as g # Import globals for logging
+
+# Helper function to get widget hierarchy
+def get_widget_hierarchy(widget):
+   hierarchy = []
+   current = widget
+   while current:
+       hierarchy.append(current.metaObject().className())
+       current = current.parent()
+   return hierarchy
+
 class MouseMonitor(QObject):
     mouseClicked = pyqtSignal(QObject)
     mouseReleased = pyqtSignal(QObject)
@@ -54,6 +65,9 @@ class MouseMonitor(QObject):
             if not self.left_button_pressed:
                 self.left_button_pressed = True
                 if current_widget:
+                    # Print widget hierarchy on mouse down
+                    hierarchy = get_widget_hierarchy(current_widget)
+                    g.log(f"Mouse down on widget hierarchy: {hierarchy}")
                     self.mouseClicked.emit(current_widget)
                 self.last_widget = current_widget
         else:
