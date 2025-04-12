@@ -782,7 +782,7 @@ def getColorUnderCursorOrAtPos(forcedPos: Optional['xy'] = None, ignore_bottom_l
                                                 # log(f"trovato opaco sul layer: {curLayer.name()}")
                                                 break # Found one, no need to check further layers
                                 else: #coordinate out of bounds for this layer or pixelData empty, treat as transparent
-                                    log("getColorUnderCursorOrAtPos coordinate out of bounds")
+                                    log(f"getColorUnderCursorOrAtPos coordinate out of bounds {x}, {y}")
 
                             except Exception as e:
                                 # Log error or handle cases where pixelData fails for a layer
@@ -2403,7 +2403,7 @@ class MyExtension(Extension):
 
                     #cruciale altrimenti l'automix crea nuovi layer quando vai sul selector e torni sul canvas.
                     if not g.g_auto_mix_ignore_this_color_in_onfgcolorchanged or not g.g_auto_mix_ignore_this_color_in_onfgcolorchanged.equals(newColorRgb):
-                        log("g.g_color_changed_since_last_leave = True")
+                        log("fgcolorchanged - g.g_color_changed_since_last_leave = True")
                         g.g_color_changed_since_last_leave = True
                         
                 else:
@@ -2431,17 +2431,23 @@ class MyExtension(Extension):
         # s_model = kis_undo_view.selectionModel()
         # s_model.currentChanged.connect(self._on_history_was_made)
 
-        # start listening to color changes via color selector
-        colorSelectorNg = next(
-            (d for d in app.dockers() if d.objectName() == 'ColorSelectorNg'), None)
-        # log(f"type of color selector = {type(colorSelectorNg)}")
-        for child in colorSelectorNg.findChildren(QObject):
-            meta = child.metaObject()
-            if meta.className() in {
-                'KisColorSelectorRing', 'KisColorSelectorTriangle',
-                    'KisColorSelectorSimple', 'KisColorSelectorWheel'}:
-                sig = getattr(child, 'update')
-                sig.connect(self.onFgColorChanged)
+
+
+
+        # ho l'impressione che dopo un po' smetta di scattare. proviamo a fare altro sistema
+        # # start listening to color changes via color selector
+        # colorSelectorNg = next(
+        #     (d for d in app.dockers() if d.objectName() == 'ColorSelectorNg'), None)
+        # # log(f"type of color selector = {type(colorSelectorNg)}")
+        # for child in colorSelectorNg.findChildren(QObject):
+        #     meta = child.metaObject()
+        #     if meta.className() in {
+        #         'KisColorSelectorRing', 'KisColorSelectorTriangle',
+        #             'KisColorSelectorSimple', 'KisColorSelectorWheel'}:
+        #         sig = getattr(child, 'update')
+        #         sig.connect(self.onFgColorChanged)
+
+
 
         # non si riesce a mettere un event filter sul color selector. gli eventi non arrivano...
         # event_filter = EventFilter(colorSelectorNg)
