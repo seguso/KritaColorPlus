@@ -2,7 +2,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QColor, QResizeEvent # Import QResizeEvent
 from PyQt5.QtWidgets import QDockWidget, QWidget, QGridLayout, QLabel
 from krita import DockWidget , Krita
-from .recent_color import rgb, setFgColor, update_label_from_virtual_color
+from .recent_color import rgb, setFgColor, update_label_from_virtual_color, log
 from . import globals as g
 
 # --- Custom Widget for Clickable Color Squares ---
@@ -111,11 +111,14 @@ class ColorHistoryDocker(DockWidget):
         view = Krita.instance().activeWindow().activeView()
         fg = view.foregroundColor()
         comp = fg.components()
-        comp[0] = color.blueF()
-        comp[1] = color.greenF()
-        comp[2] = color.redF()
-        fg.setComponents(comp)
-        view.setForeGroundColor(fg)
+        if len(comp) < 3:
+            log(f"non posso settare come fg color di krita questo colore, perche' attualmente sei su un layer grayscale. il fg color ha questa struttura {comp}")
+        else:
+            comp[0] = color.blueF()
+            comp[1] = color.greenF()
+            comp[2] = color.redF()
+            fg.setComponents(comp)
+            view.setForeGroundColor(fg)
         
     def canvasChanged(self, canvas):
         """ Override of the abstract method from DockWidget class.

@@ -78,9 +78,13 @@ from typing import List, Any, Optional  # Add List, Any, Optional
 from .spectral import *
 
 def arrEqual(a1, a2):
-    return (int(a1[0] * 255.0) == int(a2[0] * 255.0) and
-            int(a1[1] * 255.0) == int(a2[1] * 255.0) and
-            int(a1[2] * 255.0) == int(a2[2] * 255.0))
+    if len(a1) < 3 or len(a2) < 3:
+        log("arrEqual: hai passato array che non sono rgb")
+        return False
+    else:
+        return (int(a1[0] * 255.0) == int(a2[0] * 255.0) and
+                int(a1[1] * 255.0) == int(a2[1] * 255.0) and
+                int(a1[2] * 255.0) == int(a2[2] * 255.0))
 
 
 # Helper function to sample a pixel and return [R, G, B] 0-255
@@ -1235,15 +1239,17 @@ def setFgColor(col: rgb) -> None:  # aggiorna solo il selector, ma non fa piu' s
         if view is not None:
             fg = view.foregroundColor()
             comp = fg.components()
-            # log(f"fg color = {comp}")
+            if len(comp) < 3:
 
-            comp[0] = (col.r/255.0)
-            comp[1] = (col.g / 255.0)
-            comp[2] = (col.b / 255.0)
+                log(f"non setto il fg color di Krita a questo rgb perche' attualmente sei su un layer greyscale. il fg color attuale ha questa struttura = {comp}")
+            else:
+                comp[0] = (col.r/255.0)
+                comp[1] = (col.g / 255.0)
+                comp[2] = (col.b / 255.0)
 
-            fg.setComponents(comp)
+                fg.setComponents(comp)
 
-            view.setForeGroundColor(fg)
+                view.setForeGroundColor(fg)
 
 
 def QPointHash(qp):
@@ -1931,7 +1937,8 @@ def handle_click(widget) -> None:
         pass
 
 
-def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleased bm_mouseup
+def handle_release(widget) -> None: # bm_released  bm_mousereleased bm_mousebuttonreleased bm_mouseup
+
     if monitor.isColorSelector(widget): # devo gestire anche released sul selector, perche' altrimenti lancia l'evento solo su mousedown, ma se poi trascina e lascia
                                         # cambia colore ma lo ignorerebbe se non lanciassi anche qui
         onFgColorChangedNotByAutomix()
@@ -1981,10 +1988,14 @@ def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleas
         # Get the actual foreground color from Krita
         krita_fg_color = Krita.instance().activeWindow().activeView().foregroundColor()
         # Get color components (usually [R, G, B, A] as floats 0.0-1.0)
-        components = krita_fg_color.components()
+        components : list[float] = krita_fg_color.components()
 
 
-        def aggiorna_history_aggiungendo(aComponents):
+        def aggiorna_history_aggiungendo(aComponents) -> None:
+
+            if len(aComponents) < 4:
+                log("aggiorna_history_aggiungendo: hai passato array rgba di len < 4. non aggiorno history")
+                return
             # Convert Krita components (0-1 float, RGBA) to our rgb class format (0-255 float, BGR internally)
             # Note: The rgb class stores B in self.r and R in self.b internally.
             actual_color_rgb = rgb(r=aComponents[0] * 255.0,  # Blue component (index 2) * 255 for rgb.r
@@ -3804,49 +3815,53 @@ class MyExtension(Extension):
 
 
         # ora devo anche creare il layer. solo se multilayer mode, e se il corrente e' dirty . find if there is a parent node
-        curLayerId = Krita.instance().activeDocument().activeNode().uniqueId() # puo' essere none se sono su un transparency mask
-        if not (curLayerId is None) and g.g_multi_layer_mode and (curLayerId in g.g_layer_is_dirty):
+        activeLayer = Krita.instance().activeDocument().activeNode() # activeNode puo' essere none se sono su un transparency mask
+        if  (activeLayer is None):
+            log("non faccio dry perche' non sei su un layer. Non saprei dove creare il nuovo layer")
+        else:
+            curLayerId = activeLayer.uniqueId() 
+            if  g.g_multi_layer_mode and (curLayerId in g.g_layer_is_dirty):
 
-            hasParentNode = False
-            app = Krita.instance()
-            document = None
-            win = app.activeWindow()
-            if win is not None:
-                # log("pick called 1")
-                view = win.activeView()
-                if view is not None:
-                    # log("pick called 2")
-                    document = view.document()
-                    if document:
+                hasParentNode = False
+                app = Krita.instance()
+                document = None
+                win = app.activeWindow()
+                if win is not None:
+                    # log("pick called 1")
+                    view = win.activeView()
+                    if view is not None:
+                        # log("pick called 2")
+                        document = view.document()
+                        if document:
 
-                        # could be root node, so I need to do parent again
-                        parentNode = document.activeNode().parentNode()
+                            # could be root node, so I need to do parent again
+                            parentNode = document.activeNode().parentNode()
 
-                        if parentNode is not None:
-                            pa = parentNode.parentNode()
-                            if pa is not None:
-                                log(
-                                    f"has parent node. document file {document.fileName()}. parentNode = {parentNode.name()}")
-                                hasParentNode = True
+                            if parentNode is not None:
+                                pa = parentNode.parentNode()
+                                if pa is not None:
+                                    log(
+                                        f"has parent node. document file {document.fileName()}. parentNode = {parentNode.name()}")
+                                    hasParentNode = True
 
-            # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
-            if  hasParentNode :
-                newLa = dryPaper(showMessage=False)
+                # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
+                if  hasParentNode :
+                    newLa = dryPaper(showMessage=False)
 
-                # if active layer opacity < 70, set to 70
+                    # if active layer opacity < 70, set to 70
 
-                if g.g_auto_reset_opacity_on_pick  and document is not None :
-                    # bm_djiwejdie
-                    newLa.setOpacity(
-                        int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
+                    if g.g_auto_reset_opacity_on_pick  and document is not None :
+                        # bm_djiwejdie
+                        newLa.setOpacity(
+                            int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
 
-                    document.refreshProjection()
+                        document.refreshProjection()
 
-                quickMessage("Dry paper and pick color")
-            
-            else:
-                # useless to dry paper because I am at 100% opacity
-                quickMessage("Picked color")
+                    quickMessage("Dry paper and pick color")
+                
+                else:
+                    # useless to dry paper because I am at 100% opacity
+                    quickMessage("Picked color")
 
     # def dryPaperAndMix(self):
         # log("dry paper and mix")
@@ -4479,7 +4494,7 @@ def getFgColorAsRgb() -> Optional[rgb]: # Replace 'any' with the actual return t
                 # Log or handle non-RGBA cases if necessary, or raise as before
                 # For now, let's return None as it's unexpected based on the original code's assumption
                 log(f"Warning: Foreground color components length is not 4: {len(comp)}") # Optional logging
-                raise Exception("Foreground color is not RGBA") # Or raise if it's truly an error
+                return None #  raise Exception("Foreground color is not RGBA") # Or raise if it's truly an error
                 
     return None # Return None if view or fg is None
 
@@ -4498,12 +4513,17 @@ def onFgColorChangedNotByAutomix() -> None:
 
     #adesso sono sicuro che e' stato cambiato manualmente, quindi aggiorno il virtual color con il fg color di krita
     
-    g.g_virtual_fg_color_rgb  = getFgColorAsRgb();
-    if g.g_virtual_fg_color_rgb is None:
-        raise Exception("fdkfdjk")
+    fgColorMaybe  = getFgColorAsRgb();
+    if fgColorMaybe is None: # succede se utente ha settato un fg color grayscale, stando su un filter mask o transparency mask
+        return
+    else:
 
-    update_label_from_virtual_color()
+        g.g_virtual_fg_color_rgb = fgColorMaybe
 
+        update_label_from_virtual_color()
+
+    
+    
     curLayerId = Krita.instance().activeDocument().activeNode().uniqueId()
 
 
