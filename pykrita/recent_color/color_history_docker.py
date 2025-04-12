@@ -1,7 +1,8 @@
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QColor, QResizeEvent # Import QResizeEvent
 from PyQt5.QtWidgets import QDockWidget, QWidget, QGridLayout, QLabel
-from krita import DockWidget
+from krita import DockWidget , Krita
+from .recent_color import rgb, setFgColor, update_label_from_virtual_color
 from . import globals as g
 
 # --- Custom Widget for Clickable Color Squares ---
@@ -40,7 +41,7 @@ class ColorHistoryDocker(DockWidget):
         # Initial UI population
         self.update_color_history_ui()
     
-    def update_color_history_ui(self):
+    def update_color_history_ui(self) -> None:
         """ Clears and rebuilds the color history UI display in a grid layout. """
         # Clear existing widgets from the layout
         while self.color_history_layout.count() > 0:
@@ -93,20 +94,26 @@ class ColorHistoryDocker(DockWidget):
                 self.color_history_layout.addWidget(color_square, row, col)
     
     # --- Slot for Color Square Clicks ---
-    def _on_color_square_clicked(self, color):
+    def _on_color_square_clicked(self, color) -> None:
         """ Handles clicks on the color history squares. """
         g.log(f"Color square clicked: {color.name()}")
         # Set as foreground color in Krita
-        from krita import Krita
-        view = Krita.instance().activeWindow().activeView()
-        fg = view.foregroundColor()
-        # Converti il QColor in ManagedColor
-        comp = fg.components()
-        comp[0] = color.blueF()
-        comp[1] = color.greenF()
-        comp[2] = color.redF()
-        fg.setComponents(comp)
-        view.setForeGroundColor(fg)
+        
+
+        clickedColorRgb = rgb(float(color.blue()) , float( color.green()) , float( color.red()) , 255.0)
+        g.g_virtual_fg_color_rgb = clickedColorRgb
+        update_label_from_virtual_color()
+        setFgColor(g.g_virtual_fg_color_rgb)
+
+        # view = Krita.instance().activeWindow().activeView()
+        # fg = view.foregroundColor()
+        # # Converti il QColor in ManagedColor
+        # comp = fg.components()
+        # comp[0] = color.blueF()
+        # comp[1] = color.greenF()
+        # comp[2] = color.redF()
+        # fg.setComponents(comp)
+        # view.setForeGroundColor(fg)
         
     def canvasChanged(self, canvas):
         """ Override of the abstract method from DockWidget class.

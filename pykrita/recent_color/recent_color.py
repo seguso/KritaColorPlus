@@ -1250,7 +1250,7 @@ def QPointHash(qp):
     return f"{qp.x()}-{qp.y()}"
 
 
-def setFgColorEqualToColorOfLastStrokeAfterOpacityAdjust():
+def setFgColorEqualToColorOfLastStrokeAfterOpacityAdjust() -> None:
 
     if g.g_last_coord_mouse_up is None:
         log("error g.g_last_coord_mouse_up is none")
