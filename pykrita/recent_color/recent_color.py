@@ -3352,48 +3352,14 @@ class MyExtension(Extension):
 
                         setFgColor(g.g_virtual_fg_color_rgb) # non lancia eventi
 
+
+                        
+
+
                         if showMessage:
                             view.showFloatingMessage("Pick color", QIcon(), g.timeMessage, 1)
 
-                        # # setto il fg color uguale a merged color
-                        # fg = view.foregroundColor()
-                        # comp = fg.components()
-
-                        # # wrokaround in case your fg color is [1,1], which means greyscale
-                        # log(f"fg color = {comp}")
-
-                        # if len(comp) == 4:
-
-                        #     comp[0] = (mergedColor.r / 255.0)
-                        #     comp[1] = (mergedColor.g / 255.0)
-                        #     comp[2] = (mergedColor.b / 255.0)
-
-                        #     log(f"fg color after = {comp}")
-
-                        #     fg.setComponents(comp)
-
-                        #     # g.g_ultimo_colore_vero_settato_dall_utente = comp # ricorda che questo e' un colore vero
-
-                        #     view.setForeGroundColor(fg)
-
-                        #     if g.g_auto_mixing_just_once_logic:
-                        #         g.g_auto_mixing_just_once_now_on = True
-
-                        #     if g.g_diminishing_opacity:
-                        #         g.g_auto_mix__how_much_canvas_to_pick = 1.0
-
-                        #         val099 = round(
-                        #             g.g_auto_mix__how_much_canvas_to_pick * 100.0) - 1
-                        #         g.g_dial_auto_mix_level.setValue(val099)
-
-                        #     # messaggio
-                            
-                        # elif len(comp) == 2:
-                        #     messageBox(
-                        #         " Your foreground color is currently grayscale. In order to use \"pick\", please set your foreground color to an RGB color first.")
-                        # else:
-                        #     messageBox(
-                        #         "In order to use pick, please set your foreground color to an RGB color first.")
+                        
 
     def increaseMixing(self):
 
@@ -3784,55 +3750,58 @@ class MyExtension(Extension):
         # non funziona se inverto l'ordine... non capisco perche'
         self.pickColorFun(False)
 
+        maybe_dry_paper_and_autoResetOpacity()
 
-        # ora devo anche creare il layer. solo se multilayer mode, e se il corrente e' dirty . find if there is a parent node
-        activeLayer = Krita.instance().activeDocument().activeNode() # activeNode puo' essere none se sono su un transparency mask
-        if  (activeLayer is None):
-            log("non faccio dry perche' non sei su un layer. Non saprei dove creare il nuovo layer")
-        else:
-            curLayerId = activeLayer.uniqueId() 
-            if  g.g_multi_layer_mode and (curLayerId in g.g_layer_is_dirty):
+        quickMessage("Dry paper and pick color")
+        
+        # # ora devo anche creare il layer. solo se multilayer mode, e se il corrente e' dirty . find if there is a parent node
+        # activeLayer = Krita.instance().activeDocument().activeNode() # activeNode puo' essere none se sono su un transparency mask
+        # if  (activeLayer is None):
+        #     log("non faccio dry perche' non sei su un layer. Non saprei dove creare il nuovo layer")
+        # else:
+        #     curLayerId = activeLayer.uniqueId() 
+        #     if  g.g_multi_layer_mode and (curLayerId in g.g_layer_is_dirty):
 
-                hasParentNode = False
-                app = Krita.instance()
-                document = None
-                win = app.activeWindow()
-                if win is not None:
-                    # log("pick called 1")
-                    view = win.activeView()
-                    if view is not None:
-                        # log("pick called 2")
-                        document = view.document()
-                        if document:
+        #         hasParentNode = False
+        #         app = Krita.instance()
+        #         document = None
+        #         win = app.activeWindow()
+        #         if win is not None:
+        #             # log("pick called 1")
+        #             view = win.activeView()
+        #             if view is not None:
+        #                 # log("pick called 2")
+        #                 document = view.document()
+        #                 if document:
 
-                            # could be root node, so I need to do parent again
-                            parentNode = document.activeNode().parentNode()
+        #                     # could be root node, so I need to do parent again
+        #                     parentNode = document.activeNode().parentNode()
 
-                            if parentNode is not None:
-                                pa = parentNode.parentNode()
-                                if pa is not None:
-                                    log(
-                                        f"has parent node. document file {document.fileName()}. parentNode = {parentNode.name()}")
-                                    hasParentNode = True
+        #                     if parentNode is not None:
+        #                         pa = parentNode.parentNode()
+        #                         if pa is not None:
+        #                             log(
+        #                                 f"has parent node. document file {document.fileName()}. parentNode = {parentNode.name()}")
+        #                             hasParentNode = True
 
-                # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
-                if  hasParentNode :
-                    newLa = dryPaper(showMessage=False)
+        #         # I don't want to add a layer if I'm picking from the mixing palette, or if I've switched to 100 percent opacity mode
+        #         if  hasParentNode :
+        #             newLa = dryPaper(showMessage=False)
 
-                    # if active layer opacity < 70, set to 70
+        #             # if active layer opacity < 70, set to 70
 
-                    if g.g_auto_reset_opacity_on_pick  and document is not None :
-                        # bm_djiwejdie
-                        newLa.setOpacity(
-                            int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
+        #             if g.g_auto_reset_opacity_on_pick  and document is not None :
+        #                 # bm_djiwejdie
+        #                 newLa.setOpacity(
+        #                     int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
 
-                        document.refreshProjection()
+        #                 document.refreshProjection()
 
-                    quickMessage("Dry paper and pick color")
+        #             quickMessage("Dry paper and pick color")
                 
-                else:
-                    # useless to dry paper because I am at 100% opacity
-                    quickMessage("Picked color")
+        #         else:
+        #             # useless to dry paper because I am at 100% opacity
+        #             quickMessage("Picked color")
 
     # def dryPaperAndMix(self):
         # log("dry paper and mix")

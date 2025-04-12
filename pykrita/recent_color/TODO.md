@@ -4,7 +4,7 @@ esci ti setta un altro, precedente. non succede dall'inizoi ma dopo un po'
     riscrivi tutto su questa idea: se arriva il fgcolor changed MENTRE TU SEI FUORI, allora e' un colore vero.
 
 
-    TODO C non crea il nuovo layer? o solo se non sei in un group?
+    DONE C non crea il nuovo layer? o solo se non sei in un group?
 
     DONE vedi se pulsante V crea nuovo layer
     
