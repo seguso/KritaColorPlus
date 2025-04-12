@@ -66,8 +66,8 @@ class MouseMonitor(QObject):
                 self.left_button_pressed = True
                 if current_widget:
                     # Print widget hierarchy on mouse down
-                    hierarchy = get_widget_hierarchy(current_widget)
-                    g.log(f"Mouse down on widget hierarchy: {hierarchy}")
+                    # hierarchy = get_widget_hierarchy(current_widget)
+                    # g.log(f"Mouse down on widget hierarchy: {hierarchy}")
                     self.mouseClicked.emit(current_widget)
                 self.last_widget = current_widget
         else:

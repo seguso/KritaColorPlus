@@ -1050,7 +1050,7 @@ class AutoFocusSetter(QObject):
 
         if event.type() == QEvent.Enter:
             g.g_mouse_is_out_of_canvas = False
-            
+
             # log(f"enter")
             # log(f"enter color selector ")
 
@@ -2337,7 +2337,7 @@ class MyExtension(Extension):
 
         # openedView.updateAutoFocus()
 
-    def onFgColorChanged(self):
+    def onFgColorChanged(self) -> None:
 
         
         # this is fired several times when the user changes a color via the color selector.
@@ -2370,7 +2370,11 @@ class MyExtension(Extension):
                     newColorRgb = rgbOfColorArray01(comp)
 
                     if (not g.g_auto_mix_enabled or g.g_auto_mix_paused):
-                        if g.g_auto_mix_color_to_ignore is not None and arrEqual(g.g_auto_mix_color_to_ignore, comp):
+
+
+                        if ( not g.g_mouse_is_out_of_canvas  # se fosse fuori dal canvas, il colore e' un colore vero! significa che ho usato il selector
+                             and  g.g_auto_mix_color_to_ignore is not None and arrEqual(g.g_auto_mix_color_to_ignore, comp) ):
+                            
                             log(f"fg color changed. ignorato. colore to ignore matchato {g.g_auto_mix_color_to_ignore}")
                             pass
                         elif g.g_dirty_brush_color_to_ignore is not None and arrEqual(g.g_dirty_brush_color_to_ignore, comp):
