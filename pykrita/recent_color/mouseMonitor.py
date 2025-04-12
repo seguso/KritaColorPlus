@@ -59,9 +59,12 @@ class MouseMonitor(QObject):
         else:
             if self.left_button_pressed:
                 self.left_button_pressed = False
-                # Emettiamo il segnale solo se abbiamo un widget valido e NON è un pulsante
-                if self.last_widget and not self.is_button_widget(self.last_widget):
-                    self.mouseReleased.emit(self.last_widget)
+                try:
+                    # Emettiamo il segnale solo se abbiamo un widget valido e NON è un pulsante
+                    if self.last_widget and not self.is_button_widget(self.last_widget):
+                        self.mouseReleased.emit(self.last_widget)
+                except RuntimeError:
+                    self.last_widget = None
                 self.last_widget = None
 
     def is_krita_canvas(self, widget):
