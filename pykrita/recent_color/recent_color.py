@@ -1805,7 +1805,7 @@ monitor = MouseMonitor()
 
 
 def handle_click(widget) -> None:
-    if monitor.isColorSelector(widget):
+    if monitor.isColorSelector(widget): # attenzione, non basta questo. devo lanciare l'evento fgcolorchanged anche quando fa mouse released sul selector
         onFgColorChanged()
     elif monitor.is_krita_canvas(widget):
         # log("Click sul canvas di Krita!")
@@ -1946,7 +1946,11 @@ def handle_click(widget) -> None:
 
 
 def handle_release(widget): # bm_released  bm_mousereleased bm_mousebuttonreleased bm_mouseup
-    if monitor.is_krita_canvas(widget):
+    if monitor.isColorSelector(widget): # devo gestire anche released sul selector, perche' altrimenti lancia l'evento solo su mousedown, ma se poi trascina e lascia
+                                        # cambia colore ma lo ignorerebbe se non lanciassi anche qui
+        onFgColorChanged()
+    elif monitor.is_krita_canvas(widget):
+    
 
         # log("mouse released on canvas")
 
