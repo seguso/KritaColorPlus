@@ -1223,7 +1223,7 @@ class AutoFocusSetter(QObject):
 # log(Krita.instance().filters())
 
 
-def setFgColor(col: rgb):  # aggiorna solo il selector, ma non fa piu' scattare eventi
+def setFgColor(col: rgb) -> None:  # aggiorna solo il selector, ma non fa piu' scattare eventi
     # log("setFgColor")
 
     app = Krita.instance()
@@ -2614,13 +2614,18 @@ class MyExtension(Extension):
 
             # log("LastColor setup ok")
 
-    def switchToLastColor(self):  # bm_previouscolor
+    def switchToLastColor(self) -> None:  # bm_previouscolor
         """Switches color based on history, handling consecutive presses vs. first press after paint."""
 
         # log("--- switchToLastColor ---")
         # log(f"Before Switch: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
 
         try:
+
+            if g.g_virtual_fg_color_rgb is None:
+                quickMessage("Did not switch to last color because your ColorPlus foreground color is not set")
+                return
+
             acView = Krita.instance().activeWindow().activeView()
             if acView is None:
                 log("  Abort: No active view.")
@@ -2662,6 +2667,8 @@ class MyExtension(Extension):
                 # log(f"g_virtual_fg_color_rgb = last color cioe' {target_color.toString()}")
                 # Set the virtual foreground color
                 g.g_virtual_fg_color_rgb = target_color.clone()
+                update_label_from_virtual_color()
+
                 # log(f"  Switched to color at index {g.g_color_history_index}: {target_color.toString()}")
             else:
                 # Index is out of bounds (tried to go past the oldest color)
@@ -2671,7 +2678,6 @@ class MyExtension(Extension):
 
             
 
-            update_label_from_virtual_color()
 
             col: ManagedColor = acView.foregroundColor()
             comp = col.components()
@@ -3022,8 +3028,8 @@ class MyExtension(Extension):
 
         if g.g_virtual_fg_color_rgb is None or not g.g_auto_mix_enabled or g.g_auto_mix_paused : #or (g.g_auto_mixing_just_once_logic and not g.g_auto_mixing_just_once_now_on):
 
-            if not g.g_auto_mix_paused:
-                log(F"mixOnTimer non scatta. enabled = {g.g_auto_mix_enabled}, virtcol {g.g_virtual_fg_color_rgb}, paused = {g.g_auto_mix_paused}")    
+            # if not g.g_auto_mix_paused:
+            #     log(F"mixOnTimer non scatta. enabled = {g.g_auto_mix_enabled}, virtcol {g.g_virtual_fg_color_rgb}, paused = {g.g_auto_mix_paused}")    
             return
 
         
@@ -4494,6 +4500,8 @@ def onFgColorChangedNotByAutomix() -> None:
     g.g_virtual_fg_color_rgb  = getFgColorAsRgb();
     if g.g_virtual_fg_color_rgb is None:
         raise Exception("fdkfdjk")
+
+    update_label_from_virtual_color()
 
     curLayerId = Krita.instance().activeDocument().activeNode().uniqueId()
 
