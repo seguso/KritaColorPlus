@@ -2348,7 +2348,7 @@ class MyExtension(Extension):
         # serve per la logica che crea new layer
         
 
-        # log(f"fg color changed event: {g.countColorChanged}")
+        log(f"fg color changed event: {g.countColorChanged}")
 
         g.countColorChanged += 1
 
@@ -2403,6 +2403,7 @@ class MyExtension(Extension):
 
                     #cruciale altrimenti l'automix crea nuovi layer quando vai sul selector e torni sul canvas.
                     if not g.g_auto_mix_ignore_this_color_in_onfgcolorchanged or not g.g_auto_mix_ignore_this_color_in_onfgcolorchanged.equals(newColorRgb):
+                        log("g.g_color_changed_since_last_leave = True")
                         g.g_color_changed_since_last_leave = True
                         
                 else:
