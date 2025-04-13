@@ -59,7 +59,20 @@ class HelloDocker(DockWidget):
         # active color
 
         layoutHorizColorAndDry = QHBoxLayout()
+
+        
         mainLayout.addLayout(layoutHorizColorAndDry)
+
+
+        g.lblActiveColor = QLabel()
+        g.lblActiveColor.setToolTip("Current foreground color")
+        layoutHorizColorAndDry.addWidget(g.lblActiveColor)
+        # lblActiveColor.setStyleSheet("background-color: red")
+        g.lblActiveColor.setMinimumHeight(45)
+        g.lblActiveColor.setMinimumWidth(65)
+
+
+
 
         btnDry = QPushButton("Dry paper", mainWidget)
         layoutHorizColorAndDry.addWidget(btnDry)
@@ -70,13 +83,7 @@ class HelloDocker(DockWidget):
 
         btnDry.clicked.connect(lambda: dryPaper())
 
-        g.lblActiveColor = QLabel()
-        g.lblActiveColor.setToolTip("Current foreground color")
-        layoutHorizColorAndDry.addWidget(g.lblActiveColor)
-        # lblActiveColor.setStyleSheet("background-color: red")
-        g.lblActiveColor.setMinimumHeight(45)
-        g.lblActiveColor.setMinimumWidth(65)
-
+        
         # # mix layout
         layoutHorizMix = QHBoxLayout()
         mainLayout.addLayout(layoutHorizMix)

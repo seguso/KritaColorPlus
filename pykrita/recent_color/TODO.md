@@ -36,7 +36,7 @@ esci ti setta un altro, precedente. non succede dall'inizoi ma dopo un po'
 
 TODO fixa il bug di quando fa fill dell'intero layer. come si riproduceva?
 
-TODO inverti dry paper e color preview
+DONE inverti dry paper e color preview
 
 DONE vedi ultima versione di spectral
 
