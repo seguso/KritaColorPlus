@@ -95,7 +95,6 @@ g_is_drying_paper = False # Flag to prevent history update during dryPaper
 
 g_auto_mix_paused = False
 g_auto_mix_enabled = False
-g_auto_mix_color_to_ignore = None
 
 g_auto_reset_opacity_on_pick : bool = False
 g_auto_reset_opacity_on_pick_level = 1.0;

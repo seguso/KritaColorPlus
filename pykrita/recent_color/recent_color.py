@@ -1854,28 +1854,38 @@ def handle_release(hier: list[QWidget]) -> None: # bm_released  bm_mousereleased
             update_label_from_virtual_color()
 
 
-        if g.g_dirty_brush_color_to_ignore is not None and arrEqual(components, g.g_dirty_brush_color_to_ignore):
-            # non aggiorno la history visuale, perche' e' un colore generato dal dirty brush
-            # log(f"colore ignorato {components}")
-            pass
+        # if g.g_dirty_brush_color_to_ignore is not None and arrEqual(components, g.g_dirty_brush_color_to_ignore):
+        #     # non aggiorno la history visuale, perche' e' un colore generato dal dirty brush
+        #     # log(f"colore ignorato {components}")
+        #     pass
 
-        elif g.g_auto_mix_color_to_ignore is not None and arrEqual(components, g.g_auto_mix_color_to_ignore):
-            # non aggiorno la history visuale, perche' e' un colore generato dall'automix
-            # log(f"aggiorna history : colore ignorato , generato da automix {components}")
+        # elif g.g_auto_mix_color_to_ignore is not None and arrEqual(components, g.g_auto_mix_color_to_ignore):
+        #     # non aggiorno la history visuale, perche' e' un colore generato dall'automix
+        #     # log(f"aggiorna history : colore ignorato , generato da automix {components}")
 
-            # non aggiungo alla history il colore fasullo dell'automixing, ma devo aggiungere quello vero selezionato dall'utente
-            # che e' sicuramente il virtual color! perche' devo riportarlo in testa alla history.
-            # if g.g_ultimo_colore_vero_settato_dall_utente is not None:
+        #     # non aggiungo alla history il colore fasullo dell'automixing, ma devo aggiungere quello vero selezionato dall'utente
+        #     # che e' sicuramente il virtual color! perche' devo riportarlo in testa alla history.
+        #     # if g.g_ultimo_colore_vero_settato_dall_utente is not None:
             
-            aggiorna_history_aggiungendo(colorArrayOfRgb( g.g_virtual_fg_color_rgb))
+        #     aggiorna_history_aggiungendo(colorArrayOfRgb( g.g_virtual_fg_color_rgb))
                         
+        # else:
+
+        
+        # log(f"mouse release : colore non ignorato {components} : aggiungo alla history")
+
+        # e' arrivato un colore diverso, quindi l'ha settato l'utente da picker
+        g.g_dirty_brush_color_to_ignore = None
+        # g.g_auto_mix_color_to_ignore = None
+
+        if g.g_virtual_fg_color_rgb is not None:
+            # non aggiungere il colore nel fg color di krita, perche' nel caso dell'automix questo farebbe aggiungere alla history
+            # tutti i colori spuri dell'automix. aggiungi il virtuale (che in pratica lo riporta in testa alla lista)
+            # se invce non sei in automix, anche in questo caso posso aggiugnere il virtuale, che tanto coincide con quello appena
+            # disegnato. con eccezione nel caso del dirty brush, gestito sopra
+            aggiorna_history_aggiungendo(colorArrayOfRgb( g.g_virtual_fg_color_rgb))
         else:
-            # log(f"mouse release : colore non ignorato {components} : aggiungo alla history")
-
-            # e' arrivato un colore diverso, quindi l'ha settato l'utente da picker
-            g.g_dirty_brush_color_to_ignore = None
-            g.g_auto_mix_color_to_ignore = None
-
+            # fallback, non se succede
             aggiorna_history_aggiungendo(components)
 
             
@@ -2921,7 +2931,7 @@ class MyExtension(Extension):
 
                         fg.setComponents(comp)
 
-                        g.g_auto_mix_color_to_ignore = comp
+                        # g.g_auto_mix_color_to_ignore = comp
 
                         view.setForeGroundColor(fg)
 
@@ -3075,7 +3085,7 @@ class MyExtension(Extension):
 
                         fg.setComponents(comp)
 
-                        g.g_auto_mix_color_to_ignore = comp
+                        # g.g_auto_mix_color_to_ignore = comp
 
                         view.setForeGroundColor(fg)
 
