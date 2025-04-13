@@ -1798,10 +1798,13 @@ class PluginState:
 monitor = MouseMonitor()
 
 
-def handle_click(widget) -> None:
-    if monitor.isColorSelector(widget): # attenzione, non basta questo. devo lanciare l'evento fgcolorchanged anche quando fa mouse released sul selector
+def handle_click(hier : list[QWidget]) -> None:
+    if monitor.isColorSelector(hier[0]) or monitor.isPalette(hier): # attenzione, non basta questo nell'evento mousedown.
+                                                                    # devo lanciare l'evento fgcolorchanged anche quando fa mouse released sul selector
+
+        # se ha cliccato sul color selector o sulla palette di krita, do per scontato che abbia cambiato colore.
         onFgColorChangedNotByAutomix()
-    elif monitor.is_krita_canvas(widget):
+    elif monitor.is_krita_canvas(hier[0]):
         # log("Click sul canvas di Krita!")
 
         g.g_last_coord_mouse_down = get_cursor_in_document_coords()
@@ -1939,12 +1942,13 @@ def handle_click(widget) -> None:
         pass
 
 
-def handle_release(widget) -> None: # bm_released  bm_mousereleased bm_mousebuttonreleased bm_mouseup
+def handle_release(hier: list[QWidget]) -> None: # bm_released  bm_mousereleased bm_mousebuttonreleased bm_mouseup
 
-    if monitor.isColorSelector(widget): # devo gestire anche released sul selector, perche' altrimenti lancia l'evento solo su mousedown, ma se poi trascina e lascia
+    if monitor.isColorSelector(hier[0]) or monitor.isPalette(hier): # devo gestire anche released sul selector, perche' altrimenti lancia
+                                        # l'evento solo su mousedown, ma se poi trascina e lascia
                                         # cambia colore ma lo ignorerebbe se non lanciassi anche qui
         onFgColorChangedNotByAutomix()
-    elif monitor.is_krita_canvas(widget):
+    elif monitor.is_krita_canvas(hier[0]):
     
 
         # log("mouse released on canvas")
