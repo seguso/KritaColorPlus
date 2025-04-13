@@ -312,6 +312,9 @@ C:\Users\yourname\AppData\Roaming\krita\actions
 
 and copy the .action files here: https://i.imgur.com/PR2xWr0.png
 
+(before copying them, it would be better to delete the .action files that are already
+there, but be sure not to delete action files that are from other plugins!)
+
 Then start Krita. From the menu: Settings -> configure Krita. Python plugin manager.
 
 Activate the plugin by checking it here: https://i.imgur.com/EDr7vdd.png
