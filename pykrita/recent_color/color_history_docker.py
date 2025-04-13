@@ -47,6 +47,7 @@ class ClickableColorLabel(QLabel):
 
 # --- Color History Docker Definition ---
 class ColorHistoryDocker(DockWidget):
+    color_squares = []
     def __init__(self):
         super().__init__()
         g.g_color_history_docker_instance = self  # Store instance globally
@@ -72,6 +73,7 @@ class ColorHistoryDocker(DockWidget):
             widget = item.widget()
             if widget:
                 widget.deleteLater()
+        self.color_squares = []  # Clear the list of color squares
 
         # Add new color squares in a grid layout
         # g.log(f"Updating color history UI with {len(g.g_last_virtual_colors_used)} colors.")
@@ -110,12 +112,16 @@ class ColorHistoryDocker(DockWidget):
             if qcolor_to_display:
                 color_square = ClickableColorLabel(qcolor_to_display)  # Pass the QColor
                 color_square.clicked.connect(self._on_color_square_clicked)
+                self.color_squares.append(color_square)  # Store the color square
                 
                 # Calculate row and column for grid layout
                 row = i // colors_per_row
                 col = i % colors_per_row
                 self.color_history_layout.addWidget(color_square, row, col)
-                color_square.set_selected(i == g.g_color_history_index)
+
+        # Update selection after all squares are added
+        for i, square in enumerate(self.color_squares):
+            square.set_selected(i == g.g_color_history_index)
         # self.update_rectangle_position()  # No longer needed
 
     # --- Slot for Color Square Clicks ---
