@@ -58,6 +58,7 @@ class ColorHistoryDocker(DockWidget):
         self.color_history_layout = QGridLayout()
         self.color_history_layout.setContentsMargins(5, 5, 5, 5)
         self.color_history_layout.setSpacing(2)  # Spacing between squares
+        mainWidget.setLayout(self.color_history_layout)
         
 
         # Initial UI population
