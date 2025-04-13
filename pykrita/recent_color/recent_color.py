@@ -1069,7 +1069,7 @@ def onEnterCanvas(obj) -> None:
 
     # if obj.type() == QMdiSubWindow:
     if isinstance(obj, QMdiSubWindow):
-        log(f"debug - enter subwindow")
+        # log(f"debug - enter subwindow")
 
         wi = Krita.instance().activeWindow()
         q_win = wi.qwindow()
@@ -4506,7 +4506,7 @@ def onFgColorChangedNotByAutomix() -> None:
     # serve per la logica che crea new layer
     
 
-    log(f"fg color changed event: {g.countColorChanged}")
+    # log(f"fg color changed event: {g.countColorChanged}")
 
     #adesso sono sicuro che e' stato cambiato manualmente, quindi aggiorno il virtual color con il fg color di krita
     
@@ -4537,10 +4537,10 @@ def maybe_dry_paper_and_autoResetOpacity() -> None:
         #             g.g_color_changed_since_last_leave 
         #             and (not g.g_auto_mix_enabled or g.g_auto_mix_paused) and g.g_multi_layer_mode):
 
-            log ("fg color changed by user:  creating layer")
+            # log ("fg color changed by user:  creating layer")
             newLa = dryPaper(False)
 
-            log("debug 43kj")
+            # log("debug 43kj")
             # non serve dire che il layer appena creeato non e' dirty. il fatto che non e' nel dizionario significa quello
             # g.g_layer_is_dirty[curLayerId] = False
 
