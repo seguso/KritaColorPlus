@@ -1,7 +1,7 @@
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QColor, QResizeEvent, QPen
-from PyQt5.QtWidgets import QDockWidget, QWidget, QGridLayout, QLabel, QGraphicsScene, QGraphicsView, QGraphicsRectItem
-from krita import DockWidget , Krita
+from PyQt5.QtCore import Qt, pyqtSignal, QRect
+from PyQt5.QtGui import QColor, QResizeEvent, QPen, QPainter
+from PyQt5.QtWidgets import QDockWidget, QWidget, QGridLayout, QLabel
+from krita import DockWidget, Krita
 from .recent_color import rgb, setFgColor, update_label_from_virtual_color, log, maybe_dry_paper_and_autoResetOpacity
 from . import globals as g
 
@@ -11,6 +11,7 @@ class ClickableColorLabel(QLabel):
     clicked = pyqtSignal(QColor)
 
     def __init__(self, color, parent=None):
+        self.is_selected = False
         super().__init__(parent)  # Ensure QLabel is properly initialized
         self._color = color
         self.setFixedSize(32, 32)  # Fixed size for the label
@@ -33,6 +34,17 @@ class ClickableColorLabel(QLabel):
             self.clicked.emit(self._color)
         super().mousePressEvent(event)
 
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if self.is_selected:
+            painter = QPainter(self)
+            painter.setPen(QPen(QColor(255, 255, 255), 2))  # White rectangle with border thickness 2
+            rect = QRect(0, 0, self.width(), self.height())
+            painter.drawRect(rect)
+
+    def set_selected(self, selected):
+        self.is_selected = selected
+
 # --- Color History Docker Definition ---
 class ColorHistoryDocker(DockWidget):
     def __init__(self):
@@ -46,13 +58,6 @@ class ColorHistoryDocker(DockWidget):
         self.color_history_layout = QGridLayout()
         self.color_history_layout.setContentsMargins(5, 5, 5, 5)
         self.color_history_layout.setSpacing(2)  # Spacing between squares
-        mainWidget.setLayout(self.color_history_layout)
-
-        # Initialize graphics scene for rectangle overlay
-        self.scene = QGraphicsScene(self)
-        self.view = QGraphicsView(self.scene)
-        self.view.setStyleSheet("background: transparent; border: none;")  # Make view transparent
-        self.view.setAlignment(Qt.AlignTop | Qt.AlignLeft)  # Align to top-left
         
 
         # Initial UI population
@@ -109,28 +114,8 @@ class ColorHistoryDocker(DockWidget):
                 row = i // colors_per_row
                 col = i % colors_per_row
                 self.color_history_layout.addWidget(color_square, row, col)
-
-                # Add the white rectangle to the correct item
-                if i == g.g_color_history_index:
-                    rect_item = QGraphicsRectItem(0, 0, 32, 32)
-                    rect_item.setPen(QPen(QColor(255, 255, 255), 2))  # White rectangle with border thickness 2
-                    
-                    # Calculate the position of the color square within the grid
-                    x = col * (square_size + spacing)
-                    y = row * (square_size + spacing)
-
-                    # Adjust position based on layout margins
-                    x += 5 # left margin
-                    y += 5 # top margin
-
-                    # Set the position of the rectangle relative to the scene
-                    rect_item.setPos(x, y)
-
-                    # Add the rectangle to the scene
-                    self.scene.addItem(rect_item)
-                    self.selected_rect = rect_item
-
-        self.update_rectangle_position()
+                color_square.set_selected(i == g.g_color_history_index)
+        # self.update_rectangle_position()  # No longer needed
 
     # --- Slot for Color Square Clicks ---
     def _on_color_square_clicked(self, color) -> None:
@@ -167,41 +152,12 @@ class ColorHistoryDocker(DockWidget):
         # g.log(f"Canvas changed in ColorHistoryDocker")
         # Update the UI when canvas changes
         # self.update_color_history_ui()  # commentato perche lo fa ad ogni stroke
-    
-    def update_rectangle_position(self):
-        """Updates the rectangle position to match the currently selected color index."""
-        if hasattr(self, 'selected_rect'):  # Check if the rectangle exists
-            # Calculate the position based on the current index and layout
-            square_size = 32
-            spacing = 2
-            margins = 10
-            index = g.g_color_history_index
-
-            docker_width = self.width()
-            available_width = docker_width - margins
-            colors_per_row = max(1, available_width // (square_size + spacing))
-
-            row = index // colors_per_row
-            col = index % colors_per_row
-
-            x = col * (square_size + spacing) + 5  # Adjust for left margin
-            y = row * (square_size + spacing) + 5  # Adjust for top margin
-
-            # Update the position of the rectangle
-            self.selected_rect.setPos(x, y)
 
     def resizeEvent(self, event: QResizeEvent):
         """ Called when the docker widget is resized. """
         g.log(f"ColorHistoryDocker resized to: {event.size().width()}x{event.size().height()}")
         # Update the layout and recalculate positions on resize
         self.update_color_history_ui() # Recalculate layout
-
-        # Adjust the size of the QGraphicsView to match the content
-        content_width = self.color_history_layout.sizeHint().width() + 10 # Add margins
-        content_height = self.color_history_layout.sizeHint().height() + 10 # Add margins
-        # self.view.setGeometry(0, 0, content_width, content_height)
-        self.view.setGeometry(0, 0, event.size().width(), event.size().height())
-        self.view.setSceneRect(0, 0, event.size().width(), event.size().height())
 
         # Call the base class implementation
         super().resizeEvent(event) # Call base class implementation
