@@ -1,6 +1,6 @@
 
 from . mouseMonitor import MouseMonitor
-from PyQt5.QtWidgets import QTreeView
+from PyQt5.QtWidgets import QTreeView, QMdiSubWindow
 from PyQt5.QtCore import Qt, QModelIndex, QItemSelectionModel
 import pprint
 import time
@@ -21,7 +21,7 @@ from .rgb import rgb, rgbOfColorArray01, rgbOfColorArray255, colorArrayOfRgb, co
 from krita import *
 
 from krita import (
-    Krita, ManagedColor, Extension)
+    Krita, ManagedColor, Extension, DockWidget)
 
 from pathlib import Path
 
@@ -2112,7 +2112,7 @@ def handle_release(widget) -> None: # bm_released  bm_mousereleased bm_mousebutt
 
         # mouse released: sporca se dirty brush
 
-        if g.g_dirty_brush_currently_on and g.g_dirty_brush_overall_enabled:  # qui siamo in mousereleased
+        if g.g_dirty_brush_currently_on and g.g_dirty_brush_overall_enabled:  # qui siamo in mousereleased  bm_dirtyBrush bm_sporca
             application = Krita.instance()
             win = application.activeWindow()
             if win is not None:
@@ -2146,6 +2146,12 @@ def handle_release(widget) -> None: # bm_released  bm_mousereleased bm_mousebutt
 
                     # Perform spectral mixing
                     mixed_rgb_255 = spectral_mix(fg_rgb_255, bg_rgb_255, g.g_dirty_brush_level)
+
+
+                    # questo e' il colore sporco. ora lo devo mettere nel fg color. ma nota: se anche automix e' attivato, ignorera' il fg color.
+                    # quindi lo metto anche in un'altra variabile
+
+                    g.g_dirty_brush_latest_dirty_color_for_automix = rgbOfColorArray255( mixed_rgb_255 ) # ricorda per automix
 
                     # Convert result back to 0.0-1.0 for setComponents
                     mixed_comp_float = [c / 255.0 for c in mixed_rgb_255]
@@ -3050,6 +3056,15 @@ class MyExtension(Extension):
 
                     # parentNode = document.activeNode().parentNode()
 
+                    if g.g_dirty_brush_currently_on and g.g_dirty_brush_overall_enabled and   g.g_dirty_brush_latest_dirty_color_for_automix is not None:
+                        fgColorConCuiMixo = g.g_dirty_brush_latest_dirty_color_for_automix
+                    else:
+                        fgColorConCuiMixo = g.g_virtual_fg_color_rgb
+
+                    if fgColorConCuiMixo is None:
+                            log(f"skippo automix perche' fg color is none. dirty brush is {g.g_dirty_brush_currently_on}, {g.g_dirty_brush_overall_enabled}")
+                            return;
+
                     if not g.g_mix_radius_enabled:
                         
                         
@@ -3066,13 +3081,14 @@ class MyExtension(Extension):
 
                         fgMul = 1.0 - canv
 
+                        
                    
 
                         # begin mix colors spectral, bgr
                         fgMul = 1.0 - canv
-                        sb = g.g_virtual_fg_color_rgb.r
-                        sg = g.g_virtual_fg_color_rgb.g
-                        sr = g.g_virtual_fg_color_rgb.b
+                        sb = fgColorConCuiMixo.r
+                        sg = fgColorConCuiMixo.g
+                        sr = fgColorConCuiMixo.b
 
                         db = bgColor255.r
                         dg = bgColor255.g
@@ -3143,7 +3159,9 @@ class MyExtension(Extension):
                         sampled_colors_arr255 :list[list[float]] = []
                         for pcursor in sample_pointsxy:
                             maybeColorRgb255_2 : Optional[rgb] = getColorUnderCursorOrAtPos(forcedPos=pcursor, ignore_bottom_layer=True)
-                            colorRgb255_2: rgb = g.g_virtual_fg_color_rgb if maybeColorRgb255_2 is None else maybeColorRgb255_2
+                            if fgColorConCuiMixo is None:
+                                raise Exception("jkdkjfdkfd")
+                            colorRgb255_2: rgb = fgColorConCuiMixo if maybeColorRgb255_2 is None else maybeColorRgb255_2
 
                             rgbArr : list[float]= colorArray255_3_OfRgb(colorRgb255_2)
                             sampled_colors_arr255.append(rgbArr) # Appends color [R,G,B] or None
@@ -3210,9 +3228,9 @@ class MyExtension(Extension):
                         # Foreground color (color1) - Ensure it's [R, G, B] 0-255 list
                         # g.g_virtual_fg_color_rgb stores R, G, B as floats 0-255
                         fg_color_rgb = [
-                            float(g.g_virtual_fg_color_rgb.r),
-                            float(g.g_virtual_fg_color_rgb.g),
-                            float(g.g_virtual_fg_color_rgb.b)
+                            float(fgColorConCuiMixo.r),
+                            float(fgColorConCuiMixo.g),
+                            float(fgColorConCuiMixo.b)
                         ]
 
                         # Blended canvas color (color2) - Already [R, G, B] 0-255 list

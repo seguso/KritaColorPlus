@@ -104,6 +104,7 @@ g_dial_auto_mix_level = None
 
 g_dirty_brush_overall_enabled = False
 g_dirty_brush_currently_on = True
+g_dirty_brush_latest_dirty_color_for_automix : Optional['rgb'] = None
 g_dirty_brush_color_to_ignore : Optional[list[float] ] = None
 g_dirty_brush_level = None # value is ignored: will be read from settings --- range from 0.04 to 0.5
 g_mix_radius : Optional[float] = None # value is ignored: will be read from settings --- range from 0 to 20 pixels

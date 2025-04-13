@@ -86,7 +86,7 @@ def colorArray01_3_OfRgb(rgb_color: rgb) -> List[float]:
 def colorArray255_3_OfRgb(rgb_color: rgb) -> List[float]:
     """Converts an rgb object (RGBA, 0.0-255.0) to a Krita color component array (RGBA, 0.0-1.0), with alpha forced to 1.0."""
     if not isinstance(rgb_color, rgb):
-        raise TypeError("Input must be an rgb object")
+        raise TypeError(f"Input must be an rgb object but it is {rgb_color}")
         
     # Convert R, G, B from 0-255 range to 0.0-1.0 range
     # Clamp values to ensure they are within [0.0, 1.0] after division

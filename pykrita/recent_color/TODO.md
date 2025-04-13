@@ -1,4 +1,8 @@
-TODO c'è ancora il bug nell automix: scegli un colore nel selector, e quando
+TODO automix prevale su dirty brush
+
+TODO manca krita palette
+
+DONE c'è ancora il bug nell automix: scegli un colore nel selector, e quando
 esci ti setta un altro, precedente. non succede dall'inizoi ma dopo un po'
 
     riscrivi tutto su questa idea: se arriva il fgcolor changed MENTRE TU SEI FUORI, allora e' un colore vero.
@@ -16,7 +20,7 @@ esci ti setta un altro, precedente. non succede dall'inizoi ma dopo un po'
 
         DONE non crea il nuovo layer
  
-    TODO manca krita palette
+    
 
     DONE manca gestire C
 
