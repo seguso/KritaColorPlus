@@ -1,4 +1,4 @@
-TODO fai che clean brush biene fatto da dry paper, non da V
+DONE fai che clean brush biene fatto da dry paper, non da V
 
 DONE automix prevale su dirty brush
 

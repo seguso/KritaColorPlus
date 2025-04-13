@@ -634,6 +634,9 @@ def mergeCleanup(): # bm_mergelayers
 
 def dryPaper(showMessage=True):
 
+    
+
+
     # log(f"dry paper called showMessage = {showMessage}")
     application = Krita.instance()
     currentDoc = application.activeDocument()
@@ -2468,15 +2471,7 @@ class MyExtension(Extension):
                 return
 
 
-            # eccezione: forse invece di andare a previous color devo fare clean brush
-            if g.g_dirty_brush_color_to_ignore is not None:
-                quickMessage("Clean brush")
-                setFgColor(g.g_virtual_fg_color_rgb)
-                g.g_dirty_brush_color_to_ignore = None
-
-                g.g_dirty_brush_latest_dirty_color_for_automix = None # altrimenti l'autoix ignora il nuovo virtual color
-                return
-
+        
 
             num_colors = len(g.g_last_virtual_colors_used)
             if num_colors == 0:  # Need at least one color to select from
@@ -3473,7 +3468,19 @@ class MyExtension(Extension):
                     tmpDoc.close()
 
     def dryPaperWithMessage(self):
-        dryPaper(True)
+
+        # lo shortcut dry paper fa anche clean brush se necessario
+        if g.g_dirty_brush_color_to_ignore is not None:
+            quickMessage("Clean brush")
+            setFgColor(g.g_virtual_fg_color_rgb)
+            g.g_dirty_brush_color_to_ignore = None
+
+            g.g_dirty_brush_latest_dirty_color_for_automix = None # altrimenti l'autoix ignora il nuovo virtual color
+            
+            dryPaper(False)
+        else:
+            dryPaper(True)
+
 
     def dryPaperOldWithMerge(self, showMessage=True):
 
