@@ -1,4 +1,4 @@
-TODO automix prevale su dirty brush
+DONE automix prevale su dirty brush
 
 TODO manca krita palette
 

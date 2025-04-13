@@ -1584,6 +1584,8 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
                                 comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
                             update_label_from_virtual_color()
 
+                            g.g_dirty_brush_latest_dirty_color_for_automix = None # altrimenti l'autoix ignora il nuovo virtual color
+
                             if g.g_diminishing_opacity:
                                 g.g_auto_mix__how_much_canvas_to_pick = 1.0
 
@@ -2235,6 +2237,7 @@ class MyExtension(Extension):
         # dev values , only read when timer is active
         g.g_virtual_fg_color_rgb = None  # di tipo rgb
 
+
         g.g_color_history_index = -1  # New
 
         g.g_auto_focus = Krita.instance().readSetting(
@@ -2659,6 +2662,8 @@ class MyExtension(Extension):
                 quickMessage("Clean brush")
                 setFgColor(g.g_virtual_fg_color_rgb)
                 g.g_dirty_brush_color_to_ignore = None
+
+                g.g_dirty_brush_latest_dirty_color_for_automix = None # altrimenti l'autoix ignora il nuovo virtual color
                 return
 
 
@@ -2698,6 +2703,7 @@ class MyExtension(Extension):
                     raise Exception("impossibile, l'ho clonato da target color")
             
                 update_label_from_virtual_color()
+                g.g_dirty_brush_latest_dirty_color_for_automix = None # altrimenti l'autoix ignora il nuovo virtual color
                 
                 setFgColor(g.g_virtual_fg_color_rgb) # non lancia eventi, aggiorna solo il selector
 
@@ -2978,6 +2984,8 @@ class MyExtension(Extension):
                         g.g_virtual_fg_color_rgb = rgb(
                             int(comp[0] * 255.0), int(comp[1] * 255.0), int(comp[2] * 255.0), 1)
                         update_label_from_virtual_color()
+
+                        g.g_dirty_brush_latest_dirty_color_for_automix = None # altrimenti l'autoix ignora il nuovo virtual color
 
                         # messaggio
                         if picked50:
@@ -3367,6 +3375,7 @@ class MyExtension(Extension):
                         log("g_virtual_fg_color_rgb = mergedcolor")
                         g.g_virtual_fg_color_rgb = mergedColor  # lo memorizzo come target
                         update_label_from_virtual_color()
+                        g.g_dirty_brush_latest_dirty_color_for_automix = None # altrimenti l'autoix ignora il nuovo virtual color
 
                         setFgColor(g.g_virtual_fg_color_rgb) # non lancia eventi
 
@@ -4481,6 +4490,8 @@ def onFgColorChangedNotByAutomix() -> None:
         g.g_virtual_fg_color_rgb = fgColorMaybe
 
         update_label_from_virtual_color()
+
+        g.g_dirty_brush_latest_dirty_color_for_automix = None # altrimenti l'autoix ignora il nuovo virtual color
 
     maybe_dry_paper_and_autoResetOpacity()
 
