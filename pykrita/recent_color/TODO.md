@@ -34,7 +34,7 @@ esci ti setta un altro, precedente. non succede dall'inizoi ma dopo un po'
     DONE gestire mix shortcut
 
 
-TODO fixa il bug di quando fa fill dell'intero layer. come si riproduceva?
+DONE fixa il bug di quando fa fill dell'intero layer. come si riproduceva? prima dry e poi F
 
 DONE inverti dry paper e color preview
 

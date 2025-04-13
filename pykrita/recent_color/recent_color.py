@@ -1272,8 +1272,7 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
                     pixelC = imageData.pixelColor(0, 0)
 
                     # e ora da colore qt a colore mio
-                    mergedColor = rgb(float(pixelC.red()),  float(
-                        pixelC.green()),  float(pixelC.blue()), 255.0)
+                    mergedColor = rgb(float(pixelC.red()),  float(pixelC.green()),  float(pixelC.blue()), 255.0)
 
                     # log(f'pixel risulta: {mergedColor.r}  {mergedColor.g} {mergedColor.b}')
 
@@ -1369,8 +1368,7 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
                             # setto anche il virtual fg color al result del mix
 
                             # log("g_virtual_fg_color_rgb = mix 2")
-                            g.g_virtual_fg_color_rgb = rgb(
-                                comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
+                            g.g_virtual_fg_color_rgb = rgb(comp[0] * 255.0, comp[1] * 255.0, comp[2] * 255.0, 255.0)
                             update_label_from_virtual_color()
 
                             g.g_dirty_brush_latest_dirty_color_for_automix = None # altrimenti l'autoix ignora il nuovo virtual color
@@ -1388,7 +1386,7 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
                             # 1) if I mixed because the color is wrong, i.e. I made a mistake, then erase the mistake
                             if clearCurLayer:
 
-                                if g.g_multi_layer_mode:
+                                if g.g_multi_layer_mode and curLayerIsDirty():
 
                                     app.action('selectopaque').trigger()
                                     document.waitForDone()  # action needs to finish before continuing
@@ -1396,7 +1394,7 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
                                         'fill_selection_foreground_color').trigger()
                                     app.action('deselect').trigger()
 
-                            if deleteCurLayer:
+                            if deleteCurLayer: # non piu' usato
                                 document.activeNode().remove()
 
                             # 2) if I didn't make a mistake, I just want to fade the current color, then create a new layer
@@ -4184,6 +4182,18 @@ def onFgColorChangedNotByAutomix() -> None:
     maybe_dry_paper_and_autoResetOpacity()
 
 
+def curLayerIsDirty() -> Optional[bool]:
+    activeDoc =  Krita.instance().activeDocument()
+    if activeDoc is None:
+        return None
+    
+    curLayer = activeDoc.activeNode()
+    if curLayer is not None:
+        curLayerId = curLayer.uniqueId()
+
+        return curLayerId in g.g_layer_is_dirty
+    else:
+        return None
     
 def maybe_dry_paper_and_autoResetOpacity() -> None:
     curLayer = Krita.instance().activeDocument().activeNode()
