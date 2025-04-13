@@ -2518,6 +2518,10 @@ class MyExtension(Extension):
                 
                 setFgColor(g.g_virtual_fg_color_rgb) # non lancia eventi, aggiorna solo il selector
 
+                # faccio avanzare il rettangolo bianco
+                if g.g_color_history_docker_instance:
+                    g.g_color_history_docker_instance.update_color_history_ui()
+
                 # log(f"  Switched to color at index {g.g_color_history_index}: {target_color.toString()}")
             else:
                 # Index is out of bounds (tried to go past the oldest color)
