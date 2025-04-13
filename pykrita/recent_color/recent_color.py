@@ -213,7 +213,6 @@ def toggleAutoMixing():
         # you probably disabled auto-mixing in order to manually change the fg color (= target color). but the color selector has probably changed. so reset it to the current target
         if g.g_virtual_fg_color_rgb is not None:
             setFgColor(g.g_virtual_fg_color_rgb)
-        g.g_auto_mix_ignore_this_color_in_onfgcolorchanged = None
 
 
         g.g_slider_auto_mix_level.setEnabled(False)
@@ -958,13 +957,11 @@ class AutoFocusSetter(QObject):
                         # anche se tu non hai davvero cambiato colore. lui crede che tu nel picker abbia cambiato colore. perche' hai fatto questo
                         # setFgColor. Quindi in qualche modo devi far capire a onFgColorChanged che non conta.
 
-                        g.g_auto_mix_ignore_this_color_in_onfgcolorchanged = g.g_virtual_fg_color_rgb
                         
                         if g.g_virtual_fg_color_rgb is not None:
                             setFgColor(g.g_virtual_fg_color_rgb)
 
                     else:
-                        g.g_auto_mix_ignore_this_color_in_onfgcolorchanged = None
                         pass
                         # log("leave, doing nothing, auto mix disabled")
 
