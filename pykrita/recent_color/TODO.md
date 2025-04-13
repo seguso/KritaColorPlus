@@ -1,6 +1,11 @@
+TODO fai che clean brush biene fatto da dry paper, non da V
+
 DONE automix prevale su dirty brush
 
 TODO manca krita palette
+
+    difficile perché cambia con un delay il color selector. ho provato a leggere il colore
+    con delay, ma se in quel momento ho gia iniziato lo stroke, krita crasha.
 
 DONE c'è ancora il bug nell automix: scegli un colore nel selector, e quando
 esci ti setta un altro, precedente. non succede dall'inizoi ma dopo un po'
@@ -33,7 +38,7 @@ TODO fixa il bug di quando fa fill dell'intero layer. come si riproduceva?
 
 TODO inverti dry paper e color preview
 
-TODO vedi ultima versione di spectral
+DONE vedi ultima versione di spectral
 
 TODO quando togli dirty brush, deve fare accept current color. forse
 solo metterlo nella history.

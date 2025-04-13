@@ -1,1 +1,1 @@
-from .recent_color import *
+from .recent_color import MyExtension
