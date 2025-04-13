@@ -865,7 +865,7 @@ def dryPaper(showMessage=True):
     application = Krita.instance()
     currentDoc = application.activeDocument()
     if currentDoc is None:
-        log("debug 43kjfdfdg")   
+        # log("debug 43kjfdfdg")   
         return None
     else:
         activeLayer = currentDoc.activeNode()
@@ -884,7 +884,7 @@ def dryPaper(showMessage=True):
             parentNode = activeLayer.parentNode()
             rootNode = currentDoc.rootNode() # Get the document root node
 
-            log("debug gtrg5")   
+            # log("debug gtrg5")   
             newLa = None
 
             # Check if the parent is the document root
@@ -894,7 +894,7 @@ def dryPaper(showMessage=True):
                 # log("dry paper called. Layer is top-level. Creating new group.")
                 # Create a new group layer at the top level
                 newGroup = currentDoc.createGroupLayer("ColorPlus auto-group")
-                log("debug grg55g5d")   
+                # log("debug grg55g5d")   
                 # Find the index of the active layer to insert the group above it
                 try:
                     # Insert the new group *before* the active layer
@@ -905,7 +905,7 @@ def dryPaper(showMessage=True):
                     rootNode.addChildNode(newGroup, None)
 
 
-                log("debug r44f")   
+                # log("debug r44f")   
                 # Set the new group as the parent for the wet layer
                 parentNode = newGroup
                 # Optional: Move the active layer into the new group
@@ -933,20 +933,19 @@ def dryPaper(showMessage=True):
                     beforeNode = None
                     if idx + 1 < len(children):
                         beforeNode = children[idx + 1]
-                    log("debug 4r4r4f")   
-                    
+                    # log("debug 4r4r4f")   
                     # Insert the new layer *before* the node that was originally after activeLayer
                     parentNode.addChildNode(newLa, beforeNode)
                 except ValueError: # Handle case where activeLayer might have been moved or not found
                     # Fallback if activeLayer not found (e.g., if moved) or parent is new group
-                    log("debug uy7u7u7")   
+                    # log("debug uy7u7u7")   
                     parentNode.addChildNode(newLa, None) # Add to top if index not found
 
 
-                log("debug y6yu7")   
+                # log("debug y6yu7")   
                 currentDoc.setActiveNode(newLa) # Make the new layer active
 
-                log("debug u7u7")   
+                # log("debug u7u7")   
                 if g.g_blur_on_dry and selectionStroke:
                     # Apply blur to the original layer *after* creating the new one
                     # Ensure the original layer is active for the filter
@@ -1821,7 +1820,9 @@ def handle_click(hier : list[QWidget]) -> None:
 
     elif  monitor.isPalette(hier):
         # dvo farlo dopo 1 secondo perche' il clic sulla palette non cambia istantaneamente il color selector
-        QTimer.singleShot(500, onFgColorChangedNotByAutomix) # Call after 1 second
+        # ma non posso perche' se per caso lui inizia lo stroke prima, Krita si pianta, mentre cerca di fare createlayer
+        # QTimer.singleShot(500, onFgColorChangedNotByAutomix) # Call after 1 second
+        onFgColorChangedNotByAutomix()
     elif monitor.is_krita_canvas(hier[0]):
         # log("Click sul canvas di Krita!")
 
@@ -1968,7 +1969,9 @@ def handle_release(hier: list[QWidget]) -> None: # bm_released  bm_mousereleased
         onFgColorChangedNotByAutomix()
     elif  monitor.isPalette(hier):
         # dvo farlo dopo 1 secondo perche' il clic sulla palette non cambia istantaneamente il color selector
-        QTimer.singleShot(500, onFgColorChangedNotByAutomix) # Call after 1 second
+        # ma non posso perche' se lui inizia lo stroke prima di quel tempo, krita sipianta mentre cerca di fare dry paper
+        # QTimer.singleShot(500, onFgColorChangedNotByAutomix) # Call after 1 second
+        onFgColorChangedNotByAutomix()
     elif monitor.is_krita_canvas(hier[0]):
     
 
