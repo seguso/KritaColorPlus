@@ -4229,8 +4229,6 @@ def maybe_dry_paper_and_autoResetOpacity() -> None:
 
                     document.refreshProjection()
 
-                # Flag is now reset on Leave event, no need to reset here
-                g.g_color_changed_from_selector_probably = False
 
 
 
