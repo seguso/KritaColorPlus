@@ -27,7 +27,7 @@ g_mouse_is_out_of_canvas = True
 
 # g_mix_auto_clears_cur_layer = "1"
 
-g_color_changed_from_selector_probably = False
+
 g_color_changed_since_last_leave = False # Tracks if color changed after leaving canvas
 
 g_layer_is_dirty: dict[str, bool] = {} # Use lowercase dict type hint
@@ -72,7 +72,7 @@ g_auto_mixing_uses_distance_logic = False # perche' io posso prendere un colore 
 g_auto_mixing_just_once_logic = False
 g_auto_mixing_just_once_now_on = False
 
-g_auto_mix_ignore_this_color_in_onfgcolorchanged = None
+
 
 #g_ultimo_colore_vero_settato_dall_utente = None
 
@@ -95,7 +95,6 @@ g_is_drying_paper = False # Flag to prevent history update during dryPaper
 
 g_auto_mix_paused = False
 g_auto_mix_enabled = False
-g_auto_mix_color_to_ignore = None
 
 g_auto_reset_opacity_on_pick : bool = False
 g_auto_reset_opacity_on_pick_level = 1.0;
@@ -104,8 +103,13 @@ g_dial_auto_mix_level = None
 
 g_dirty_brush_overall_enabled = False
 g_dirty_brush_currently_on = True
+
+
+# TODO probabilmente questi sono la stessa variabile, togline una
 g_dirty_brush_latest_dirty_color_for_automix : Optional['rgb'] = None
 g_dirty_brush_color_to_ignore : Optional[list[float] ] = None
+
+
 g_dirty_brush_level = None # value is ignored: will be read from settings --- range from 0.04 to 0.5
 g_mix_radius : Optional[float] = None # value is ignored: will be read from settings --- range from 0 to 20 pixels
 g_mix_radius_enabled = False
