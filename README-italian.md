@@ -101,8 +101,8 @@ sempre di più al colore target (cioè il foreground color). Invece, con
 il dirty brush, ogni pennellata vi allontana sempre più dal foreground
 color.
 
-Nota: per pulire il pennello c'è uno shortcut, che è lo stesso per la funzione Previous Color.
-(la prima volta che lo premi, pulisce il pennello, poi inizia a passare ai colori precedenti)
+Nota: per pulire il pennello c'è uno shortcut, che è lo stesso per la funzione Dry Paper.
+(se il pennello è sporco, oltre a creare un nuovo layer pulisce il pennello)
 
 Nota: la pennellata non si sporca col bianco della tela, ma solo con il
 colore davvero depositato sulla tela. Questo settaggio è opzionale.

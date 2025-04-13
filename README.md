@@ -99,9 +99,8 @@ Another  difference is that, with auto-mix, each stroke brings you closer and cl
 target color (i.e., the foreground color). Instead, with the dirty brush, each stroke takes
 you further and further away from the foreground color.
 
-Note: to clean the brush there is a shortcut, which is the same as for
-the "Previous Color" function. (the first time you press it, it cleans
-the brush, then starts switching to previous colors)
+Note: There is a shortcut to clean the brush, which is the same one used for the Dry Paper
+function. (If the brush is dirty, besides creating a new layer, it also cleans the brush).
 
 Note: the stroke does not get dirty with the white of the canvas, but only
 with the color actually deposited on the canvas. This setting is optional.
