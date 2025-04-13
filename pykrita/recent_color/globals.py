@@ -72,7 +72,7 @@ g_auto_mixing_uses_distance_logic = False # perche' io posso prendere un colore 
 g_auto_mixing_just_once_logic = False
 g_auto_mixing_just_once_now_on = False
 
-g_auto_mix_ignore_this_color_in_onfgcolorchanged = None
+
 
 #g_ultimo_colore_vero_settato_dall_utente = None
 
