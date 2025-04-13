@@ -865,142 +865,156 @@ def dryPaper(showMessage=True):
     application = Krita.instance()
     currentDoc = application.activeDocument()
     if currentDoc is None:
-
+        log("debug 43kjfdfdg")   
         return None
     else:
         activeLayer = currentDoc.activeNode()
 
-        if g.g_blur_on_dry:
-            application.action('selectopaque').trigger()
-            currentDoc.waitForDone()  # action needs to finish before continuing
-            selectionStroke = currentDoc.selection()
-            blurFilter = application.filter('gaussian blur')
-            blurFilter.setProperty('level', 50)
-            blurFilter.setProperty('radius', 50)
-
-        parentNode = activeLayer.parentNode()
-        rootNode = currentDoc.rootNode() # Get the document root node
-        newLa = None
-
-        # Check if the parent is the document root
-        is_top_level = (parentNode == rootNode)
-
-        if is_top_level:
-            # log("dry paper called. Layer is top-level. Creating new group.")
-            # Create a new group layer at the top level
-            newGroup = currentDoc.createGroupLayer("ColorPlus auto-group")
-            # Find the index of the active layer to insert the group above it
-            try:
-                # Insert the new group *before* the active layer
-                rootNode.addChildNode(newGroup, activeLayer)
-            except Exception as e: # Catch potential errors more broadly
-                 log(f"Error adding group before active layer: {e}. Adding to top.")
-                 # Fallback if adding before fails (e.g., activeLayer not direct child)
-                 rootNode.addChildNode(newGroup, None)
-
-            # Set the new group as the parent for the wet layer
-            parentNode = newGroup
-            # Optional: Move the active layer into the new group
-            # parentNode.addChildNode(activeLayer, None) # This changes layer structure
-        elif parentNode is not None:
-            # log(f"dry paper called. parent = {parentNode}")
-            pass
+        if activeLayer is None:
+            log("skip dry paper, active layer is none")
         else:
-            # log("dry paper called. parentNode is None. This shouldn't happen for active layers.")
-            parentNode = None # Ensure parentNode is None if it started as None
-
-        if parentNode: # Proceed if we have a valid parent (original or new group)
-            oldOpacity = activeLayer.opacity()
-
-            # activeLayer.mergeDown() # Keep this commented out for now
-            # currentDoc.waitForDone()
-
-            newLa = currentDoc.createNode("Wet_area", "paintLayer")
-            newLa.setOpacity(oldOpacity)
-
-            # Add the new layer *above* the active layer within the parent group
-            try:
-                children = parentNode.childNodes()
-                idx = children.index(activeLayer)
-                beforeNode = None
-                if idx + 1 < len(children):
-                    beforeNode = children[idx + 1]
-                # Insert the new layer *before* the node that was originally after activeLayer
-                parentNode.addChildNode(newLa, beforeNode)
-            except ValueError: # Handle case where activeLayer might have been moved or not found
-                 # Fallback if activeLayer not found (e.g., if moved) or parent is new group
-                 parentNode.addChildNode(newLa, None) # Add to top if index not found
-
-            currentDoc.setActiveNode(newLa) # Make the new layer active
-
-            if g.g_blur_on_dry and selectionStroke:
-                # Apply blur to the original layer *after* creating the new one
-                # Ensure the original layer is active for the filter
-                currentDoc.setActiveNode(activeLayer)
-                blurFilter.apply(selectionStroke, 0, 0)
-                currentDoc.waitForDone()
-                currentDoc.deselect()
-                # Set active node back to the new layer
-                currentDoc.setActiveNode(newLa)
-
-            if g.g_set_spectral_blend_mode_when_creating_layer:
-                # log("setting over spectral")
-                newLa.setBlendingMode("over spectral")
-
             if g.g_blur_on_dry:
-                # al layer precedente ad activeLayer, applica il blur
-                for layerPrima in parentNode.childNodes()[: -2]:
+                application.action('selectopaque').trigger()
+                currentDoc.waitForDone()  # action needs to finish before continuing
+                selectionStroke = currentDoc.selection()
+                blurFilter = application.filter('gaussian blur')
+                blurFilter.setProperty('level', 50)
+                blurFilter.setProperty('radius', 50)
 
-                    # log(f"applicando blur a  {layerPrima.name()}:{selectionStroke.x()}, {selectionStroke.y()}, {selectionStroke.width()},{selectionStroke.height()}")
+            parentNode = activeLayer.parentNode()
+            rootNode = currentDoc.rootNode() # Get the document root node
 
-                    selFuori = Selection()
-                    selFuori.select(selectionStroke.x(), selectionStroke.y(
-                    ), selectionStroke.width(), selectionStroke.height(), 255)
-                    selFuori.subtract(selectionStroke)
+            log("debug gtrg5")   
+            newLa = None
 
-                    currentDoc.setSelection(selFuori)
-                    selFuori.copy(layerPrima)
+            # Check if the parent is the document root
+            is_top_level = (parentNode == rootNode)
 
-                    blurFilter.apply(layerPrima, selectionStroke.x(), selectionStroke.y(
-                    ), selectionStroke.width(), selectionStroke.height())
+            if is_top_level:
+                # log("dry paper called. Layer is top-level. Creating new group.")
+                # Create a new group layer at the top level
+                newGroup = currentDoc.createGroupLayer("ColorPlus auto-group")
+                log("debug grg55g5d")   
+                # Find the index of the active layer to insert the group above it
+                try:
+                    # Insert the new group *before* the active layer
+                    rootNode.addChildNode(newGroup, activeLayer)
+                except Exception as e: # Catch potential errors more broadly
+                    log(f"Error adding group before active layer: {e}. Adding to top.")
+                    # Fallback if adding before fails (e.g., activeLayer not direct child)
+                    rootNode.addChildNode(newGroup, None)
 
+
+                log("debug r44f")   
+                # Set the new group as the parent for the wet layer
+                parentNode = newGroup
+                # Optional: Move the active layer into the new group
+                # parentNode.addChildNode(activeLayer, None) # This changes layer structure
+            elif parentNode is not None:
+                # log(f"dry paper called. parent = {parentNode}")
+                pass
+            else:
+                # log("dry paper called. parentNode is None. This shouldn't happen for active layers.")
+                parentNode = None # Ensure parentNode is None if it started as None
+
+            if parentNode: # Proceed if we have a valid parent (original or new group)
+                oldOpacity = activeLayer.opacity()
+
+                # activeLayer.mergeDown() # Keep this commented out for now
+                # currentDoc.waitForDone()
+
+                newLa = currentDoc.createNode("Wet_area", "paintLayer")
+                newLa.setOpacity(oldOpacity)
+
+                # Add the new layer *above* the active layer within the parent group
+                try:
+                    children = parentNode.childNodes()
+                    idx = children.index(activeLayer)
+                    beforeNode = None
+                    if idx + 1 < len(children):
+                        beforeNode = children[idx + 1]
+                    log("debug 4r4r4f")   
+                    
+                    # Insert the new layer *before* the node that was originally after activeLayer
+                    parentNode.addChildNode(newLa, beforeNode)
+                except ValueError: # Handle case where activeLayer might have been moved or not found
+                    # Fallback if activeLayer not found (e.g., if moved) or parent is new group
+                    log("debug uy7u7u7")   
+                    parentNode.addChildNode(newLa, None) # Add to top if index not found
+
+
+                log("debug y6yu7")   
+                currentDoc.setActiveNode(newLa) # Make the new layer active
+
+                log("debug u7u7")   
+                if g.g_blur_on_dry and selectionStroke:
+                    # Apply blur to the original layer *after* creating the new one
+                    # Ensure the original layer is active for the filter
+                    currentDoc.setActiveNode(activeLayer)
+                    blurFilter.apply(selectionStroke, 0, 0)
+                    currentDoc.waitForDone()
+                    currentDoc.deselect()
+                    # Set active node back to the new layer
+                    currentDoc.setActiveNode(newLa)
+
+                if g.g_set_spectral_blend_mode_when_creating_layer:
+                    # log("setting over spectral")
+                    newLa.setBlendingMode("over spectral")
+
+                if g.g_blur_on_dry:
+                    # al layer precedente ad activeLayer, applica il blur
+                    for layerPrima in parentNode.childNodes()[: -2]:
+
+                        # log(f"applicando blur a  {layerPrima.name()}:{selectionStroke.x()}, {selectionStroke.y()}, {selectionStroke.width()},{selectionStroke.height()}")
+
+                        selFuori = Selection()
+                        selFuori.select(selectionStroke.x(), selectionStroke.y(
+                        ), selectionStroke.width(), selectionStroke.height(), 255)
+                        selFuori.subtract(selectionStroke)
+
+                        currentDoc.setSelection(selFuori)
+                        selFuori.copy(layerPrima)
+
+                        blurFilter.apply(layerPrima, selectionStroke.x(), selectionStroke.y(
+                        ), selectionStroke.width(), selectionStroke.height())
+
+                        currentDoc.setSelection(None)
+                        # paste è bacata, non posso usarlo
+                        # selFuori.paste(layerPrima, selectionStroke.x() + 20  , selectionStroke.y() + 20 ) # copia il pezzo che non doveva essere blurred
+
+                        currentDoc.setActiveNode(layerPrima)
+                        Krita.instance().action('edit_paste').trigger()
+
+                        currentDoc.waitForDone()  # action needs to finish before continuing
+
+                        # ora ci devo
+
+                    currentDoc.refreshProjection()
                     currentDoc.setSelection(None)
-                    # paste è bacata, non posso usarlo
-                    # selFuori.paste(layerPrima, selectionStroke.x() + 20  , selectionStroke.y() + 20 ) # copia il pezzo che non doveva essere blurred
+                    # currentDoc.setSelection(None)
 
-                    currentDoc.setActiveNode(layerPrima)
-                    Krita.instance().action('edit_paste').trigger()
+                g.g_opacity_decided_for_layer = False
 
-                    currentDoc.waitForDone()  # action needs to finish before continuing
+                # currentDoc.setActiveNode(newLa)
 
-                    # ora ci devo
+                # currentDoc.refreshProjection() # tenta di agggirare il bug di quickmessage a tutto schermo
+                # currentDoc.waitForDone()
+            else:
+                messageBox(
+                    "In order to call \"Dry paper\", the current layer needs to have a parent group")
+                showMessage = False
+                # newLa = currentDoc.createNode("Wet_area", "paintLayer")
+                # newLa.setOpacity(50.0 * 255.0 / 100.0)
+                # root.addChildNode(newLa, None)
 
-                currentDoc.refreshProjection()
-                currentDoc.setSelection(None)
-                # currentDoc.setSelection(None)
+            # test blur
 
-            g.g_opacity_decided_for_layer = False
+            if showMessage:
+                # log("dry paper called message")
+                quickMessage("Dry paper")
+                # application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
 
-            # currentDoc.setActiveNode(newLa)
-
-            # currentDoc.refreshProjection() # tenta di agggirare il bug di quickmessage a tutto schermo
-            # currentDoc.waitForDone()
-        else:
-            messageBox(
-                "In order to call \"Dry paper\", the current layer needs to have a parent group")
-            showMessage = False
-            # newLa = currentDoc.createNode("Wet_area", "paintLayer")
-            # newLa.setOpacity(50.0 * 255.0 / 100.0)
-            # root.addChildNode(newLa, None)
-
-        # test blur
-
-        if showMessage:
-            # log("dry paper called message")
-            quickMessage("Dry paper")
-            # application.activeWindow().activeView().showFloatingMessage("Dry paper", QIcon(), timeMessage, 1)
-
-        return newLa
+            return newLa
 
 
 def node_to_index(node, model):
@@ -1799,11 +1813,15 @@ monitor = MouseMonitor()
 
 
 def handle_click(hier : list[QWidget]) -> None:
-    if monitor.isColorSelector(hier[0]) or monitor.isPalette(hier): # attenzione, non basta questo nell'evento mousedown.
+    if monitor.isColorSelector(hier[0]) : # attenzione, non basta questo nell'evento mousedown.
                                                                     # devo lanciare l'evento fgcolorchanged anche quando fa mouse released sul selector
 
         # se ha cliccato sul color selector o sulla palette di krita, do per scontato che abbia cambiato colore.
         onFgColorChangedNotByAutomix()
+
+    elif  monitor.isPalette(hier):
+        # dvo farlo dopo 1 secondo perche' il clic sulla palette non cambia istantaneamente il color selector
+        QTimer.singleShot(500, onFgColorChangedNotByAutomix) # Call after 1 second
     elif monitor.is_krita_canvas(hier[0]):
         # log("Click sul canvas di Krita!")
 
@@ -1944,10 +1962,13 @@ def handle_click(hier : list[QWidget]) -> None:
 
 def handle_release(hier: list[QWidget]) -> None: # bm_released  bm_mousereleased bm_mousebuttonreleased bm_mouseup
 
-    if monitor.isColorSelector(hier[0]) or monitor.isPalette(hier): # devo gestire anche released sul selector, perche' altrimenti lancia
-                                        # l'evento solo su mousedown, ma se poi trascina e lascia
+    if monitor.isColorSelector(hier[0]) : # devo gestire anche released sul selector, perche' altrimenti lancia
+                                        # l'evento solo su mousedown, ma se poi trascina e lasciaF
                                         # cambia colore ma lo ignorerebbe se non lanciassi anche qui
         onFgColorChangedNotByAutomix()
+    elif  monitor.isPalette(hier):
+        # dvo farlo dopo 1 secondo perche' il clic sulla palette non cambia istantaneamente il color selector
+        QTimer.singleShot(500, onFgColorChangedNotByAutomix) # Call after 1 second
     elif monitor.is_krita_canvas(hier[0]):
     
 
@@ -4516,7 +4537,7 @@ def maybe_dry_paper_and_autoResetOpacity() -> None:
             log ("fg color changed by user:  creating layer")
             newLa = dryPaper(False)
 
-
+            log("debug 43kj")
             # non serve dire che il layer appena creeato non e' dirty. il fatto che non e' nel dizionario significa quello
             # g.g_layer_is_dirty[curLayerId] = False
 
@@ -4545,3 +4566,4 @@ def maybe_dry_paper_and_autoResetOpacity() -> None:
 
 # And add the extension to Krita's list of extensions:
 Krita.instance().addExtension(MyExtension(Krita.instance()))
+
