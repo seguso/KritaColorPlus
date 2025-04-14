@@ -1,4 +1,6 @@
 from . globals import log
+
+from typing import Optional
 import math
 
 class rgb:
@@ -98,6 +100,9 @@ def colorArray255_3_OfRgb(rgb_color: rgb) -> List[float]:
     return [r_comp, g_comp, b_comp]
 
 
-def rgbOfManagedColor(c):
+def rgbOfManagedColor(c) -> Optional[rgb]:
     co = c.components()
-    return rgb(float(co[0] * 255.0), float(co[1] * 255.0), float(co[2] * 255.0), 255.0)
+    if len(co ) < 3:
+         return None # sei su un layer grayscale
+    else:
+        return rgb(float(co[0] * 255.0), float(co[1] * 255.0), float(co[2] * 255.0), 255.0)

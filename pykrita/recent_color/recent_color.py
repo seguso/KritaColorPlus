@@ -1642,7 +1642,8 @@ def handle_click(hier : list[QWidget]) -> None:
 
                                 fg : ManagedColor = view.foregroundColor()  # tipo ManagedColor, valori da 0 a 1
                                 fgRgb = rgbOfManagedColor(fg)
-                   
+                                if fgRgb is None:
+                                    return # non fare dirty brush su layer greyscale
                                 colorRgb255: rgb = fgRgb if maybeColorRgb255 is None else maybeColorRgb255
 
                                 g.g_color_on_down_dirty_brush = colorRgb255
@@ -1680,9 +1681,10 @@ def handle_click(hier : list[QWidget]) -> None:
                                     maybeColorRgb255_2 : Optional[rgb] = getColorUnderCursorOrAtPos(forcedPos=pcursor, ignore_bottom_layer=True)
                                     
                                     fg_2 : ManagedColor = view.foregroundColor()  # tipo ManagedColor, valori da 0 a 1
-                                    fgRgb = rgbOfManagedColor(fg_2)
-                    
-                                    colorRgb255_2: rgb = fgRgb if maybeColorRgb255_2 is None else maybeColorRgb255_2
+                                    fgRgb_2 : Optional[rgb]= rgbOfManagedColor(fg_2)
+                                    if fgRgb_2 is None:
+                                        return # non fare dirty brush su layer greyscale
+                                    colorRgb255_2: rgb = fgRgb_2 if maybeColorRgb255_2 is None else maybeColorRgb255_2
 
                                     rgbArr : list[float] = colorArray255_3_OfRgb(colorRgb255_2)
                                     sampled_colors_arr255.append(rgbArr) # Appends color [R,G,B] or None
