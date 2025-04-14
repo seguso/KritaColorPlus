@@ -1,7 +1,7 @@
 # brush_cycler.py
 # Module to handle automatic brush cycling after each stroke
 
-from krita import Krita
+from krita import Krita  # type: ignore
 from . import globals as g
 
 class BrushCycler:
@@ -111,15 +111,36 @@ class BrushCycler:
         self.save_settings()
     
     def cycle_to_next_brush(self):
-        """Cycle to the next brush in the list and apply it"""
+        """Cycle to the next brush in the list and apply it, preserving size"""
         if not self.enabled or not self.brush_list:
             return False
-        
+
+        app = Krita.instance()
+        window = app.activeWindow()
+        if not window:
+            return False
+        view = window.activeView()
+        if not view:
+            return False
+
+        # Get current brush size
+        previous_size = view.brushSize()
+
         # Move to next brush
         self.current_index = (self.current_index + 1) % len(self.brush_list)
-        
+
         # Apply the brush
-        return self.apply_current_brush()
+        applied_successfully = self.apply_current_brush()
+
+        # Restore the previous size if the brush was applied
+        if applied_successfully:
+            # Re-get view just in case, though likely unnecessary
+            view = Krita.instance().activeWindow().activeView()
+            if view:
+                view.setBrushSize(previous_size)
+                g.log(f"Restored brush size to: {previous_size}")
+
+        return applied_successfully
     
     def apply_current_brush(self):
         """Apply the current brush in the cycle"""

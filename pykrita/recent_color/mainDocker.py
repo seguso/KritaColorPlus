@@ -256,40 +256,40 @@ class HelloDocker(DockWidget):
 
 
         # per ora commento il brush cycler, non e' chiaro lo scopo
-        # # Brush cycler layout
-        # layoutHorizBrushCycler = QHBoxLayout()
-        # mainLayout.addLayout(layoutHorizBrushCycler)
+        # Brush cycler layout
+        layoutHorizBrushCycler = QHBoxLayout()
+        mainLayout.addLayout(layoutHorizBrushCycler)
         
-        # # Brush cycler button
-        # g.g_btn_brush_cycler = QPushButton("Cycle brushes", mainWidget)
-        # g.g_btn_brush_cycler.setCheckable(True)
-        # layoutHorizBrushCycler.addWidget(g.g_btn_brush_cycler)
-        # g.g_btn_brush_cycler.clicked.connect(self.toggleBrushCycler)
-        # # g.g_btn_brush_cycler.setMinimumHeight(60)
+        # Brush cycler button
+        g.g_btn_brush_cycler = QPushButton("Cycle brushes", mainWidget)
+        g.g_btn_brush_cycler.setCheckable(True)
+        layoutHorizBrushCycler.addWidget(g.g_btn_brush_cycler)
+        g.g_btn_brush_cycler.clicked.connect(self.toggleBrushCycler)
+        # g.g_btn_brush_cycler.setMinimumHeight(60)
         
-        # # Set initial tooltip
-        # if brush_cycler.brush_list:
-        #     g.g_btn_brush_cycler.setToolTip(f"Cycle brushes (enabled: {brush_cycler.enabled}, {len(brush_cycler.brush_list)} brushes)")
-        # else:
-        #     g.g_btn_brush_cycler.setToolTip("Cycle brushes (no brushes in list)")
+        # Set initial tooltip
+        if brush_cycler.brush_list:
+            g.g_btn_brush_cycler.setToolTip(f"Cycle brushes (enabled: {brush_cycler.enabled}, {len(brush_cycler.brush_list)} brushes)")
+        else:
+            g.g_btn_brush_cycler.setToolTip("Cycle brushes (no brushes in list)")
         
-        # # font = g.g_btn_brush_cycler.font()
-        # # # font.setPixelSize(14)
-        # # g.g_btn_brush_cycler.setFont(font)
+        # font = g.g_btn_brush_cycler.font()
+        # # font.setPixelSize(14)
+        # g.g_btn_brush_cycler.setFont(font)
         
-        # # Button to add current brush to cycle list
-        # btnAddBrush = QPushButton("+", mainWidget)
-        # btnAddBrush.setToolTip("Add current brush to cycle list")
-        # layoutHorizBrushCycler.addWidget(btnAddBrush)
-        # btnAddBrush.clicked.connect(self.addCurrentBrushToCycleList)
-        # # btnAddBrush.setMinimumHeight(60)
-        # btnAddBrush.setMaximumWidth(40)
+        # Button to add current brush to cycle list
+        btnAddBrush = QPushButton("+", mainWidget)
+        btnAddBrush.setToolTip("Add current brush to cycle list")
+        layoutHorizBrushCycler.addWidget(btnAddBrush)
+        btnAddBrush.clicked.connect(self.addCurrentBrushToCycleList)
+        # btnAddBrush.setMinimumHeight(60)
+        btnAddBrush.setMaximumWidth(40)
         
-        # # Button to edit brush list
-        # btnEditBrushList = QPushButton("Edit List", mainWidget)
-        # btnEditBrushList.setToolTip("View and edit brush cycle list")
-        # layoutHorizBrushCycler.addWidget(btnEditBrushList)
-        # btnEditBrushList.clicked.connect(self.showBrushListEditor)
+        # Button to edit brush list
+        btnEditBrushList = QPushButton("Edit List", mainWidget)
+        btnEditBrushList.setToolTip("View and edit brush cycle list")
+        layoutHorizBrushCycler.addWidget(btnEditBrushList)
+        btnEditBrushList.clicked.connect(self.showBrushListEditor)
         
 
     def leaveEvent(self, event):
