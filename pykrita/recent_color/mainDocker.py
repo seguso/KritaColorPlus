@@ -261,7 +261,7 @@ class HelloDocker(DockWidget):
         mainLayout.addLayout(layoutHorizBrushCycler)
         
         # Brush cycler button
-        g.g_btn_brush_cycler = QPushButton("Cycle brushes", mainWidget)
+        g.g_btn_brush_cycler = QPushButton("Auto-cycle brushes", mainWidget)
         g.g_btn_brush_cycler.setCheckable(True)
         layoutHorizBrushCycler.addWidget(g.g_btn_brush_cycler)
         g.g_btn_brush_cycler.clicked.connect(self.toggleBrushCycler)

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ActionCollection version="2" name="Scripts">
+    <Actions category="Scripts">
+        <text>Cycle to Next Brush</text> <!-- Added this top-level text element -->
+
+        <Action name="colorplus_cycle_next_brush">
+            <icon></icon>
+            <text>Cycle to Next Brush</text> <!-- Text inside the action -->
+            <whatsThis>Manually cycles to the next brush in the configured list if auto-cycling is off.</whatsThis>
+            <toolTip>Cycle to Next Brush (Manual)</toolTip>
+            <iconText></iconText>
+            <activationFlags>0</activationFlags>
+            <activationConditions>0</activationConditions>
+            <shortcut></shortcut>
+            <isCheckable>false</isCheckable>
+            <statusTip>Manually cycle to the next brush in the list</statusTip>
+        </Action>
+    </Actions>
+</ActionCollection>

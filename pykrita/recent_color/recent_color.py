@@ -10,7 +10,14 @@ from . import globals as g
 # Throttling for debug logs
 
 from .whichtool import EKritaTools, EKritaToolsId  # Import the necessary classes
-from .brush_cycler import brush_cycler  # Import the brush cycler instance
+
+def log(s):
+    g.printCount += 1
+    print(f"{g.printCount}: {s}\n\n")
+
+
+
+from .brush_cycler import brush_cycler # Import the brush cycler instance
 from .brush_list_widget import BrushListDialog  # Import the brush list dialog
 from .slider import KritaStyleSlider # Import the new slider
 
@@ -247,9 +254,6 @@ def toggleDirtyBrush():
         g.g_actionDirtyBrush.setChecked(True)
         g.g_slider_dirty_brush_level.setEnabled(True)
 
-def log(s):
-    g.printCount += 1
-    print(f"{g.printCount}: {s}\n\n")
 
 # --- Custom Widget for Clickable Color Squares ---
 
@@ -3673,6 +3677,25 @@ class MyExtension(Extension):
             # pass
             # #quickMessage("Picked color")
 
+    # --- Action Methods ---
+
+    def manual_cycle_next_brush(self):
+        """Manually cycle to the next brush if auto-cycling is disabled."""
+        if not brush_cycler.enabled:
+            if brush_cycler.cycle_to_next_brush():
+                # Use the brush name from the cycler instance after cycling
+                # quickMessage(f"Switched to brush: {brush_cycler.brush_list[brush_cycler.current_index]}", 500)
+                pass
+            else:
+                # Check if the list is empty or if apply failed
+                if not brush_cycler.brush_list:
+                     quickMessage("Brush cycle list is empty.", 1000)
+                else:
+                     quickMessage("Failed to apply next brush (not found?).", 1000)
+        else:
+            quickMessage("Manual cycle disabled while auto-cycle is active.", 1000)
+
+
     def onEnter(self):
         log(f"enter event")
 
@@ -3871,6 +3894,11 @@ class MyExtension(Extension):
         custom_menu.addAction(g.g_actionDirtyBrush)
         custom_menu.addSeparator()
         custom_menu.addAction(g.g_actionBrushCycler)
+        
+        # --- Manual Brush Cycler Action ---
+        actionManualCycleBrush = window.createAction("colorplus_cycle_next_brush", "Cycle to Next Brush")
+        actionManualCycleBrush.triggered.connect(self.manual_cycle_next_brush)
+        custom_menu.addAction(actionManualCycleBrush) # Add to the menu
 
         custom_menu.addSeparator()
         custom_menu.addAction(actionDryPaper)

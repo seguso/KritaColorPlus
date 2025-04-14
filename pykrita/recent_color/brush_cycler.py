@@ -2,7 +2,10 @@
 # Module to handle automatic brush cycling after each stroke
 
 from krita import Krita  # type: ignore
-from . import globals as g
+
+# from . import globals as g
+
+from .recent_color import log
 
 class BrushCycler:
     """Class to manage cycling through a list of brushes automatically"""
@@ -68,7 +71,7 @@ class BrushCycler:
                     break
             
             if not found:
-                g.log(f"Warning: Brush preset '{brush_name}' not found and will be skipped")
+                log(f"Warning: Brush preset '{brush_name}' not found and will be skipped")
         
         self.brush_list = valid_brushes
         self.current_index = 0 if valid_brushes else 0
@@ -112,7 +115,7 @@ class BrushCycler:
     
     def cycle_to_next_brush(self):
         """Cycle to the next brush in the list and apply it, preserving size"""
-        if not self.enabled or not self.brush_list:
+        if not self.brush_list:
             return False
 
         app = Krita.instance()
@@ -138,7 +141,7 @@ class BrushCycler:
             view = Krita.instance().activeWindow().activeView()
             if view:
                 view.setBrushSize(previous_size)
-                g.log(f"Restored brush size to: {previous_size}")
+                log(f"Restored brush size to: {previous_size}")
 
         return applied_successfully
     
@@ -160,6 +163,7 @@ class BrushCycler:
         brush_name = self.brush_list[self.current_index]
         
         # Find the brush preset
+        log(f"Attempting to apply brush: '{brush_name}' (Index: {self.current_index})") # DEBUG
         all_presets = app.resources('preset')
 
         # self.debug_print_all_brushes()
@@ -168,11 +172,15 @@ class BrushCycler:
             if preset.name() == brush_name:
                 # Apply the brush preset using setCurrentBrushPreset
                 view.setCurrentBrushPreset(preset)
-                g.log(f"Switched to brush: {brush_name}")
+                log(f"Switched to brush: {brush_name}")
                 self.save_settings()
                 return True
         
-        g.log(f"Error: Could not find brush preset '{brush_name}'")
+        log(f"Error: Could not find brush preset '{brush_name}'")
+        # DEBUG: Print available names if not found
+        available_names = [p.name() for p_key, p in all_presets.items()]
+        available_names.sort()
+        log(f"Available presets ({len(available_names)}): {', '.join(available_names[:20])}...") # Print first 20
         return False
 
     def debug_print_all_brushes(self):
@@ -180,20 +188,20 @@ class BrushCycler:
         app = Krita.instance()
         all_presets = app.resources('preset')
         
-        g.log("=== DEBUG: All available brush presets ===")
-        g.log(f"Total number of presets: {len(all_presets)}")
+        log("=== DEBUG: All available brush presets ===")
+        log(f"Total number of presets: {len(all_presets)}")
         
         # Sort brush names alphabetically for easier reading
         brush_names = []
         for preset_key, preset in all_presets.items():
             brush_names.append(preset.name())
-            g.log(f"Preset key: {preset_key}")
+            log(f"Preset key: {preset_key}")
         
         brush_names.sort()
         for i, name in enumerate(brush_names):
-            g.log(f"{i+1}. {name}")
+            log(f"{i+1}. {name}")
         
-        g.log("=== End of brush presets list ===")
+        log("=== End of brush presets list ===")
         return brush_names
 
 # Create a global instance
