@@ -1,6 +1,6 @@
 TODO alternare brush automaticamente: può avere senso per brush di tipo setole, molto
 simili, per dare varietà. ma se cambio il size di uno, come faccio a cambiare il size
-degli altri? ma forse quando switch posso coiare il size del nuovo nel vecchio.
+degli altri? ma forse quando switch posso copiare il size del nuovo nel vecchio.
 
 DONE fai che clean brush biene fatto da dry paper, non da V
 
