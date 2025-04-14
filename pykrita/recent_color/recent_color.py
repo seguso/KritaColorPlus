@@ -3684,8 +3684,7 @@ class MyExtension(Extension):
         if not brush_cycler.enabled:
             if brush_cycler.cycle_to_next_brush():
                 # Use the brush name from the cycler instance after cycling
-                # quickMessage(f"Switched to brush: {brush_cycler.brush_list[brush_cycler.current_index]}", 500)
-                pass
+                quickMessage(f"Switched to brush: {brush_cycler.brush_list[brush_cycler.current_index]}", 500)
             else:
                 # Check if the list is empty or if apply failed
                 if not brush_cycler.brush_list:
