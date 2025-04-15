@@ -135,7 +135,7 @@ class ColorHistoryDocker(DockWidget):
         g.g_virtual_fg_color_rgb = clickedColorRgb
         update_label_from_virtual_color()
         
-
+        g.g_ColorOnTopOfHistoryIsTemp = False # cambiando colore, implicitamente hai accettato il colore temporaneo automix
 
         # invece di  setFgColor(g.g_virtual_fg_color_rgb)
         # faccio cosi', altrimenti per sottili differenze di arrotondamento si creano duplicati nella history
@@ -150,6 +150,8 @@ class ColorHistoryDocker(DockWidget):
             comp[2] = color.redF()
             fg.setComponents(comp)
             view.setForeGroundColor(fg)
+
+            
 
         maybe_dry_paper_and_autoResetOpacity()
         

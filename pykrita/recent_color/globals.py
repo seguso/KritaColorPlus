@@ -28,6 +28,8 @@ g_mouse_is_out_of_canvas = True
 # g_mix_auto_clears_cur_layer = "1"
 
 
+g_ColorOnTopOfHistoryIsTemp : bool = False
+
 g_color_changed_since_last_leave = False # Tracks if color changed after leaving canvas
 
 g_layer_is_dirty: dict[str, bool] = {} # Use lowercase dict type hint

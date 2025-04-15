@@ -635,7 +635,7 @@ def mergeCleanup(): # bm_mergelayers
         return newLa
 
 
-def dryPaper(showMessage=True):
+def dryPaper(showMessage=True):  # bm_dryPaper
 
     
 
@@ -772,6 +772,8 @@ def dryPaper(showMessage=True):
                     # currentDoc.setSelection(None)
 
                 g.g_opacity_decided_for_layer = False
+
+                g.g_ColorOnTopOfHistoryIsTemp = False #  facendo dry paper, implicitamente hai accettato il colore temporaneo automix
 
                 # currentDoc.setActiveNode(newLa)
 
@@ -1374,6 +1376,15 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
 
                             g.g_dirty_brush_latest_dirty_color_for_automix = None # altrimenti l'autoix ignora il nuovo virtual color
 
+
+                            # devo metterlo nella history ma come temporaneo. e se c'e' gia' un temporaneo, lo sovrascrivo
+                            if g.g_ColorOnTopOfHistoryIsTemp:
+                                g.g_last_virtual_colors_used.pop(0)
+
+                            aggiorna_history_aggiungendo(comp)
+                            g.g_ColorOnTopOfHistoryIsTemp = True
+                            
+
                             if g.g_diminishing_opacity:
                                 g.g_auto_mix__how_much_canvas_to_pick = 1.0
 
@@ -1797,67 +1808,6 @@ def handle_release(hier: list[QWidget]) -> None: # bm_released  bm_mousereleased
         # Get color components (usually [R, G, B, A] as floats 0.0-1.0)
         components : list[float] = krita_fg_color.components()
 
-
-        def aggiorna_history_aggiungendo(aComponents) -> None:
-
-            if len(aComponents) < 4:
-                log("aggiorna_history_aggiungendo: hai passato array rgba di len < 4. non aggiorno history")
-                return
-            # Convert Krita components (0-1 float, RGBA) to our rgb class format (0-255 float, BGR internally)
-            # Note: The rgb class stores B in self.r and R in self.b internally.
-            actual_color_rgb = rgb(r=aComponents[0] * 255.0,  # Blue component (index 2) * 255 for rgb.r
-                                   # Green component (index 1) * 255 for rgb.g
-                                   g=aComponents[1] * 255.0,
-                                   # Red component (index 0) * 255 for rgb.b
-                                   b=aComponents[2] * 255.0,
-                                   a=aComponents[3] * 255.0)  # Alpha component (index 3) * 255 for rgb.a
-
-            # Use the actual color for the stroke
-            stroke_color = actual_color_rgb.clone()
-
-
-            # log(f"  Stroke Color (g.g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
-            # log(f"  Before Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
-
-            if stroke_color is not None:
-                stroke_color_clone = stroke_color.clone()
-                # log(f"  Processing stroke color {stroke_color_clone.toString()}")
-
-                # Use a temporary list to avoid modifying while iterating if needed, though list comprehension handles this.
-                # original_count = len(g.g_last_virtual_colors_used)
-
-                # Remove all existing instances of the color using list comprehension
-                g.g_last_virtual_colors_used = [
-                    c for c in g.g_last_virtual_colors_used if not c.equals(stroke_color_clone)]
-                
-                # removed_count = original_count - len(g.g_last_virtual_colors_used)
-                # if removed_count > 0:
-                #     log(f"  Removed {removed_count} existing instance(s) of {stroke_color_clone.toString()}.")
-
-                # Add the new/current color to the beginning (most recent)
-                g.g_last_virtual_colors_used.insert(0, stroke_color_clone)
-                # log(f"  Added color {stroke_color_clone.toString()} to beginning. History size: {len(g.g_last_virtual_colors_used)}")
-
-                # Trim list to max_history, keeping the newest items (at the start)
-                max_history = 40  # TODO: Consider making this configurable
-                if len(g.g_last_virtual_colors_used) > max_history:
-                    g.g_last_virtual_colors_used = g.g_last_virtual_colors_used[:max_history]
-                    # log(f"  History trimmed to {max_history} items.")
-
-                # Always reset the history index after a stroke adds/moves a color
-                g.g_color_history_index = 0
-                # log(f"  Reset g_color_history_index to 0.")
-
-            # Update the absolute last color tracker (always, inside try)
-            # g.g_virtual_color_used_last_rgb = stroke_color
-
-            # aggiorna la history
-
-            # Aggiorna il dock widget della cronologia colori
-            if g.g_color_history_docker_instance:
-                g.g_color_history_docker_instance.update_color_history_ui()
-
-            update_label_from_virtual_color()
 
 
         # if g.g_dirty_brush_color_to_ignore is not None and arrEqual(components, g.g_dirty_brush_color_to_ignore):
@@ -3198,6 +3148,8 @@ class MyExtension(Extension):
                         update_label_from_virtual_color()
                         g.g_dirty_brush_latest_dirty_color_for_automix = None # altrimenti l'autoix ignora il nuovo virtual color
 
+                        g.g_ColorOnTopOfHistoryIsTemp = False # cambiando colore, implicitamente hai accettato il colore temporaneo automix
+
                         setFgColor(g.g_virtual_fg_color_rgb) # non lancia eventi
 
 
@@ -3604,11 +3556,13 @@ class MyExtension(Extension):
             quickMessage(
                 f"Reset layer opacity to default ({round(g.g_auto_reset_opacity_on_pick_level )}%)")
 
-    def dryPaperAndPick(self) -> None:
+    def dryPaperAndPick(self) -> None:  # bm_dryPaperAndPick
         log("dry paper and pick")
 
         # non funziona se inverto l'ordine... non capisco perche'
         self.pickColorFun(False)
+
+        
 
         maybe_dry_paper_and_autoResetOpacity()
 
@@ -4218,6 +4172,8 @@ def onFgColorChangedNotByAutomix() -> None:
         update_label_from_virtual_color()
 
         g.g_dirty_brush_latest_dirty_color_for_automix = None # altrimenti l'autoix ignora il nuovo virtual color
+        
+        g.g_ColorOnTopOfHistoryIsTemp = False # cambiando colore, implicitamente hai accettato il colore temporaneo automix
 
     maybe_dry_paper_and_autoResetOpacity()
 
@@ -4271,6 +4227,67 @@ def maybe_dry_paper_and_autoResetOpacity() -> None:
 
 
 
+
+def aggiorna_history_aggiungendo(aComponents01) -> None:
+
+    if len(aComponents01) < 4:
+        log("aggiorna_history_aggiungendo: hai passato array rgba di len < 4. non aggiorno history")
+        return
+    # Convert Krita components (0-1 float, RGBA) to our rgb class format (0-255 float, BGR internally)
+    # Note: The rgb class stores B in self.r and R in self.b internally.
+    actual_color_rgb = rgb(r=aComponents01[0] * 255.0,  # Blue component (index 2) * 255 for rgb.r
+                            # Green component (index 1) * 255 for rgb.g
+                            g=aComponents01[1] * 255.0,
+                            # Red component (index 0) * 255 for rgb.b
+                            b=aComponents01[2] * 255.0,
+                            a=aComponents01[3] * 255.0)  # Alpha component (index 3) * 255 for rgb.a
+
+    # Use the actual color for the stroke
+    stroke_color = actual_color_rgb.clone()
+
+
+    # log(f"  Stroke Color (g.g_virtual_fg_color_rgb): {stroke_color.toString() if stroke_color else 'None'}")
+    # log(f"  Before Update: Index = {g.g_color_history_index}, History = {[c.toString() for c in g.g_last_virtual_colors_used]}")
+
+    if stroke_color is not None:
+        stroke_color_clone = stroke_color.clone()
+        # log(f"  Processing stroke color {stroke_color_clone.toString()}")
+
+        # Use a temporary list to avoid modifying while iterating if needed, though list comprehension handles this.
+        # original_count = len(g.g_last_virtual_colors_used)
+
+        # Remove all existing instances of the color using list comprehension
+        g.g_last_virtual_colors_used = [
+            c for c in g.g_last_virtual_colors_used if not c.equals(stroke_color_clone)]
+        
+        # removed_count = original_count - len(g.g_last_virtual_colors_used)
+        # if removed_count > 0:
+        #     log(f"  Removed {removed_count} existing instance(s) of {stroke_color_clone.toString()}.")
+
+        # Add the new/current color to the beginning (most recent)
+        g.g_last_virtual_colors_used.insert(0, stroke_color_clone)
+        # log(f"  Added color {stroke_color_clone.toString()} to beginning. History size: {len(g.g_last_virtual_colors_used)}")
+
+        # Trim list to max_history, keeping the newest items (at the start)
+        max_history = 40  # TODO: Consider making this configurable
+        if len(g.g_last_virtual_colors_used) > max_history:
+            g.g_last_virtual_colors_used = g.g_last_virtual_colors_used[:max_history]
+            # log(f"  History trimmed to {max_history} items.")
+
+        # Always reset the history index after a stroke adds/moves a color
+        g.g_color_history_index = 0
+        # log(f"  Reset g_color_history_index to 0.")
+
+    # Update the absolute last color tracker (always, inside try)
+    # g.g_virtual_color_used_last_rgb = stroke_color
+
+    # aggiorna la history
+
+    # Aggiorna il dock widget della cronologia colori
+    if g.g_color_history_docker_instance:
+        g.g_color_history_docker_instance.update_color_history_ui()
+
+    update_label_from_virtual_color()
 
 
 
