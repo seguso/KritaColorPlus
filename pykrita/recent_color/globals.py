@@ -27,6 +27,7 @@ g_mouse_is_out_of_canvas = True
 
 # g_mix_auto_clears_cur_layer = "1"
 
+g_brushCyclerIndex = 0
 
 g_ColorOnTopOfHistoryIsTemp : bool = False
 

@@ -81,7 +81,7 @@ class BrushListWidget(QWidget):
         for i, brush_name in enumerate(brush_cycler.brush_list):
             item = QListWidgetItem(brush_name)
             # Highlight the current brush
-            if i == brush_cycler.current_index:
+            if i == g.g_brushCyclerIndex:
                 font = item.font()
                 font.setBold(True)
                 item.setFont(font)

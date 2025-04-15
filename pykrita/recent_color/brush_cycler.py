@@ -3,7 +3,7 @@
 
 from krita import Krita  # type: ignore
 
-# from . import globals as g
+from . import globals as g
 
 from .recent_color import log
 
@@ -13,7 +13,7 @@ class BrushCycler:
     def __init__(self):
         self.enabled = False
         self.brush_list = []  # List of brush preset names to cycle through
-        self.current_index = 0
+        g.g_brushCyclerIndex = 0
         self.load_settings()
     
     def load_settings(self):
@@ -30,21 +30,15 @@ class BrushCycler:
         else:
             self.brush_list = []
         
-        # Load current index
-        try:
-            self.current_index = int(app.readSetting("colorPlus", "brush_cycler_index", "0"))
-            # Ensure index is valid
-            if self.current_index >= len(self.brush_list):
-                self.current_index = 0
-        except ValueError:
-            self.current_index = 0
+        
+            
     
     def save_settings(self):
         """Save brush cycler settings to Krita configuration"""
         app = Krita.instance()
         #app.writeSetting("colorPlus", "brush_cycler_enabled", str(self.enabled).lower())
         app.writeSetting("colorPlus", "brush_cycler_list", ",".join(self.brush_list))
-        app.writeSetting("colorPlus", "brush_cycler_index", str(self.current_index))
+        
     
     def toggle_enabled(self):
         """Toggle brush cycling on/off"""
@@ -74,7 +68,7 @@ class BrushCycler:
                 log(f"Warning: Brush preset '{brush_name}' not found and will be skipped")
         
         self.brush_list = valid_brushes
-        self.current_index = 0 if valid_brushes else 0
+        g.g_brushCyclerIndex = 0 if valid_brushes else 0
         self.save_settings()
     
     def add_current_brush(self):
@@ -101,8 +95,8 @@ class BrushCycler:
         if brush_name in self.brush_list:
             self.brush_list.remove(brush_name)
             # Adjust current index if needed
-            if self.current_index >= len(self.brush_list):
-                self.current_index = 0 if self.brush_list else 0
+            if g.g_brushCyclerIndex >= len(self.brush_list):
+                g.g_brushCyclerIndex = 0 if self.brush_list else 0
             self.save_settings()
             return True
         return False
@@ -110,7 +104,7 @@ class BrushCycler:
     def clear_brush_list(self):
         """Clear the brush cycle list"""
         self.brush_list = []
-        self.current_index = 0
+        g.g_brushCyclerIndex = 0
         self.save_settings()
     
     def cycle_to_next_brush(self):
@@ -130,7 +124,7 @@ class BrushCycler:
         previous_size = view.brushSize()
 
         # Move to next brush
-        self.current_index = (self.current_index + 1) % len(self.brush_list)
+        g.g_brushCyclerIndex = (g.g_brushCyclerIndex + 1) % len(self.brush_list)
 
         # Apply the brush
         applied_successfully = self.apply_current_brush()
@@ -160,10 +154,10 @@ class BrushCycler:
             return False
         
         # Get the brush name
-        brush_name = self.brush_list[self.current_index]
+        brush_name = self.brush_list[g.g_brushCyclerIndex]
         
         # Find the brush preset
-        log(f"Attempting to apply brush: '{brush_name}' (Index: {self.current_index})") # DEBUG
+        log(f"Attempting to apply brush: '{brush_name}' (Index: {g.g_brushCyclerIndex})") # DEBUG
         all_presets = app.resources('preset')
 
         # self.debug_print_all_brushes()
