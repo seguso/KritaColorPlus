@@ -112,6 +112,9 @@ class BrushCycler:
         if not self.brush_list:
             return False
 
+
+        log("cycle to next brush")
+        
         app = Krita.instance()
         window = app.activeWindow()
         if not window:

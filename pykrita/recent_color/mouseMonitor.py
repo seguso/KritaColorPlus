@@ -7,6 +7,8 @@ from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
 
 from . import globals as g # Import globals for logging
 
+from .recent_color import log
+
 # Helper function to get widget hierarchy
 def get_widget_hierarchy(widget: Optional[QWidget]) -> List[QWidget]:
     hierarchy: List[str] = []
@@ -63,7 +65,7 @@ class MouseMonitor(QObject):
                 if current_widget:
                     # Print widget hierarchy on mouse down
                     hierarchy: List[str] = get_widget_hierarchy(current_widget)
-                    #g.log(f"Mouse down on widget hierarchy: {hierarchy}")
+                    #log(f"Mouse down on widget hierarchy: {hierarchy}")
                     self.mouseClicked.emit(hierarchy)
                 self.last_widget = current_widget
         else:

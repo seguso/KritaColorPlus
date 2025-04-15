@@ -1,5 +1,5 @@
 
-from . mouseMonitor import MouseMonitor
+
 from PyQt5.QtWidgets import QTreeView, QMdiSubWindow
 from PyQt5.QtCore import Qt, QModelIndex, QItemSelectionModel
 import pprint
@@ -15,7 +15,7 @@ def log(s):
     g.printCount += 1
     print(f"{g.printCount}: {s}\n\n")
 
-
+from . mouseMonitor import MouseMonitor
 
 from .brush_cycler import brush_cycler # Import the brush cycler instance
 from .brush_list_widget import BrushListDialog  # Import the brush list dialog
@@ -1385,6 +1385,9 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
                             g.g_ColorOnTopOfHistoryIsTemp = True
                             
 
+                            g.g_brushCyclerIndex = 0
+                            brush_cycler.apply_current_brush()
+                            
                             if g.g_diminishing_opacity:
                                 g.g_auto_mix__how_much_canvas_to_pick = 1.0
 
@@ -2474,6 +2477,10 @@ class MyExtension(Extension):
                 
                 setFgColor(g.g_virtual_fg_color_rgb) # non lancia eventi, aggiorna solo il selector
 
+
+                g.g_brushCyclerIndex = 0
+                brush_cycler.apply_current_brush()
+
                 # faccio avanzare il rettangolo bianco
                 if g.g_color_history_docker_instance:
                     g.g_color_history_docker_instance.update_color_history_ui()
@@ -3056,6 +3063,12 @@ class MyExtension(Extension):
         # return self.mix( 0.33)  #0.33 from canvas
 
     def pickColorFun(self, showMessage=True) -> None: # bm_pickColorViaKey
+
+
+        g.g_brushCyclerIndex = 0
+        brush_cycler.apply_current_brush()
+
+        log("resettato index brush cycle")
 
         log("pick called")
         app = Krita.instance()
@@ -4162,6 +4175,11 @@ def onFgColorChangedNotByAutomix() -> None:
 
     #adesso sono sicuro che e' stato cambiato manualmente, quindi aggiorno il virtual color con il fg color di krita
     
+
+    g.g_brushCyclerIndex = 0
+    brush_cycler.apply_current_brush()
+    log("resettato index brush cycle")
+
     fgColorMaybe  = getFgColorAsRgb();
     if fgColorMaybe is None: # succede se utente ha settato un fg color grayscale, stando su un filter mask o transparency mask
         return

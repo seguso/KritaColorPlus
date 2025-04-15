@@ -10,6 +10,7 @@ from PyQt5.QtGui import QIcon
 from krita import Krita
 from . import globals as g
 from .brush_cycler import brush_cycler
+from .recent_color import log
 
 class BrushListWidget(QWidget):
     """Widget to display and edit the list of brushes in the brush cycler"""
@@ -94,9 +95,9 @@ class BrushListWidget(QWidget):
         if brush_cycler.add_current_brush():
             self.update_list()
             self.brushListChanged.emit()
-            g.log(f"Added current brush to cycle list. Total: {len(brush_cycler.brush_list)}")
+            log(f"Added current brush to cycle list. Total: {len(brush_cycler.brush_list)}")
         else:
-            g.log("Could not add current brush to cycle list")
+            log("Could not add current brush to cycle list")
     
     def remove_selected_brush(self):
         """Remove the selected brush from the list"""
@@ -117,9 +118,9 @@ class BrushListWidget(QWidget):
         if brush_cycler.remove_brush(brush_name):
             self.update_list()
             self.brushListChanged.emit()
-            g.log(f"Removed brush '{brush_name}' from cycle list")
+            log(f"Removed brush '{brush_name}' from cycle list")
         else:
-            g.log(f"Could not remove brush '{brush_name}' from cycle list")
+            log(f"Could not remove brush '{brush_name}' from cycle list")
     
     def move_brush_up(self):
         """Move the selected brush up in the list"""
@@ -186,7 +187,7 @@ class BrushListWidget(QWidget):
             brush_cycler.clear_brush_list()
             self.update_list()
             self.brushListChanged.emit()
-            g.log("Cleared brush cycle list")
+            log("Cleared brush cycle list")
     
     def on_rows_moved(self, parent, start, end, destination, row):
         """Handle rows being moved by drag and drop"""

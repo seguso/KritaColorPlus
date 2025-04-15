@@ -2,8 +2,10 @@ from PyQt5.QtCore import Qt, pyqtSignal, QRect
 from PyQt5.QtGui import QColor, QResizeEvent, QPen, QPainter
 from PyQt5.QtWidgets import QDockWidget, QWidget, QGridLayout, QLabel
 from krita import DockWidget, Krita
-from .recent_color import rgb, setFgColor, update_label_from_virtual_color, log, maybe_dry_paper_and_autoResetOpacity
+from .recent_color import rgb, setFgColor, update_label_from_virtual_color, log, maybe_dry_paper_and_autoResetOpacity, log
 from . import globals as g
+from .brush_cycler import brush_cycler # Import the brush cycler instance
+
 
 # --- Custom Widget for Clickable Color Squares ---
 class ClickableColorLabel(QLabel):
@@ -30,7 +32,7 @@ class ClickableColorLabel(QLabel):
     
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            g.log(f"ClickableColorLabel clicked: emitting color {self._color.name()}")
+            log(f"ClickableColorLabel clicked: emitting color {self._color.name()}")
             self.clicked.emit(self._color)
         super().mousePressEvent(event)
 
@@ -76,7 +78,7 @@ class ColorHistoryDocker(DockWidget):
         self.color_squares = []  # Clear the list of color squares
 
         # Add new color squares in a grid layout
-        # g.log(f"Updating color history UI with {len(g.g_last_virtual_colors_used)} colors.")
+        # log(f"Updating color history UI with {len(g.g_last_virtual_colors_used)} colors.")
         
         # Calculate how many color squares can fit in the current width
         docker_width = self.width()
@@ -87,7 +89,7 @@ class ColorHistoryDocker(DockWidget):
         # Calculate available width and how many squares can fit
         available_width = docker_width - margins
         colors_per_row = max(1, available_width // (square_size + spacing))
-        # g.log(f"Docker width: {docker_width}px, can fit {colors_per_row} color squares per row")
+        # log(f"Docker width: {docker_width}px, can fit {colors_per_row} color squares per row")
         
         for i, item in enumerate(g.g_last_virtual_colors_used):
             qcolor_to_display = None
@@ -103,11 +105,11 @@ class ColorHistoryDocker(DockWidget):
                     b_val = max(0, min(255, b_val))
                     qcolor_to_display = QColor(r_val, g_val, b_val)
                 except Exception as e:
-                    g.log(f"Error converting rgb to QColor: {e}, rgb values: r={item.r}, g={item.g}, b={item.b}")
+                    log(f"Error converting rgb to QColor: {e}, rgb values: r={item.r}, g={item.g}, b={item.b}")
             elif isinstance(item, QColor):  # Handle if it's already a QColor
                 qcolor_to_display = item
             else:
-                g.log(f"Warning: Item in g_last_virtual_colors_used is not an rgb or QColor object: {type(item)}")
+                log(f"Warning: Item in g_last_virtual_colors_used is not an rgb or QColor object: {type(item)}")
 
             if qcolor_to_display:
                 color_square = ClickableColorLabel(qcolor_to_display)  # Pass the QColor
@@ -126,8 +128,16 @@ class ColorHistoryDocker(DockWidget):
 
     # --- Slot for Color Square Clicks ---
     def _on_color_square_clicked(self, color) -> None:
+
+        g.g_brushCyclerIndex = 0
+        brush_cycler.apply_current_brush()
+                            
+
+        log("resettato index brush cycle")
+        
+
         """ Handles clicks on the color history squares. """
-        g.log(f"Color square clicked: {color.name()}")
+        log(f"Color square clicked: {color.name()}")
         # Set as foreground color in Krita
         
 
@@ -158,13 +168,13 @@ class ColorHistoryDocker(DockWidget):
     def canvasChanged(self, canvas):
         """ Override of the abstract method from DockWidget class.
         Called when the canvas changes in Krita. """
-        # g.log(f"Canvas changed in ColorHistoryDocker")
+        # log(f"Canvas changed in ColorHistoryDocker")
         # Update the UI when canvas changes
         # self.update_color_history_ui()  # commentato perche lo fa ad ogni stroke
 
     def resizeEvent(self, event: QResizeEvent):
         """ Called when the docker widget is resized. """
-        g.log(f"ColorHistoryDocker resized to: {event.size().width()}x{event.size().height()}")
+        log(f"ColorHistoryDocker resized to: {event.size().width()}x{event.size().height()}")
         # Update the layout and recalculate positions on resize
         self.update_color_history_ui() # Recalculate layout
 
