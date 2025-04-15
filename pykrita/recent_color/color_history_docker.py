@@ -129,8 +129,9 @@ class ColorHistoryDocker(DockWidget):
     # --- Slot for Color Square Clicks ---
     def _on_color_square_clicked(self, color) -> None:
 
-        g.g_brushCyclerIndex = 0
-        brush_cycler.apply_current_brush()
+        if brush_cycler.enabled:
+            g.g_brushCyclerIndex = 0
+            brush_cycler.apply_current_brush()
                             
 
         log("resettato index brush cycle")

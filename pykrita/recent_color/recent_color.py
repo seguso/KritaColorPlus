@@ -1384,10 +1384,10 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
                             aggiorna_history_aggiungendo(comp)
                             g.g_ColorOnTopOfHistoryIsTemp = True
                             
+                            if brush_cycler.enabled:
+                                g.g_brushCyclerIndex = 0
+                                brush_cycler.apply_current_brush()
 
-                            g.g_brushCyclerIndex = 0
-                            brush_cycler.apply_current_brush()
-                            
                             if g.g_diminishing_opacity:
                                 g.g_auto_mix__how_much_canvas_to_pick = 1.0
 
@@ -2477,9 +2477,9 @@ class MyExtension(Extension):
                 
                 setFgColor(g.g_virtual_fg_color_rgb) # non lancia eventi, aggiorna solo il selector
 
-
-                g.g_brushCyclerIndex = 0
-                brush_cycler.apply_current_brush()
+                if brush_cycler.enabled:
+                    g.g_brushCyclerIndex = 0
+                    brush_cycler.apply_current_brush()
 
                 # faccio avanzare il rettangolo bianco
                 if g.g_color_history_docker_instance:
@@ -3064,11 +3064,11 @@ class MyExtension(Extension):
 
     def pickColorFun(self, showMessage=True) -> None: # bm_pickColorViaKey
 
+        if brush_cycler.enabled:
+            g.g_brushCyclerIndex = 0
+            brush_cycler.apply_current_brush()
 
-        g.g_brushCyclerIndex = 0
-        brush_cycler.apply_current_brush()
-
-        log("resettato index brush cycle")
+            log("resettato index brush cycle")
 
         log("pick called")
         app = Krita.instance()
@@ -4175,10 +4175,10 @@ def onFgColorChangedNotByAutomix() -> None:
 
     #adesso sono sicuro che e' stato cambiato manualmente, quindi aggiorno il virtual color con il fg color di krita
     
-
-    g.g_brushCyclerIndex = 0
-    brush_cycler.apply_current_brush()
-    log("resettato index brush cycle")
+    if brush_cycler.enabled:
+        g.g_brushCyclerIndex = 0
+        brush_cycler.apply_current_brush()
+        log("resettato index brush cycle")
 
     fgColorMaybe  = getFgColorAsRgb();
     if fgColorMaybe is None: # succede se utente ha settato un fg color grayscale, stando su un filter mask o transparency mask
