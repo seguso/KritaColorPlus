@@ -15,7 +15,7 @@ def log(s):
     g.printCount += 1
     print(f"{g.printCount}: {s}\n\n")
 
-from . mouseMonitor import MouseMonitor
+from . mouseMonitor import MouseMonitor, mouseIsCurrentlyDown
 
 from .brush_cycler import brush_cycler # Import the brush cycler instance
 from .brush_list_widget import BrushListDialog  # Import the brush list dialog
@@ -1609,9 +1609,18 @@ def handle_click(hier : list[QWidget]) -> None:
 
     elif  monitor.isPalette(hier):
         # dvo farlo dopo 1 secondo perche' il clic sulla palette non cambia istantaneamente il color selector
-        # ma non posso perche' se per caso lui inizia lo stroke prima, Krita si pianta, mentre cerca di fare createlayer
-        # QTimer.singleShot(500, onFgColorChangedNotByAutomix) # Call after 1 second
-        onFgColorChangedNotByAutomix()
+        # ma non posso perche' se lui inizia lo stroke prima di quel tempo, krita sipianta mentre cerca di fare dry paper
+        # quindi come workaround controllo che il mouse non sia down
+        def delayedUpdate():
+            if not mouseIsCurrentlyDown():  # Verifica se Krita non è impegnato in uno stroke
+                onFgColorChangedNotByAutomix()
+            else:
+                # Se Krita è ancora in uno stroke, riprova dopo un breve ritardo
+                QTimer.singleShot(200, delayedUpdate)
+
+        QTimer.singleShot(200, delayedUpdate) # aspetta sempre almeno 300
+        
+
     elif monitor.is_krita_canvas(hier[0]):
         # log("Click sul canvas di Krita!")
 
@@ -1761,8 +1770,16 @@ def handle_release(hier: list[QWidget]) -> None: # bm_released  bm_mousereleased
     elif  monitor.isPalette(hier):
         # dvo farlo dopo 1 secondo perche' il clic sulla palette non cambia istantaneamente il color selector
         # ma non posso perche' se lui inizia lo stroke prima di quel tempo, krita sipianta mentre cerca di fare dry paper
-        # QTimer.singleShot(500, onFgColorChangedNotByAutomix) # Call after 1 second
-        onFgColorChangedNotByAutomix()
+        # quindi come workaround controllo che il mouse non sia down
+        def delayedUpdate():
+            if not mouseIsCurrentlyDown():  # Verifica se Krita non è impegnato in uno stroke
+                onFgColorChangedNotByAutomix()
+            else:
+                # Se Krita è ancora in uno stroke, riprova dopo un breve ritardo
+                QTimer.singleShot(200, delayedUpdate)
+
+        QTimer.singleShot(200, delayedUpdate) # aspetta sempre almeno 300
+        
     elif monitor.is_krita_canvas(hier[0]):
     
 

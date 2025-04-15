@@ -1,4 +1,4 @@
-TODO quando cambio colore, prendi sempre il primo brush del ciclo.
+DONE quando cambio colore, prendi sempre il primo brush del ciclo.
 che probabilmente è quello con texture.
 
 DONE alternare brush automaticamente: può avere senso per brush di tipo setole, molto

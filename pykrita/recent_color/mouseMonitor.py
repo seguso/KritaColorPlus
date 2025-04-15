@@ -54,6 +54,8 @@ class MouseMonitor(QObject):
 
         return False
 
+
+    
     def check_mouse(self) -> None:
         current_buttons: Qt.MouseButtons = QApplication.mouseButtons() # Type alias for int flags
         current_widget: Optional[QWidget] = QApplication.widgetAt(QCursor.pos())
@@ -125,3 +127,8 @@ class MouseMonitor(QObject):
         # else:
         #     print(f"class name { widget.metaObject().className()}. widget = {widget}\n")
         return False
+    
+
+def mouseIsCurrentlyDown() -> bool:
+    current_buttons: Qt.MouseButtons = QApplication.mouseButtons() # Type alias for int flags
+    return current_buttons & Qt.LeftButton    
