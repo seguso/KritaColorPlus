@@ -1,4 +1,7 @@
-TODO alternare brush automaticamente: può avere senso per brush di tipo setole, molto
+TODO quando cambio colore, prendi sempre il primo brush del ciclo.
+che probabilmente è quello con texture.
+
+DONE alternare brush automaticamente: può avere senso per brush di tipo setole, molto
 simili, per dare varietà. ma se cambio il size di uno, come faccio a cambiare il size
 degli altri? ma forse quando switch posso copiare il size del nuovo nel vecchio.
 
