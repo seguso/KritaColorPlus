@@ -4336,8 +4336,9 @@ def aggiorna_history_aggiungendo(aComponents01) -> None:
         # Add the new color to the opacity dictionary with full opacity (255)
         # Use a string representation of the color as the dictionary key
         color_key = f"{int(stroke_color_clone.r)}-{int(stroke_color_clone.g)}-{int(stroke_color_clone.b)}"
-        g.g_last_opacity_of_color[color_key] = 255
-        # log(f"Initialized opacity for new history color {color_key} to 255.")
+        if color_key not in g.g_last_opacity_of_color:
+            g.g_last_opacity_of_color[color_key] = 255
+            log(f"Initialized opacity for new history color {color_key} to 255.")
 
 
         # Trim list to max_history, keeping the newest items (at the start)
