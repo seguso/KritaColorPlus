@@ -4240,7 +4240,16 @@ def onFgColorChangedNotByAutomix() -> None:
         
         g.g_ColorOnTopOfHistoryIsTemp = False # cambiando colore, implicitamente hai accettato il colore temporaneo automix
 
-    maybe_dry_paper_and_autoResetOpacity()
+        color_key = f"{int(fgColorMaybe.r)}-{int(fgColorMaybe.g)}-{int(fgColorMaybe.b)}"
+        if color_key not in g.g_last_opacity_of_color:
+            g.g_last_opacity_of_color[color_key] = 255
+            g.g_selected_color_opacity = 255
+            log(f"Initialized opacity for new history color {color_key} to 255.")
+        else:
+            g.g_selected_color_opacity = g.g_last_opacity_of_color[color_key]
+
+
+        maybe_dry_paper_and_autoResetOpacity()
 
 
 def curLayerIsDirty() -> Optional[bool]:
