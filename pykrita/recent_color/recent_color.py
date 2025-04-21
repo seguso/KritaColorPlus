@@ -3186,7 +3186,7 @@ class MyExtension(Extension):
                         g.g_ColorOnTopOfHistoryIsTemp = False # cambiando colore, implicitamente hai accettato il colore temporaneo automix
 
                         setFgColor(g.g_virtual_fg_color_rgb) # non lancia eventi
-
+ 
 
                         #se questo colore l'ho preso dallo schermo, lo voglio con opacita' forte, non con quella memorizzata nella history,
                         # nel caso improbabile che esista. quindi uso l'autoreset value, non quello della history.
