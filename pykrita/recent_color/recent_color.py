@@ -3188,9 +3188,22 @@ class MyExtension(Extension):
                         setFgColor(g.g_virtual_fg_color_rgb) # non lancia eventi
 
 
+                        #se questo colore l'ho preso dallo schermo, lo voglio con opacita' forte, non con quella memorizzata nella history,
+                        # nel caso improbabile che esista. quindi uso l'autoreset value, non quello della history.
                         color_key = f"{int(mergedColor.r)}-{int(mergedColor.g)}-{int(mergedColor.b)}"
-                        g.g_selected_color_opacity = g.g_last_opacity_of_color.get(color_key, 255)
-                        log(f"Picked color ({color_key}) with opacity {g.g_selected_color_opacity}")
+
+                        if g.g_auto_reset_opacity_on_pick:
+                            level = int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)
+                            
+                        else:
+                            level = 255
+
+                        g.g_last_opacity_of_color[color_key] = level
+                        g.g_selected_color_opacity = level
+                        log(f"Initialized opacity for new history color {color_key} to {level}.")
+                        
+                        # g.g_selected_color_opacity = g.g_last_opacity_of_color.get(color_key, 255)
+                        # log(f"Picked color ({color_key}) with opacity {g.g_selected_color_opacity}")
 
 
                         if showMessage:
@@ -4242,9 +4255,16 @@ def onFgColorChangedNotByAutomix() -> None:
 
         color_key = f"{int(fgColorMaybe.r)}-{int(fgColorMaybe.g)}-{int(fgColorMaybe.b)}"
         if color_key not in g.g_last_opacity_of_color:
-            g.g_last_opacity_of_color[color_key] = 255
-            g.g_selected_color_opacity = 255
-            log(f"Initialized opacity for new history color {color_key} to 255.")
+
+            if g.g_auto_reset_opacity_on_pick:
+                level = int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)
+                g.g_last_opacity_of_color[color_key] = level
+                g.g_selected_color_opacity = level
+                log(f"Initialized opacity for new history color {color_key} to {level}.")
+            else:
+                g.g_last_opacity_of_color[color_key] = 255
+                g.g_selected_color_opacity = 255
+                log(f"Initialized opacity for new history color {color_key} to 255.")
         else:
             g.g_selected_color_opacity = g.g_last_opacity_of_color[color_key]
 
