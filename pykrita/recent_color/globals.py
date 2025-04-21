@@ -27,6 +27,10 @@ g_mouse_is_out_of_canvas = True
 
 # g_mix_auto_clears_cur_layer = "1"
 
+g_last_opacity_of_color: Dict[str, int] = {} # Stores the last used opacity for each color (color string representation as key, opacity 0-255 as value)
+
+g_selected_color_opacity: int = 255 # Opacity for the currently selected color (0-255)
+
 g_brushCyclerIndex = 0
 
 g_ColorOnTopOfHistoryIsTemp : bool = False

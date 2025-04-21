@@ -162,6 +162,32 @@ class ColorHistoryDocker(DockWidget):
             fg.setComponents(comp)
             view.setForeGroundColor(fg)
 
+
+        # Get the string representation of the clicked color to use as the dictionary key
+        # Use the clickedColorRgb which is already in the correct format (0-255)
+        color_key = f"{int(clickedColorRgb.r)}-{int(clickedColorRgb.g)}-{int(clickedColorRgb.b)}"
+        # Retrieve and set the stored opacity for the selected color, default to 255 if not found
+        g.g_selected_color_opacity = g.g_last_opacity_of_color.get(color_key, 255)
+        log(f"Clicked color ({color_key}) from history with opacity {g.g_selected_color_opacity}")
+
+        # Find the index of the clicked color in the history to update g.g_color_history_index
+        found_index = -1
+        for i, item in enumerate(g.g_last_virtual_colors_used):
+            # Assuming items in g_last_virtual_colors_used are rgb objects now
+            if isinstance(item, rgb):
+                # Compare rgb objects. Assuming arrEqual is suitable for this comparison.
+                # Note: arrEqual is defined in recent_color.py, ensure it's accessible or imported.
+                # Let's perform a direct comparison of rgb values.
+                if int(item.r) == int(clickedColorRgb.r) and int(item.g) == int(clickedColorRgb.g) and int(item.b) == int(clickedColorRgb.b):
+                    found_index = i
+                    break
+
+        if found_index != -1:
+            # Update the global history index to match the clicked color
+            g.g_color_history_index = found_index
+            log(f"Updated history index to {g.g_color_history_index} for clicked color.")
+        else:
+            log(f"Clicked color not found in history list.")
             
 
         maybe_dry_paper_and_autoResetOpacity()

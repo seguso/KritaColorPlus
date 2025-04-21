@@ -2481,6 +2481,11 @@ class MyExtension(Extension):
                 g.g_color_history_index = next_index  # Update the global index
                 target_color = g.g_last_virtual_colors_used[g.g_color_history_index]
 
+                # Get the string representation of the target color to use as the dictionary key
+                color_key = f"{int(target_color.r)}-{int(target_color.g)}-{int(target_color.b)}"
+                # Retrieve and set the stored opacity for the selected color, default to 255 if not found
+                g.g_selected_color_opacity = g.g_last_opacity_of_color.get(color_key, 255)
+                log(f"Switched to color from history index {g.g_color_history_index} ({color_key}) with opacity {g.g_selected_color_opacity}")
                 
                 # log(f"g_virtual_fg_color_rgb = last color cioe' {target_color.toString()}")
                 # Set the virtual foreground color
@@ -3341,6 +3346,18 @@ class MyExtension(Extension):
         # activeLayer.remove()
         # parentNode.addChildNode(newLa, None)
 
+        # Get the current foreground color
+        current_fg_color = getFgColorAsRgb()
+        if current_fg_color is not None:
+            # Use a string representation of the color as the dictionary key
+            color_key = f"{int(current_fg_color.r)}-{int(current_fg_color.g)}-{int(current_fg_color.b)}"
+            g.g_last_opacity_of_color[color_key] = int(newOpac)
+            g.g_selected_color_opacity = int(newOpac)
+            log(f"Updated opacity for color {color_key} to {int(newOpac)}")
+        else:
+            log("Cannot update opacity in history: current foreground color is None.")
+
+
         application.activeWindow().activeView().showFloatingMessage(
             f"Increased layer opacity to {round(newOpac * 100.0 / 255.0)}", QIcon(), g.timeMessage, 1)
 
@@ -3411,6 +3428,17 @@ class MyExtension(Extension):
         # newLa = activeLayer.clone()
         # activeLayer.remove()
         # parentNode.addChildNode(newLa, None)
+
+        # Get the current foreground color
+        current_fg_color = getFgColorAsRgb()
+        if current_fg_color is not None:
+            # Use a string representation of the color as the dictionary key
+            color_key = f"{int(current_fg_color.r)}-{int(current_fg_color.g)}-{int(current_fg_color.b)}"
+            g.g_last_opacity_of_color[color_key] = int(newOpac)
+            g.g_selected_color_opacity = int(newOpac)
+            log(f"Updated opacity for color {color_key} to {int(newOpac)}")
+        else:
+            log("Cannot update opacity in history: current foreground color is None.")
 
         application.activeWindow().activeView().showFloatingMessage(
             f"Decreased layer opacity to { round(newOpac * 100.0 / 255.0)}", QIcon(), g.timeMessage, 1)
@@ -4256,7 +4284,8 @@ def maybe_dry_paper_and_autoResetOpacity() -> None:
             if newLa is not None:
                 document = Krita.instance().activeDocument()
                 if g.g_auto_reset_opacity_on_pick and document is not None:
-                    newLa.setOpacity( int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
+                    newLa.setOpacity(g.g_selected_color_opacity)
+                    #newLa.setOpacity( int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0))
 
                     document.refreshProjection()
 
@@ -4302,6 +4331,14 @@ def aggiorna_history_aggiungendo(aComponents01) -> None:
         # Add the new/current color to the beginning (most recent)
         g.g_last_virtual_colors_used.insert(0, stroke_color_clone)
         # log(f"  Added color {stroke_color_clone.toString()} to beginning. History size: {len(g.g_last_virtual_colors_used)}")
+
+
+        # Add the new color to the opacity dictionary with full opacity (255)
+        # Use a string representation of the color as the dictionary key
+        color_key = f"{int(stroke_color_clone.r)}-{int(stroke_color_clone.g)}-{int(stroke_color_clone.b)}"
+        g.g_last_opacity_of_color[color_key] = 255
+        # log(f"Initialized opacity for new history color {color_key} to 255.")
+
 
         # Trim list to max_history, keeping the newest items (at the start)
         max_history = 40  # TODO: Consider making this configurable
