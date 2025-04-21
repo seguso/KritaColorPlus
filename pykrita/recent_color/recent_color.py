@@ -3188,7 +3188,9 @@ class MyExtension(Extension):
                         setFgColor(g.g_virtual_fg_color_rgb) # non lancia eventi
 
 
-                        
+                        color_key = f"{int(mergedColor.r)}-{int(mergedColor.g)}-{int(mergedColor.b)}"
+                        g.g_selected_color_opacity = g.g_last_opacity_of_color.get(color_key, 255)
+                        log(f"Picked color ({color_key}) with opacity {g.g_selected_color_opacity}")
 
 
                         if showMessage:
