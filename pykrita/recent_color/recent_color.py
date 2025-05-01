@@ -4146,7 +4146,9 @@ def export_layer_coordinates():
                     "wt": bounds.width(),
                     "ht": bounds.height()
                 })
-            if child.childNodes():
+
+            # non guardare i figli, se hai trovato un layer con suffisso
+            elif child.childNodes():
                 process_layers(child)
 
     process_layers(root_node)
@@ -4158,8 +4160,17 @@ def export_layer_coordinates():
         "origFilePath": document.fileName()
     }
 
+   
     documents_path = os.path.expanduser('~/Documents')
-    output_file = os.path.join(documents_path, 'layer_coordinates.json')
+
+    # Nuovo: usa il nome del documento come nome della cartella
+    doc_name = os.path.splitext(os.path.basename(document.fileName()))[0]
+    output_dir = os.path.join(documents_path, doc_name)
+    
+    # Crea la cartella se non esiste
+    os.makedirs(output_dir, exist_ok=True)
+
+    output_file = os.path.join(output_dir, 'layer_coordinates.json')
 
     for layer_data in layers_data:
         layer_name = layer_data['fullName']
@@ -4178,7 +4189,7 @@ def export_layer_coordinates():
 
         layer = find_layer(root_node, layer_name)
         if layer:
-            export_path = os.path.join(documents_path, file_name)
+            export_path = os.path.join(output_dir, file_name)
             info = InfoObject()
             info.setProperty("width", layer.bounds().width())
             info.setProperty("height", layer.bounds().height())
