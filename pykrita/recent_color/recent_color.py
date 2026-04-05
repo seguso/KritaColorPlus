@@ -2483,8 +2483,14 @@ class MyExtension(Extension):
 
                 # Get the string representation of the target color to use as the dictionary key
                 color_key = f"{int(target_color.r)}-{int(target_color.g)}-{int(target_color.b)}"
-                # Retrieve and set the stored opacity for the selected color, default to 255 if not found
-                g.g_selected_color_opacity = g.g_last_opacity_of_color.get(color_key, 255)
+                # If auto-reset opacity is enabled, previous-color must use the configured default.
+                # Otherwise keep the per-color stored opacity.
+                if g.g_auto_reset_opacity_on_pick:
+                    level = int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)
+                    g.g_last_opacity_of_color[color_key] = level
+                    g.g_selected_color_opacity = level
+                else:
+                    g.g_selected_color_opacity = g.g_last_opacity_of_color.get(color_key, 255)
                 log(f"Switched to color from history index {g.g_color_history_index} ({color_key}) with opacity {g.g_selected_color_opacity}")
                 
                 # log(f"g_virtual_fg_color_rgb = last color cioe' {target_color.toString()}")

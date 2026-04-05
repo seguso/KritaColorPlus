@@ -24,7 +24,15 @@ def get_files_to_install():
              print(f"Warning: Python source directory not found: {py_source_dir_abs}")
 
 
-        # 2. Action Files
+        # 2. Plugin desktop file
+        desktop_source_abs = os.path.join(script_dir, 'pykrita', 'recent_color.desktop')
+        desktop_dest_abs = os.path.join(appdata_dir, 'krita', 'pykrita', 'recent_color.desktop')
+        if os.path.isfile(desktop_source_abs):
+            files_to_install.append(('file', desktop_source_abs, desktop_dest_abs))
+        else:
+            print(f"Warning: Plugin desktop file not found: {desktop_source_abs}")
+
+        # 3. Action Files
         actions_source_dir = os.path.join(script_dir, 'actions')
         actions_dest_dir = os.path.join(appdata_dir, 'krita', 'actions')
 
