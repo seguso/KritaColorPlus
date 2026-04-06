@@ -39,6 +39,7 @@ from PyQt5.QtCore import (
     QPointF,
     QRect,
     QTimer,
+    QStandardPaths,
     pyqtSignal)  # Added pyqtSignal
 
 from PyQt5.QtGui import (
@@ -193,6 +194,48 @@ def _qcolor_from_pixel_bytes(pixBytes, context: str = "") -> Optional[QColor]:
     except Exception as e:
         log(f"Failed decoding pixelData. context={context}. error={e}")
         return None
+
+
+def _get_krita_appdata_dir() -> str:
+    """
+    Resolve a writable app-data directory across platforms.
+    Preference order:
+    1) Krita API (when available)
+    2) APPDATA (Windows)
+    3) XDG_DATA_HOME (Linux)
+    4) User home directory fallback
+    """
+    try:
+        app = Krita.instance()
+        get_appdata = getattr(app, "getAppDataLocation", None)
+        if callable(get_appdata):
+            val = get_appdata()
+            if val:
+                return os.path.normpath(val)
+    except Exception:
+        pass
+
+    for env_key in ("APPDATA", "XDG_DATA_HOME"):
+        env_val = os.getenv(env_key)
+        if env_val:
+            return os.path.normpath(env_val)
+
+    return os.path.normpath(str(Path.home()))
+
+
+def _get_preferred_documents_dir() -> str:
+    """Cross-platform documents dir with safe fallbacks."""
+    try:
+        docs = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
+        if docs:
+            return docs
+    except Exception:
+        pass
+
+    home_docs = os.path.join(str(Path.home()), "Documents")
+    if os.path.isdir(home_docs):
+        return home_docs
+    return str(Path.home())
 
 
 # Helper function to blend a list of colors [[R,G,B], ...] using spectral_mix
@@ -2147,10 +2190,10 @@ class MyExtension(Extension):
         # self.timer.timeout.connect(self.mergeOnTimer)
         # self.timer.start(4000)
 
-        home = os.getenv('APPDATA') or str(Path.home())
+        home = _get_krita_appdata_dir()
         self.plugin_state_dir = os.path.join(home, "plugin_krita_color_plus")
 
-        self.filePathWindowState = f"{self.plugin_state_dir}/windowPositions.txt"
+        self.filePathWindowState = os.path.join(self.plugin_state_dir, "windowPositions.txt")
 
         self.windows_with_autofocus = []
         self.ef_autofocus = AutoFocusSetter(self)
@@ -4274,7 +4317,7 @@ def export_layer_coordinates():
     }
 
    
-    documents_path = os.path.expanduser('~/Documents')
+    documents_path = _get_preferred_documents_dir()
 
     # Nuovo: usa il nome del documento come nome della cartella
     doc_name = os.path.splitext(os.path.basename(document.fileName()))[0]
