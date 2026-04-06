@@ -2147,20 +2147,15 @@ class MyExtension(Extension):
         # self.timer.timeout.connect(self.mergeOnTimer)
         # self.timer.start(4000)
 
-        home = str(Path.home())
-
-        home = os.getenv('APPDATA')
-
-        self.plugin_state_dir = f"{home}/plugin_krita_color_plus"
+        home = os.getenv('APPDATA') or str(Path.home())
+        self.plugin_state_dir = os.path.join(home, "plugin_krita_color_plus")
 
         self.filePathWindowState = f"{self.plugin_state_dir}/windowPositions.txt"
 
         self.windows_with_autofocus = []
         self.ef_autofocus = AutoFocusSetter(self)
 
-        if not os.path.exists(self.plugin_state_dir):
-
-            os.mkdir(self.plugin_state_dir)
+        os.makedirs(self.plugin_state_dir, exist_ok=True)
 
         Krita.instance().notifier().windowCreated.connect(self.onWindowCreated)
         Krita.instance().notifier().viewCreated.connect(self.onViewOpenedEvent)
