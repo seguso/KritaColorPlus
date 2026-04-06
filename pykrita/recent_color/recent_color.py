@@ -672,6 +672,21 @@ def toggleMultiLayerMode():
         
     quickMessage("Single-layer mode: " + ("disabled" if g.g_multi_layer_mode else "enabled"))
 
+
+def _copy_blending_mode_from_layer(target_layer, source_layer) -> None:
+    """Copy blending mode from source layer to target layer when possible."""
+    if target_layer is None or source_layer is None:
+        return
+    try:
+        get_mode = getattr(source_layer, "blendingMode", None)
+        if not callable(get_mode):
+            return
+        mode = get_mode()
+        if mode:
+            target_layer.setBlendingMode(mode)
+    except Exception as e:
+        log(f"Could not copy blending mode from layer '{source_layer.name() if source_layer else '?'}': {e}")
+
 def mergeCleanup(): # bm_mergelayers
         # log(f"dry paper called showMessage = {showMessage}")
         application = Krita.instance()
@@ -706,6 +721,7 @@ def mergeCleanup(): # bm_mergelayers
                 # root = currentDoc.rootNode()
                 newLa = currentDoc.createNode("Wet_area", "paintLayer")
                 newLa.setOpacity(oldOpacity)
+                _copy_blending_mode_from_layer(newLa, activeLayer)
 
                 if g.g_set_spectral_blend_mode_when_creating_layer:
                     # log("setting over spectral")
@@ -802,6 +818,7 @@ def dryPaper(showMessage=True):  # bm_dryPaper
 
                 newLa = currentDoc.createNode("Wet_area", "paintLayer")
                 newLa.setOpacity(oldOpacity)
+                _copy_blending_mode_from_layer(newLa, activeLayer)
 
                 # Add the new layer *above* the active layer within the parent group
                 try:
@@ -3670,6 +3687,7 @@ class MyExtension(Extension):
             root = currentDoc.rootNode()
             newLa = currentDoc.createNode("Wet_area", "paintLayer")
             newLa.setOpacity(oldOpacity)
+            _copy_blending_mode_from_layer(newLa, activeLayer)
 
             backgroundLayer = parentNode.childNodes()[0]
 
@@ -3685,6 +3703,7 @@ class MyExtension(Extension):
 
             newLa = currentDoc.createNode("Wet_area", "paintLayer")
             newLa.setOpacity(50.0 * 255.0 / 100.0)
+            _copy_blending_mode_from_layer(newLa, activeLayer)
             root.addChildNode(newLa, None)
 
             g.g_opacity_decided_for_layer = False
