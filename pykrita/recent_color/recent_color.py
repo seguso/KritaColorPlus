@@ -80,6 +80,7 @@ import xml
 import math
 import json
 import queue
+import struct
 from typing import List, Any, Optional  # Add List, Any, Optional
 
 from .spectral import *
@@ -141,6 +142,57 @@ def sample_pixel_rgb0255(document, x, y):
     except Exception as e:
         log(f"Error sampling pixel at ({x}, {y}): {e}")
         return None # Return None on any error
+
+
+def _krita_version_tuple() -> Tuple[int, int, int]:
+    """Parse Krita version string to (major, minor, patch)."""
+    try:
+        version_str = Krita.instance().version()
+    except Exception:
+        return (0, 0, 0)
+
+    match = re.search(r"(\d+)\.(\d+)\.(\d+)", version_str or "")
+    if not match:
+        return (0, 0, 0)
+    return (int(match.group(1)), int(match.group(2)), int(match.group(3)))
+
+
+def _get_canvas_zoom_for_transform(canvas, document) -> float:
+    """
+    Krita 5.3+ appears to expose zoomLevel already in effective document scale.
+    Older versions used the historical 72/resolution correction.
+    """
+    zoom_level = float(canvas.zoomLevel())
+    if _krita_version_tuple() >= (5, 3, 0):
+        return zoom_level
+    return (zoom_level * 72.0) / float(document.resolution())
+
+
+def _qcolor_from_pixel_bytes(pixBytes, context: str = "") -> Optional[QColor]:
+    """Decode 1x1 bytes from document.pixelData() into QColor."""
+    try:
+        ln = len(pixBytes)
+        if ln == 4:
+            imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA8888)
+            return imageData.pixelColor(0, 0)
+        if ln == 8:
+            imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA64)
+            return imageData.pixelColor(0, 0)
+        if ln == 16:
+            # Fallback for float32 RGBA formats if exposed by newer Krita builds.
+            r, g, b, a = struct.unpack("<ffff", bytes(pixBytes))
+            return QColor(
+                int(max(0.0, min(1.0, r)) * 255.0),
+                int(max(0.0, min(1.0, g)) * 255.0),
+                int(max(0.0, min(1.0, b)) * 255.0),
+                int(max(0.0, min(1.0, a)) * 255.0),
+            )
+
+        log(f"Unsupported pixelData len={ln}. context={context}")
+        return None
+    except Exception as e:
+        log(f"Failed decoding pixelData. context={context}. error={e}")
+        return None
 
 
 # Helper function to blend a list of colors [[R,G,B], ...] using spectral_mix
@@ -318,6 +370,9 @@ def getColorUnderCursorOrAtPos(forcedPos: Optional['xy'] = None, ignore_bottom_l
         if forcedPos is None:
             # questo dà la posizione da (-docwt/2, -docht/2) a (docwt/2, docht/2)
             p = get_cursor_in_document_coords()
+            if p is None:
+                log("getColorUnderCursorOrAtPos: cursor mapping failed")
+                return None
             # per cui aggiungo metà della larghezza documento e metà altezza. così è nel range (0, 0) -- (docwt, docht)
             doc_pos = p + center
             doc_posxy = xyOfQpoint(doc_pos)  # passo a intero
@@ -413,21 +468,14 @@ def getColorUnderCursorOrAtPos(forcedPos: Optional['xy'] = None, ignore_bottom_l
                                 if 0 <= x < document.width() and 0 <= y < document.height():
                                     pixelBytes = curLayer.pixelData(x, y, 1, 1)
                                     if pixelBytes: # Check if pixelData returned valid bytes
-                                        imageData = None
-                                        # Use formats consistent with later checks
-                                        if len(pixelBytes) == 4:
-                                            imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA8888)
-                                        elif len(pixelBytes) == 8:
-                                            imageData = QImage(pixelBytes, 1, 1, QImage.Format_RGBA64)
-                                        # Add more formats if needed based on Krita's layer types
-
-                                        if imageData:
-                                            pixelC = imageData.pixelColor(0, 0)
-                                            # Check alpha channel (alpha() is 0-255)
-                                            if pixelC.alpha() > 0:
-                                                found_opaque_pixel_above_bottom = True
-                                                # log(f"trovato opaco sul layer: {curLayer.name()}")
-                                                break # Found one, no need to check further layers
+                                        pixelC = _qcolor_from_pixel_bytes(
+                                            pixelBytes,
+                                            context=f"ignore_bottom_layer_check layer={curLayer.name()} x={x} y={y}",
+                                        )
+                                        if pixelC is not None and pixelC.alpha() > 0:
+                                            found_opaque_pixel_above_bottom = True
+                                            # log(f"trovato opaco sul layer: {curLayer.name()}")
+                                            break # Found one, no need to check further layers
                                 else: #coordinate out of bounds for this layer or pixelData empty, treat as transparent
                                     log(f"getColorUnderCursorOrAtPos coordinate out of bounds {x}, {y}")
 
@@ -468,21 +516,12 @@ def getColorUnderCursorOrAtPos(forcedPos: Optional['xy'] = None, ignore_bottom_l
 
             # log(f'Dati letti: {concatenated_string}')
 
-            # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
-            if len(pixBytes) == 4:
-                imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA8888)
-            elif len(pixBytes) == 8:
-                imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA64)
-            else:
-                # Log warning instead of raising exception? Or return None?
-                # print(f"Warning: unsupported composite pixelData length {len(pixBytes)} at {doc_pos.x},{doc_pos.y}")
-                return None # Return None if format is unexpected
-
-            if not imageData:
-                 # This case might happen if QImage fails for some reason
-                 return None
-
-            pixelC = imageData.pixelColor(0, 0)
+            pixelC = _qcolor_from_pixel_bytes(
+                pixBytes,
+                context=f"composite x={int(doc_pos.x)} y={int(doc_pos.y)}",
+            )
+            if pixelC is None:
+                return None
 
             # e ora da colore qt a colore mio
             # Convert QColor to internal rgb format, preserving alpha from the composite pixel
@@ -1258,6 +1297,9 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
                 center = QPointF(0.5 * document.width(),
                                  0.5 * document.height())
                 p = get_cursor_in_document_coords()
+                if p is None:
+                    quickMessage("Cannot mix: cursor mapping failed")
+                    return
 
                 doc_pos = p + center  # float
                 # log(f'cursor at: x={doc_pos.x()}, y={doc_pos.y()}')
@@ -1278,17 +1320,13 @@ def mixFgColorWithBgColor_normalLogic(createLayer=False, clearCurLayer=False, de
 
                     # log(f'Dati letti: {concatenated_string}')
 
-                    # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
-                    if len(pixBytes) == 4:
-                        imageData = QImage(
-                            pixBytes, 1, 1, QImage.Format_RGBA8888)
-                    elif len(pixBytes) == 8:
-                        imageData = QImage(
-                            pixBytes, 1, 1, QImage.Format_RGBA64)
-                    else:
-                        raise f"unsupported len {len(pixBytes)}"
-
-                    pixelC = imageData.pixelColor(0, 0)
+                    pixelC = _qcolor_from_pixel_bytes(
+                        pixBytes,
+                        context=f"mixFgColorWithBgColor_normalLogic x={int(doc_pos.x())} y={int(doc_pos.y())}",
+                    )
+                    if pixelC is None:
+                        quickMessage("Cannot mix: unsupported pixel format under cursor")
+                        return
 
                     # e ora da colore qt a colore mio
                     mergedColor = rgb(float(pixelC.red()),  float(pixelC.green()),  float(pixelC.blue()), 255.0)
@@ -1461,7 +1499,7 @@ def get_transform(view):
     q_view = get_q_view(view)
     if q_view is not None:
         area = q_view.findChild(QAbstractScrollArea)
-        zoom = (canvas.zoomLevel() * 72.0) / document.resolution()
+        zoom = _get_canvas_zoom_for_transform(canvas, document)
         transform = QTransform()
         transform.translate(
             _offset(area.horizontalScrollBar()),
@@ -1478,15 +1516,39 @@ def get_cursor_in_document_coords():
     view = app.activeWindow().activeView()
     if view.document():
         q_view = get_q_view(view)
+        if q_view is None:
+            log("get_cursor_in_document_coords: q_view is None")
+            return None
         q_canvas = get_q_canvas(q_view)
+        if q_canvas is None:
+            log("get_cursor_in_document_coords: q_canvas is None")
+            return None
         transform = get_transform(view)
         if transform is not None:
             transform_inv, _ = transform.inverted()
             global_pos = QCursor.pos()
             local_pos = q_canvas.mapFromGlobal(global_pos)
             center = q_canvas.rect().center()
-            return transform_inv.map(local_pos - QPointF(center))
+            result = transform_inv.map(local_pos - QPointF(center))
+
+            doc = view.document()
+            half_w = 0.5 * doc.width()
+            half_h = 0.5 * doc.height()
+            if abs(result.x()) > half_w + 5 or abs(result.y()) > half_h + 5:
+                canvas = view.canvas()
+                log(
+                    "cursor-doc mismatch: "
+                    f"krita={Krita.instance().version()}, "
+                    f"zoomLevel={canvas.zoomLevel()}, "
+                    f"docRes={doc.resolution()}, "
+                    f"local=({round(local_pos.x(),2)},{round(local_pos.y(),2)}), "
+                    f"mapped=({round(result.x(),2)},{round(result.y(),2)}), "
+                    f"docHalf=({round(half_w,2)},{round(half_h,2)})"
+                )
+
+            return result
         else:
+            log("get_cursor_in_document_coords: transform is None")
             return None
 
 # from PyQt5.QtCore import (
@@ -3131,6 +3193,9 @@ class MyExtension(Extension):
                     center = QPointF(0.5 * document.width(),
                                      0.5 * document.height())
                     p = get_cursor_in_document_coords()
+                    if p is None:
+                        quickMessage("Cannot pick color: cursor mapping failed")
+                        return
                     doc_pos = p + center
 
                     # 3 or 6 bytes depending on the image format
@@ -3142,15 +3207,13 @@ class MyExtension(Extension):
 
                     # log(f'Dati letti: {concatenated_string}')
 
-                    # ora ho i byte (3 o 6 byte). devo convertirli in colore Qt
-                    if len(pixBytes) == 4:
-                        imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA8888)
-                    elif len(pixBytes) == 8:
-                        imageData = QImage(pixBytes, 1, 1, QImage.Format_RGBA64)
-                    else:
-                        raise Exception( f"unsupported len {len(pixBytes)}")
-
-                    pixelC = imageData.pixelColor(0, 0)
+                    pixelC = _qcolor_from_pixel_bytes(
+                        pixBytes,
+                        context=f"pickColorFun x={int(doc_pos.x())} y={int(doc_pos.y())}",
+                    )
+                    if pixelC is None:
+                        quickMessage("Cannot pick color: unsupported pixel format under cursor")
+                        return
 
                     # e ora da colore qt a colore mio
                     mergedColor = rgb(float(pixelC.red()),  float(
