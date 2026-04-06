@@ -540,6 +540,22 @@ def toggleAutoResetOpacityOnPick():
                                   str(g.g_auto_reset_opacity_on_pick))
 
 
+def togglePreviousColorUsesHistoryOpacity():
+    g.g_previous_color_uses_history_opacity = not g.g_previous_color_uses_history_opacity
+    if g.g_actionPrevColorUseHistoryOpacity is not None:
+        g.g_actionPrevColorUseHistoryOpacity.setChecked(g.g_previous_color_uses_history_opacity)
+
+    Krita.instance().writeSetting(
+        "colorPlus",
+        "g.g_previous_color_uses_history_opacity",
+        "1" if g.g_previous_color_uses_history_opacity else "0")
+
+    if g.g_previous_color_uses_history_opacity:
+        quickMessage("Previous color: opacity is read from color history")
+    else:
+        quickMessage("Previous color: opacity is not read from history")
+
+
 
 def updateAutoResetOpacityLevel(value):
     """Updates the global opacity level when the slider changes."""
@@ -2003,6 +2019,8 @@ class MyExtension(Extension):
 
         g.g_auto_reset_opacity_on_pick = int(Krita.instance().readSetting(
             "colorPlus", "g.g_auto_reset_opacity_on_pick", "0"))
+        g.g_previous_color_uses_history_opacity = Krita.instance().readSetting(
+            "colorPlus", "g.g_previous_color_uses_history_opacity", "0") == "1"
 
         strHowMuch = Krita.instance().readSetting(
             "colorPlus", "g.g_how_much_canvas_to_pick", "0.45")
@@ -2483,14 +2501,15 @@ class MyExtension(Extension):
 
                 # Get the string representation of the target color to use as the dictionary key
                 color_key = f"{int(target_color.r)}-{int(target_color.g)}-{int(target_color.b)}"
-                # If auto-reset opacity is enabled, previous-color must use the configured default.
-                # Otherwise keep the per-color stored opacity.
-                if g.g_auto_reset_opacity_on_pick:
-                    level = int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)
-                    g.g_last_opacity_of_color[color_key] = level
-                    g.g_selected_color_opacity = level
-                else:
+                # Optional behavior: read opacity from history for previous-color.
+                # Default behavior: do not remember opacity here.
+                if g.g_previous_color_uses_history_opacity:
                     g.g_selected_color_opacity = g.g_last_opacity_of_color.get(color_key, 255)
+                else:
+                    if g.g_auto_reset_opacity_on_pick:
+                        g.g_selected_color_opacity = int(g.g_auto_reset_opacity_on_pick_level * 255.0 / 100.0)
+                    else:
+                        g.g_selected_color_opacity = 255
                 log(f"Switched to color from history index {g.g_color_history_index} ({color_key}) with opacity {g.g_selected_color_opacity}")
                 
                 # log(f"g_virtual_fg_color_rgb = last color cioe' {target_color.toString()}")
@@ -3730,6 +3749,22 @@ class MyExtension(Extension):
 
     def onEnter(self):
         log(f"enter event")
+    
+    def showColorPlusDocker(self):
+        app = Krita.instance()
+        colorplus_docker = None
+        for dock in app.dockers():
+            if dock.windowTitle() == "ColorPlus":
+                colorplus_docker = dock
+                break
+
+        if colorplus_docker is not None:
+            colorplus_docker.show()
+            colorplus_docker.raise_()
+            colorplus_docker.activateWindow()
+            quickMessage("ColorPlus docker opened")
+        else:
+            quickMessage("ColorPlus docker not found")
 
     def createActions(self, window):
 
@@ -3855,6 +3890,14 @@ class MyExtension(Extension):
             g.g_auto_reset_opacity_on_pick == 1)
         g.g_actionAutoResOnPick.triggered.connect(
             toggleAutoResetOpacityOnPick)
+        
+        g.g_actionPrevColorUseHistoryOpacity = window.createAction(
+            "togglePreviousColorUseHistoryOpacity", "Previous color: remember opacity from history")
+        g.g_actionPrevColorUseHistoryOpacity.setCheckable(True)
+        g.g_actionPrevColorUseHistoryOpacity.setChecked(
+            g.g_previous_color_uses_history_opacity)
+        g.g_actionPrevColorUseHistoryOpacity.triggered.connect(
+            togglePreviousColorUsesHistoryOpacity)
 
         g.g_actionSingleLayerMode = window.createAction(
             "toggleSingleLayerMode", "Single-layer mode (don't auto create layers for watercolor effect)")
@@ -3878,10 +3921,15 @@ class MyExtension(Extension):
         setFgColorEqualToColorOfLastStroke.triggered.connect(
             setFgColorEqualToColorOfLastStrokeAfterOpacityAdjust)
         # setFgColorEqualToColorOfLastStroke.setShortcut("v")
+        
+        actionShowColorPlusDocker = window.createAction(
+            "showColorPlusDocker", "Show ColorPlus docker")
+        actionShowColorPlusDocker.triggered.connect(self.showColorPlusDocker)
 
         main_menu = window.qwindow().menuBar()
         custom_menu = main_menu.addMenu("ColorPlus")
 
+        custom_menu.addAction(actionShowColorPlusDocker)
         custom_menu.addAction(g.g_actionAutoFocus)
         custom_menu.addAction(g.g_actionSingleLayerMode)
 
@@ -3949,6 +3997,7 @@ class MyExtension(Extension):
         custom_menu.addAction(actionExportCoords)
         custom_menu.addSeparator()
         custom_menu.addAction(g.g_actionAutoResOnPick)
+        custom_menu.addAction(g.g_actionPrevColorUseHistoryOpacity)
         # custom_menu.addAction(actioninaro)
         # custom_menu.addAction(actiondearo)
         custom_menu.addAction(g.g_manualResOnPick)

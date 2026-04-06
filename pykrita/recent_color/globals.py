@@ -63,6 +63,7 @@ g_actionDirtyBrush = None
 g_actionBrushCycler = None
 g_actionAutoFocus = None
 g_actionAutoResOnPick = None
+g_actionPrevColorUseHistoryOpacity = None
 g_actionSingleLayerMode = None
 g_manualResOnPick = None
 
@@ -105,6 +106,7 @@ g_auto_mix_enabled = False
 
 g_auto_reset_opacity_on_pick : bool = False
 g_auto_reset_opacity_on_pick_level = 1.0;
+g_previous_color_uses_history_opacity: bool = False
 
 g_dial_auto_mix_level = None
 
